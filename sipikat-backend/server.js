@@ -6,6 +6,7 @@ const gejalaRoutes = require('./routes/gejala');
 const diagnosaRoutes = require('./routes/diagnosa');
 const artikelRoutes = require('./routes/artikel');
 const userRoutes = require('./routes/user'); 
+const aktivitasRoutes = require('./routes/aktivitas'); 
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use('/api/gejala', gejalaRoutes);
 app.use('/api/diagnosa', diagnosaRoutes); 
 app.use('/api/artikel', artikelRoutes);
 app.use('/api/admin/users', userRoutes); 
+app.use('/api/aktivitas', aktivitasRoutes);
 
 app.get('/', (req, res) => {
   res.send('Expert System Backend API is running!');

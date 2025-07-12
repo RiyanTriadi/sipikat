@@ -38,10 +38,12 @@ exports.addUser = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+    
+    const created_at = new Date();
 
     const [result] = await pool.execute(
-      'INSERT INTO tb_user (name, email, password) VALUES (?, ?, ?)',
-      [name, email, hashedPassword]
+      'INSERT INTO tb_user (name, email, password, created_at) VALUES (?, ?, ?, ?)',
+      [name, email, hashedPassword, created_at]
     );
     res.status(201).json({ message: 'User added successfully', id: result.insertId });
   } catch (err) {
@@ -49,6 +51,7 @@ exports.addUser = async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 };
+
 
 exports.updateUser = async (req, res) => {
   const { name, email, password } = req.body;
