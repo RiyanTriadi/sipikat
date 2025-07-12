@@ -1,4 +1,3 @@
-// src/app/(user)/diagnosa/hasil/page.jsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -6,7 +5,6 @@ import Link from 'next/link';
 import { ArrowLeft, User, List, Lightbulb, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Komponen untuk Gauge Radial (Pengganti Progress Bar)
 const RadialProgress = ({ percentage, styles }) => {
     const radius = 80;
     const stroke = 15;
@@ -18,7 +16,7 @@ const RadialProgress = ({ percentage, styles }) => {
         <div className="relative flex items-center justify-center">
             <svg height={radius * 2} width={radius * 2} className="transform -rotate-90">
                 <circle
-                    stroke="#e5e7eb" // gray-200
+                    stroke="#e5e7eb" 
                     fill="transparent"
                     strokeWidth={stroke}
                     r={normalizedRadius}
@@ -26,7 +24,7 @@ const RadialProgress = ({ percentage, styles }) => {
                     cy={radius}
                 />
                 <motion.circle
-                    stroke={styles.progress.replace('bg-', '')} // Ambil warna dari class
+                    stroke={styles.progress.replace('bg-', '')} 
                     fill="transparent"
                     strokeWidth={stroke}
                     strokeDasharray={circumference + ' ' + circumference}
@@ -50,7 +48,6 @@ const RadialProgress = ({ percentage, styles }) => {
     );
 };
 
-// Komponen Kartu Informasi
 const InfoCard = ({ icon, title, children }) => (
     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
         <div className="flex items-center mb-4">
@@ -122,7 +119,6 @@ export default function HasilPage() {
                     <p className="text-center text-gray-500 mb-10">Berikut adalah hasil analisis sistem berdasarkan gejala yang Anda berikan.</p>
                     
                     <div className="grid md:grid-cols-2 gap-8 items-center mb-10">
-                        {/* Sisi Kiri: Gauge & Kategori */}
                         <div className="flex flex-col items-center justify-center p-6 rounded-lg bg-gray-50 border">
                             <RadialProgress percentage={percentage} styles={styles} />
                             <div className={`mt-6 text-center ${styles.bg} ${styles.text} px-4 py-2 rounded-full font-semibold`}>
@@ -130,14 +126,12 @@ export default function HasilPage() {
                             </div>
                         </div>
 
-                        {/* Sisi Kanan: Solusi */}
                         <InfoCard icon={<Lightbulb className={`h-6 w-6 ${styles.text}`} />} title="Solusi & Rekomendasi">
                             <p className="leading-relaxed">{result.solusi}</p>
                         </InfoCard>
                     </div>
                     
                     <div className="grid md:grid-cols-2 gap-8">
-                        {/* Detail Pasien */}
                         <InfoCard icon={<User className="h-6 w-6 text-indigo-600" />} title="Detail Pasien">
                             <p><strong>Nama:</strong> {result.user.nama}</p>
                             <p><strong>Usia:</strong> {result.user.usia} tahun</p>
@@ -145,7 +139,6 @@ export default function HasilPage() {
                             <p><strong>Alamat:</strong> {result.user.alamat}</p>
                         </InfoCard>
 
-                        {/* Gejala yang Dialami */}
                         <InfoCard icon={<List className="h-6 w-6 text-indigo-600" />} title="Gejala yang Dialami">
                             <ul className="list-disc list-inside space-y-1">
                                 {result.gejala_terpilih.map(g => (
@@ -157,7 +150,6 @@ export default function HasilPage() {
                         </InfoCard>
                     </div>
 
-                    {/* Tombol Aksi */}
                     <div className="text-center mt-12 pt-8 border-t border-gray-200">
                         <Link href="/diagnosa" className="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-transform transform hover:scale-105">
                             <RefreshCw className="mr-2 h-5 w-5" />
