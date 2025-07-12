@@ -50,11 +50,11 @@ export default async function HomePage() {
             </section>
 
             {/* --- Diagnosis Card Section --- */}
-            <section className="py-16 sm:py-24 bg-blue-100">
+            <section className="py-16 sm:py-24">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="bg-gray-50 rounded-2xl shadow-lg max-w-5xl mx-auto p-8 md:p-12 flex flex-col md:flex-row items-center gap-8 border border-gray-200">
                         <div className="flex-shrink-0 text-indigo-600">
-                            <FileText className="w-20 h-20" strokeWidth={1.5} />
+                            <Image src="/diagnose.svg" alt="Logo Kabupaten Pandeglang" width={158} height={48} unoptimized />
                         </div>
                         <div className="text-center md:text-left flex-grow">
                             <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Siap Mengambil Langkah Pertama?</h2>
@@ -67,14 +67,14 @@ export default async function HomePage() {
                                 Lakukan Tes
                                 <ArrowRight className="ml-2 h-5 w-5" />
                             </Link>
-                        </div>
+                        </div>  
                     </div>
                 </div>
             </section>
           
             {/* --- Latest Articles Section --- */}
             {latestArticles.length > 0 && (
-                <section className="py-16 sm:py-24 bg-gray-50">
+                <section className="py-16 sm:py-24 bg-gray-100">
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="text-center mb-12">
                             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Informasi Terbaru</h2>
@@ -88,7 +88,6 @@ export default async function HomePage() {
                         <div className="text-center mt-12">
                             <Link href="/artikel" className="inline-flex items-center font-semibold text-indigo-600 hover:text-indigo-800 transition-colors group">
                                 Lihat Semua Artikel
-                                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                             </Link>
                         </div>
                     </div>
@@ -102,12 +101,8 @@ export default async function HomePage() {
                         Didukung Oleh
                     </h2>
                     <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-8">
-                        <div className="grayscale hover:grayscale-0 transition-all duration-300">
                             <Image src="/unma logo.png" alt="Logo Universitas Mathla'ul Anwar" width={158} height={48} unoptimized />
-                        </div>
-                        <div className="grayscale hover:grayscale-0 transition-all duration-300">
                             <Image src="/pandeglang logo.png" alt="Logo Kabupaten Pandeglang" width={158} height={48} unoptimized />
-                        </div>
                     </div>
                 </div>
             </section>

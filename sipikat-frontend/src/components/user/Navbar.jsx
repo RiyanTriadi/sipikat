@@ -17,6 +17,7 @@ export default function Navbar() {
         { href: "/tentang", label: "Tentang" },
     ];
 
+    // Effect untuk mendeteksi scroll
     useEffect(() => {
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 10);
@@ -29,39 +30,50 @@ export default function Navbar() {
         setIsOpen(!isOpen);
     };
     
-    // Tutup menu saat navigasi
+    // Effect untuk menutup menu mobile saat halaman berubah
     useEffect(() => {
         if(isOpen) {
             setIsOpen(false);
         }
     }, [pathname]);
 
+    // --- PERUBAHAN UTAMA DI SINI ---
+    // Fungsi untuk kelas styling link desktop
+    const linkClasses = (href) => {
+        const isActive = pathname === href;
+        const baseClasses = 'relative px-1 py-2 text-sm font-medium text-gray-700 transition-colors duration-300 outline-none';
+        const activeClasses = 'font-semibold text-indigo-600';
+        const inactiveClasses = 'hover:text-indigo-600';
+        // Kelas untuk pseudo-element ::after (garis bawah)
+        const afterClasses = `
+            after:content-[''] after:absolute after:left-0 after:bottom-0 
+            after:h-[2px] after:bg-indigo-600 after:transition-all after:duration-300
+        `;
+        const activeAfter = 'after:w-full';
+        const inactiveAfter = 'after:w-0 group-hover:after:w-full';
 
-    const linkClasses = (href) => 
-        `px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300 ${
-            pathname === href 
-            ? 'text-indigo-600 bg-indigo-50' 
-            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-        }`;
+        return `group ${baseClasses} ${isActive ? activeClasses : inactiveClasses} ${afterClasses} ${isActive ? activeAfter : inactiveAfter}`;
+    };
 
+    // Fungsi untuk kelas styling link mobile
     const mobileLinkClasses = (href) => 
         `block px-3 py-2 rounded-md text-base font-medium text-center ${
             pathname === href 
-            ? 'bg-indigo-100 text-indigo-700' 
+            ? 'bg-indigo-100 text-indigo-700 font-semibold' 
             : 'text-gray-700 hover:bg-gray-100'
         }`;
 
     return (
-        <nav className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/80 shadow-md backdrop-blur-sm' : 'bg-white'}`}>
+        <nav className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 shadow-lg backdrop-blur-lg' : 'bg-white border-b border-gray-200'}`}>
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
-                    <div className="flex items-center">
-                        <Link href="/" className="text-xl font-bold text-indigo-600">
+                    <div className="flex-shrink-0">
+                        <Link href="/" className="text-2xl font-bold text-indigo-600">
                             SIPAKAT
                         </Link>
                     </div>
                     <div className="hidden md:block">
-                        <div className="ml-10 flex items-baseline space-x-4">
+                        <div className="ml-10 flex items-baseline space-x-8">
                             {navLinks.map(link => (
                                 <Link key={link.href} href={link.href} className={linkClasses(link.href)}>
                                     {link.label}
@@ -83,6 +95,7 @@ export default function Navbar() {
                 </div>
             </div>
 
+            {/* Menu Mobile */}
             {isOpen && (
                 <div className="md:hidden border-t border-gray-200 bg-white">
                     <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">

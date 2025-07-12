@@ -100,12 +100,12 @@ export default function Sidebar() {
             </aside>
 
             {/* --- Header untuk Mobile (berisi tombol hamburger) --- */}
-            <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-white px-4 md:hidden">
-                 <Link href="/admin/dashboard" className="flex items-center gap-2 text-lg font-bold text-slate-800">
+            <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-slate-900 px-4 md:hidden">
+                 <Link href="/admin/dashboard" className="flex items-center gap-2 text-lg font-bold text-white">
                     <ShieldCheck className="h-6 w-6 text-indigo-600" />
                     <span>Admin Panel</span>
                 </Link>
-                <button onClick={() => setIsSidebarOpen(true)} className="rounded-lg p-2 text-slate-600 hover:bg-slate-100">
+                <button onClick={() => setIsSidebarOpen(true)} className="rounded-lg p-2 text-slate-100 hover:bg-slate-600">
                     <Menu className="h-6 w-6" />
                 </button>
             </header>

@@ -46,7 +46,6 @@ export default async function ArtikelDetailPage({ params }) {
                 <article className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8 md:p-12 w-full border border-gray-200">
                     <div className="mb-8">
                            <Link href="/artikel" className="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-semibold group transition-colors">
-                                <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
                                 Kembali ke semua artikel
                             </Link>
                     </div>
@@ -62,7 +61,7 @@ export default async function ArtikelDetailPage({ params }) {
                         alt={`Gambar untuk ${article.judul}`}
                         className="w-full h-auto max-h-[500px] object-cover rounded-lg mb-8 shadow-md border border-gray-200"
                     />
-
+ 
                     <div
                         className="prose lg:prose-lg max-w-none text-gray-800 leading-relaxed space-y-4"
                         dangerouslySetInnerHTML={{ __html: article.konten }}

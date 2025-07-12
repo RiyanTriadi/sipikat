@@ -5,7 +5,7 @@ export default function UserLayout({ children }) {
   return (
     <div>
       <Navbar />
-      <main className="bg-gray-50 min-h-screen">
+      <main className="bg-gradient-to-br from-gray-50 to-indigo-50 min-h-screen">
         {children}
       </main>
       <Footer />
