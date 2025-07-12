@@ -5,9 +5,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, ClipboardList, Send, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import React from 'react'; // Diperlukan untuk React.Fragment
+import React from 'react'; 
 
-// --- DATA STATIS ---
 const confidenceLevels = [
     { label: "Tidak", value: 0 }, { label: "Jarang", value: 0.2 },
     { label: "Kadang-kadang", value: 0.4 }, { label: "Sering", value: 0.6 },
@@ -15,7 +14,6 @@ const confidenceLevels = [
 ];
 const namaKampung = ["Leuwi Kolot", "Tegalwangi", "Cibuntu", "Cilaja", "Ciparay", "Pasirpeuteuy"];
 
-// --- KOMPONEN UI ---
 const Alert = ({ message }) => (
     <div className="px-4 py-3 rounded-md relative text-center text-sm font-medium shadow-sm bg-red-50 border border-red-300 text-red-700 flex items-center justify-center space-x-2" role="alert">
         <AlertCircle className="h-5 w-5 text-red-500" />
@@ -49,9 +47,7 @@ const ProgressIndicator = ({ currentStep }) => {
     );
 };
 
-// --- KOMPONEN UTAMA HALAMAN DIAGNOSA ---
 export default function DiagnosaPage() {
-    // --- STATE MANAGEMENT ---
     const [step, setStep] = useState(1);
     const [user, setUser] = useState({ nama: '', jenis_kelamin: '', usia: '', alamat: '' });
     const [gejala, setGejala] = useState([]);
@@ -61,13 +57,11 @@ export default function DiagnosaPage() {
     const [gejalaLoading, setGejalaLoading] = useState(true);
     const router = useRouter();
 
-    // --- DATA FETCHING ---
     useEffect(() => {
         const fetchGejala = async () => {
             setGejalaLoading(true);
             setError('');
             try {
-                // Ganti dengan URL API Anda
                 const res = await fetch('http://localhost:5000/api/gejala');
                 if (!res.ok) throw new Error('Gagal mengambil data gejala dari server.');
                 const data = await res.json();
@@ -84,7 +78,6 @@ export default function DiagnosaPage() {
         fetchGejala();
     }, []);
 
-    // --- HANDLERS ---
     const handleUserChange = (e) => setUser({ ...user, [e.target.name]: e.target.value });
     const handleGejalaChange = (gejalaId, cf_user) => setSelectedGejala(prev => ({ ...prev, [gejalaId]: cf_user }));
 
@@ -94,7 +87,6 @@ export default function DiagnosaPage() {
                 setError('Harap lengkapi semua field Data Diri.');
                 return;
             }
-            // Scroll ke atas saat lanjut ke step 2
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         setError('');
@@ -168,7 +160,6 @@ export default function DiagnosaPage() {
                                     <User className="w-6 h-6 mr-3 text-indigo-600" />Langkah 1: Data Diri Pasien
                                 </h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Input fields untuk data diri */}
                                     <div>
                                         <label htmlFor="nama" className={labelClasses}>Nama Lengkap:</label>
                                         <input type="text" id="nama" name="nama" value={user.nama} onChange={handleUserChange} className={inputClasses} placeholder="Masukkan nama lengkap"/>
@@ -205,7 +196,6 @@ export default function DiagnosaPage() {
                                 </h2>
                                 <p className="text-gray-600 mb-8 text-md">Pilih tingkat keyakinan Anda untuk setiap gejala yang dialami.</p>
                                 <div className="space-y-6">
-                                    {/* Tampilan loading atau daftar gejala */}
                                     {gejalaLoading ? (
                                         <div className="flex justify-center items-center h-48 text-gray-500">
                                             <Loader2 className="animate-spin h-8 w-8 text-indigo-600 mr-3" />
@@ -215,7 +205,6 @@ export default function DiagnosaPage() {
                                         gejala.map((g, index) => (
                                             <div key={g.id} className="p-5 border border-gray-200 rounded-xl bg-white shadow-sm">
                                                 <p className="font-semibold text-gray-800 mb-4 text-md">{index + 1}. {g.gejala}</p>
-                                                {/* Desain baru untuk pilihan gejala */}
                                                 <fieldset className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
                                                     {confidenceLevels.map(level => (
                                                         <label key={level.value} className="relative flex items-center justify-center p-2 rounded-lg border-2 cursor-pointer transition-all duration-200 ease-in-out has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-500 has-[:checked]:shadow-inner text-center">
