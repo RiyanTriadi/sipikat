@@ -1,10 +1,16 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { PlusCircle, Edit, Trash2, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { 
+    PlusCircle, Edit, Trash2, Loader2, AlertCircle, RefreshCw, 
+    Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Quote 
+} from 'lucide-react';
+import { createEditor, Descendant, Editor as SlateEditor, Transforms, Text, Element as SlateElement } from 'slate';
+import { Slate, Editable, withReact, ReactEditor } from 'slate-react';
+import { withHistory } from 'slate-history';
+import isHotkey from 'is-hotkey';
 
-// --- Variabel Konfigurasi & Komponen UI Dasar (Alert, Spinner, etc.) ---
+// --- Variabel Konfigurasi & Komponen UI Dasar ---
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 const Alert = ({ message }) => (
@@ -21,44 +27,233 @@ const Spinner = ({ text }) => (
     </div>
 );
 
-// --- Komponen Editor CKEditor (Dibuat khusus untuk Next.js) ---
-const Editor = ({ value, onChange }) => {
-    const editorRef = useRef(null);
-    const [isEditorLoaded, setIsEditorLoaded] = useState(false);
-    const { CKEditor, ClassicEditor } = editorRef.current || {};
+// --- Konfigurasi dan Utilitas Slate.js ---
 
-    useEffect(() => {
-        // Import dinamis untuk menghindari error SSR
-        import('@ckeditor/ckeditor5-react').then(module => {
-            const CKEditor = module.CKEditor;
-            import('@ckeditor/ckeditor5-build-classic').then(module => {
-                const ClassicEditor = module.default;
-                editorRef.current = { CKEditor, ClassicEditor };
-                setIsEditorLoaded(true);
-            });
-        });
-    }, []);
+const HOTKEYS = {
+  'mod+b': 'bold',
+  'mod+i': 'italic',
+  'mod+u': 'underline',
+};
 
-    if (!isEditorLoaded) {
-        return <div className="p-4 border border-gray-200 rounded-lg min-h-[200px]">Memuat editor...</div>;
-    }
+const LIST_TYPES = ['numbered-list', 'bulleted-list'];
+const TEXT_ALIGN_TYPES = ['left', 'center', 'right', 'justify'];
+
+// Fungsi untuk mengubah format mark (bold, italic, etc.)
+const toggleMark = (editor, format) => {
+  const isActive = isMarkActive(editor, format);
+  if (isActive) {
+    SlateEditor.removeMark(editor, format);
+  } else {
+    SlateEditor.addMark(editor, format, true);
+  }
+};
+
+const isMarkActive = (editor, format) => {
+  const marks = SlateEditor.marks(editor);
+  return marks ? marks[format] === true : false;
+};
+
+// Fungsi untuk mengubah format block (heading, list, etc.)
+const toggleBlock = (editor, format) => {
+  const isActive = isBlockActive(editor, format, TEXT_ALIGN_TYPES.includes(format) ? 'align' : 'type');
+  const isList = LIST_TYPES.includes(format);
+
+  Transforms.unwrapNodes(editor, {
+    match: n =>
+      !SlateEditor.isEditor(n) &&
+      SlateElement.isElement(n) &&
+      LIST_TYPES.includes(n.type) &&
+      !TEXT_ALIGN_TYPES.includes(format),
+    split: true,
+  });
+
+  let newProperties;
+  if (TEXT_ALIGN_TYPES.includes(format)) {
+    newProperties = { align: isActive ? undefined : format };
+  } else {
+    newProperties = { type: isActive ? 'paragraph' : isList ? 'list-item' : format };
+  }
+  Transforms.setNodes(editor, newProperties);
+
+  if (!isActive && isList) {
+    const block = { type: format, children: [] };
+    Transforms.wrapNodes(editor, block);
+  }
+};
+
+const isBlockActive = (editor, format, blockType = 'type') => {
+  const { selection } = editor;
+  if (!selection) return false;
+
+  const [match] = SlateEditor.nodes(editor, {
+    at: SlateEditor.unhangRange(editor, selection),
+    match: n =>
+      !SlateEditor.isEditor(n) &&
+      SlateElement.isElement(n) &&
+      n[blockType] === format,
+  });
+
+  return !!match;
+};
+
+// Komponen untuk merender elemen (paragraf, heading, dll)
+const Element = ({ attributes, children, element }) => {
+  const style = { textAlign: element.align };
+  switch (element.type) {
+    case 'block-quote':
+      return <blockquote className="border-l-4 pl-4 italic text-gray-500" style={style} {...attributes}>{children}</blockquote>;
+    case 'bulleted-list':
+      return <ul className="list-disc pl-8" style={style} {...attributes}>{children}</ul>;
+    case 'heading-one':
+      return <h1 className="text-3xl font-bold" style={style} {...attributes}>{children}</h1>;
+    case 'heading-two':
+      return <h2 className="text-2xl font-bold" style={style} {...attributes}>{children}</h2>;
+    case 'list-item':
+      return <li style={style} {...attributes}>{children}</li>;
+    case 'numbered-list':
+      return <ol className="list-decimal pl-8" style={style} {...attributes}>{children}</ol>;
+    default:
+      return <p style={style} {...attributes}>{children}</p>;
+  }
+};
+
+// Komponen untuk merender leaf (teks dengan format bold, italic, dll)
+const Leaf = ({ attributes, children, leaf }) => {
+  if (leaf.bold) {
+    children = <strong>{children}</strong>;
+  }
+  if (leaf.italic) {
+    children = <em>{children}</em>;
+  }
+  if (leaf.underline) {
+    children = <u>{children}</u>;
+  }
+  return <span {...attributes}>{children}</span>;
+};
+
+const MarkButton = ({ format, icon: Icon, editor }) => (
+  <button
+    type="button"
+    onMouseDown={event => {
+      event.preventDefault();
+      toggleMark(editor, format);
+    }}
+    className={`p-2 rounded ${isMarkActive(editor, format) ? 'bg-indigo-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-indigo-200`}
+  >
+    <Icon size={16} />
+  </button>
+);
+
+const BlockButton = ({ format, icon: Icon, editor }) => (
+  <button
+    type="button"
+    onMouseDown={event => {
+      event.preventDefault();
+      toggleBlock(editor, format);
+    }}
+    className={`p-2 rounded ${isBlockActive(editor, format, TEXT_ALIGN_TYPES.includes(format) ? 'align' : 'type') ? 'bg-indigo-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-indigo-200`}
+  >
+    <Icon size={16} />
+  </button>
+);
+
+const SlateToolbar = ({ editor }) => (
+    <div className="flex items-center gap-2 p-2 bg-gray-100 border-b border-gray-300 rounded-t-lg">
+        <MarkButton format="bold" icon={Bold} editor={editor} />
+        <MarkButton format="italic" icon={Italic} editor={editor} />
+        <MarkButton format="underline" icon={Underline} editor={editor} />
+        <div className="w-px h-6 bg-gray-300 mx-1"></div>
+        <BlockButton format="heading-one" icon={Heading1} editor={editor} />
+        <BlockButton format="heading-two" icon={Heading2} editor={editor} />
+        <BlockButton format="block-quote" icon={Quote} editor={editor} />
+        <BlockButton format="numbered-list" icon={ListOrdered} editor={editor} />
+        <BlockButton format="bulleted-list" icon={List} editor={editor} />
+    </div>
+);
+
+
+// --- Komponen Editor Slate.js ---
+const SlateRichEditor = ({ value, onChange }) => {
+    const renderElement = useCallback(props => <Element {...props} />, []);
+    const renderLeaf = useCallback(props => <Leaf {...props} />, []);
+    const editor = useMemo(() => withHistory(withReact(createEditor())), []);
 
     return (
-        <CKEditor
-            editor={ClassicEditor}
-            data={value}
-            onChange={(event, editor) => {
-                const data = editor.getData();
-                onChange(data);
-            }}
-        />
+        <Slate editor={editor} initialValue={value} onValueChange={onChange}>
+            <SlateToolbar editor={editor} />
+            <div className="p-4 min-h-[200px] focus-within:ring-2 focus-within:ring-indigo-500 rounded-b-lg">
+                <Editable
+                    renderElement={renderElement}
+                    renderLeaf={renderLeaf}
+                    placeholder="Mulai tulis artikel Anda di sini..."
+                    spellCheck
+                    autoFocus
+                    onKeyDown={event => {
+                        for (const hotkey in HOTKEYS) {
+                            if (isHotkey(hotkey, event)) {
+                                event.preventDefault();
+                                const mark = HOTKEYS[hotkey];
+                                toggleMark(editor, mark);
+                            }
+                        }
+                    }}
+                    className="prose max-w-none"
+                />
+            </div>
+        </Slate>
     );
 };
 
 
-// --- Komponen Modal & Tabel ---
+// --- Fungsi Konversi Data ---
+const initialSlateValue = [{ type: 'paragraph', children: [{ text: '' }] }];
+
+// Mengubah konten (string) dari DB menjadi format Slate (JSON)
+const parseToSlate = (dbString) => {
+    if (!dbString) return initialSlateValue;
+    try {
+        const parsed = JSON.parse(dbString);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+        }
+    } catch (e) {
+        // Jika bukan JSON, anggap sebagai teks/html lama dan bungkus dalam paragraf
+        return [{ type: 'paragraph', children: [{ text: dbString.replace(/<[^>]+>/g, '') || '' }] }];
+    }
+    return initialSlateValue;
+};
+
+// Mengubah format Slate (JSON) menjadi HTML untuk ditampilkan di tabel
+const serializeSlateToHtml = (nodes) => {
+    if (!nodes || !Array.isArray(nodes)) return '';
+    const escapeHtml = str => new Option(str).innerHTML;
+
+    return nodes.map(node => {
+        if (Text.isText(node)) {
+            let text = escapeHtml(node.text);
+            if (node.bold) text = `<strong>${text}</strong>`;
+            if (node.italic) text = `<em>${text}</em>`;
+            if (node.underline) text = `<u>${text}</u>`;
+            return text;
+        }
+
+        const children = serializeSlateToHtml(node.children);
+        switch (node.type) {
+            case 'heading-one': return `<h1>${children}</h1>`;
+            case 'heading-two': return `<h2>${children}</h2>`;
+            case 'block-quote': return `<blockquote>${children}</blockquote>`;
+            case 'numbered-list': return `<ol>${children}</ol>`;
+            case 'bulleted-list': return `<ul>${children}</ul>`;
+            case 'list-item': return `<li>${children}</li>`;
+            default: return `<p>${children}</p>`;
+        }
+    }).join('');
+};
+
+// --- Komponen Modal & Tabel (Disesuaikan untuk Slate) ---
 
 const ConfirmationModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
+    // ... (tidak ada perubahan)
     if (!isOpen) return null;
     return (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
@@ -80,39 +275,38 @@ const ConfirmationModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
 };
 
 const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
-    // FIX: Tambahkan 'gambar' ke initial state
-    const [formData, setFormData] = useState({ judul: '', konten: '', gambar: '' });
+    const [judul, setJudul] = useState('');
+    const [gambar, setGambar] = useState('');
+    const [konten, setKonten] = useState(initialSlateValue);
     const [formError, setFormError] = useState('');
 
     useEffect(() => {
-        if (artikel) {
-            // FIX: Pastikan 'gambar' juga di-set saat mengedit
-            setFormData({ judul: artikel.judul, konten: artikel.konten, gambar: artikel.gambar || '' });
-        } else {
-            // FIX: Reset semua field termasuk 'gambar'
-            setFormData({ judul: '', konten: '', gambar: '' });
+        if (isOpen) {
+            if (artikel) {
+                setJudul(artikel.judul);
+                setGambar(artikel.gambar || '');
+                setKonten(parseToSlate(artikel.konten));
+            } else {
+                setJudul('');
+                setGambar('');
+                setKonten(initialSlateValue);
+            }
+            setFormError('');
         }
-        setFormError('');
     }, [artikel, isOpen]);
 
     if (!isOpen) return null;
 
-    const handleChange = (e) => {
-        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-    };
-    
-    const handleEditorChange = (data) => {
-        setFormData(prev => ({ ...prev, konten: data }));
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setFormError('');
-        if (!formData.judul || !formData.konten) {
+        // Cek jika konten kosong
+        const isContentEmpty = konten.length === 1 && konten[0].children.length === 1 && konten[0].children[0].text === '';
+        if (!judul.trim() || isContentEmpty) {
             setFormError('Judul dan Konten tidak boleh kosong.');
             return;
         }
-        await onSave(formData);
+        await onSave({ judul, gambar, konten });
     };
 
     return (
@@ -123,17 +317,16 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <label htmlFor="judul" className="block text-gray-700 text-sm font-medium mb-2">Judul Artikel</label>
-                        <input type="text" id="judul" name="judul" value={formData.judul} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" required />
+                        <input type="text" id="judul" name="judul" value={judul} onChange={(e) => setJudul(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" required />
                     </div>
-                    {/* FIX: Tambahkan input untuk URL gambar */}
                     <div>
-                        <label htmlFor="gambar" className="block text-gray-700 text-sm font-medium mb-2">URL Gambar (Opsional)</label>
-                        <input type="text" id="gambar" name="gambar" value={formData.gambar} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="https://contoh.com/gambar.jpg" />
+                        <label htmlFor="gambar" className="block text-gray-700 text-sm font-medium mb-2">URL Gambar Sampul (Opsional)</label>
+                        <input type="text" id="gambar" name="gambar" value={gambar} onChange={(e) => setGambar(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="https://contoh.com/gambar.jpg" />
                     </div>
                     <div>
                         <label className="block text-gray-700 text-sm font-medium mb-2">Konten</label>
-                        <div className="prose max-w-none border border-gray-300 rounded-lg overflow-hidden">
-                           <Editor value={formData.konten} onChange={handleEditorChange} />
+                        <div className="border border-gray-300 rounded-lg">
+                           <SlateRichEditor value={konten} onChange={setKonten} />
                         </div>
                     </div>
                     <div className="flex justify-end gap-3 pt-4">
@@ -149,7 +342,7 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
 };
 
 const ArtikelTable = ({ data, onEdit, onDelete, isDeleting }) => {
-    // Komponen ini tidak diubah
+    // ... (tidak ada perubahan signifikan pada logika, hanya cara render konten)
     if (data.length === 0) {
         return (
             <div className="text-center text-gray-500 py-24">
@@ -159,20 +352,27 @@ const ArtikelTable = ({ data, onEdit, onDelete, isDeleting }) => {
         );
     }
     const formatArticleDate = (dateString) => {
-        if (!dateString) return '';
+        if (!dateString) return 'Tanggal tidak valid';
         try {
             return new Intl.DateTimeFormat('id-ID', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }).format(new Date(dateString));
         } catch (error) {
             return dateString;
         }
     };
+
+    const renderKontenPreview = (kontenString) => {
+        const slateValue = parseToSlate(kontenString);
+        const html = serializeSlateToHtml(slateValue);
+        return { __html: html };
+    };
+
     return (
         <>
             <div className="space-y-4 md:hidden">
                 {data.map((artikel) => (
                     <div key={artikel.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-                        <h3 className="font-bold text-xl text-gray-900 leading-tight mb-2">{artikel.judul}</h3>
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-3" dangerouslySetInnerHTML={{ __html: artikel.konten || '' }}></p>
+                        <h3 className="font-bold text-lg text-gray-900 leading-tight mb-2">{artikel.judul}</h3>
+                        <div className="text-sm text-gray-600 mb-3 line-clamp-3 prose prose-sm max-w-none" dangerouslySetInnerHTML={renderKontenPreview(artikel.konten)}></div>
                         <div className="flex justify-between items-center text-sm text-gray-500 mt-auto pt-3 border-t border-gray-100">
                             <span>{formatArticleDate(artikel.created_at)}</span>
                             <div className="flex space-x-3">
@@ -184,12 +384,12 @@ const ArtikelTable = ({ data, onEdit, onDelete, isDeleting }) => {
                 ))}
             </div>
             <div className="hidden md:block border border-gray-200 rounded-lg overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 table-fixed">
+                <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
                             <th scope="col" className="w-2/3 px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Judul</th>
                             <th scope="col" className="w-1/4 px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Tanggal Publikasi</th>
-                            <th scope="col" className="w-1/12 px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">Aksi</th>
+                            <th scope="col" className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">Aksi</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -230,12 +430,25 @@ export default function ArtikelAdminPage() {
         setError('');
         try {
             const res = await fetch(`${API_BASE_URL}/artikel`, { cache: 'no-store' });
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({ message: 'Terjadi kesalahan saat memuat artikel.' }));
-                throw new Error(errorData.message || res.statusText);
-            }
-            const data = await res.json();
-            const sortedData = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            if (!res.ok) throw new Error('Gagal memuat daftar artikel.');
+            
+            const listData = await res.json();
+            
+            // Ambil detail setiap artikel untuk mendapatkan 'konten'
+            const articlesWithContent = await Promise.all(
+                listData.map(async (article) => {
+                    try {
+                        const detailRes = await fetch(`${API_BASE_URL}/artikel/${article.slug}`);
+                        if (!detailRes.ok) return article; // Fallback
+                        const detailData = await detailRes.json();
+                        return { ...article, konten: detailData.konten };
+                    } catch (e) {
+                        return article; // Fallback
+                    }
+                })
+            );
+
+            const sortedData = articlesWithContent.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             setArticles(sortedData);
         } catch (err) {
             setError(err.message);
@@ -255,14 +468,13 @@ export default function ArtikelAdminPage() {
         if (!token) {
             setError('Anda tidak memiliki izin. Silakan login kembali.');
             setIsSaving(false);
-             return;
+            return;
         }
 
-        // FIX: Sertakan 'gambar' dalam payload yang dikirim ke backend
-        // Kirim null jika string kosong, sesuai pesan error backend
         const dataToSave = {
             judul: formData.judul,
-            konten: formData.konten,
+            // Serialisasi konten Slate (JSON) menjadi string
+            konten: JSON.stringify(formData.konten), 
             gambar: formData.gambar || null, 
         };
 
@@ -285,10 +497,11 @@ export default function ArtikelAdminPage() {
                 const errorData = await res.json().catch(() => ({ message: 'Gagal menyimpan artikel.' }));
                 throw new Error(errorData.message || res.statusText);
             }
-            fetchArticles(); 
+            await fetchArticles(); 
             closeModal();
         } catch (err) {
-            setError(err.message);
+            // Tampilkan error di dalam modal
+            setFormErrorInModal(err.message);
         } finally {
             setIsSaving(false);
         }
@@ -310,7 +523,7 @@ export default function ArtikelAdminPage() {
         setError('');
         const token = localStorage.getItem('adminToken');
         if (!token) {
-            setError('Anda tidak memiliki izin. Silakan login kembali.');
+            setError('Anda tidak memiliki izin.');
             setIsDeleting(false);
             cancelDeleteHandler();
             return;
@@ -321,14 +534,11 @@ export default function ArtikelAdminPage() {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({ message: 'Gagal menghapus artikel.' }));
-                throw new Error(errorData.message || res.statusText);
-            }
+            if (!res.ok) throw new Error('Gagal menghapus artikel.');
+            
             setArticles(prevList => prevList.filter(artikel => artikel.id !== artikelToDeleteId));
         } catch (err) {
             setError(err.message);
-            fetchArticles();
         } finally {
             setIsDeleting(false);
             cancelDeleteHandler();
@@ -343,7 +553,13 @@ export default function ArtikelAdminPage() {
     const closeModal = () => {
         setEditingArtikel(null);
         setIsModalOpen(false);
-        setError(''); 
+    };
+
+    // Fungsi dummy untuk error di modal, karena state error ada di parent
+    const setFormErrorInModal = (message) => {
+        // Cara sederhana untuk menampilkan error save di modal
+        // Anda bisa membuat state error khusus untuk modal jika perlu
+        alert(`Gagal menyimpan: ${message}`);
     };
 
     return (
@@ -355,7 +571,7 @@ export default function ArtikelAdminPage() {
                         <p className="mt-1 text-gray-600">Daftar semua artikel yang dipublikasikan di website.</p>
                     </div>
                     <div className="flex space-x-3">
-                        <button onClick={() => fetchArticles()} disabled={loading} className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50">
+                        <button onClick={fetchArticles} disabled={loading} className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50">
                             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                             Refresh
                         </button>
