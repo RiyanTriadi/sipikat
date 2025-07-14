@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, Trash2, AlertCircle, UserPlus, Edit, X } from 'lucide-react';
+// Impor ikon yang dibutuhkan, Mail ditambahkan untuk UI yang lebih baik
+import { Loader2, Trash2, AlertCircle, UserPlus, Edit, X, Mail } from 'lucide-react';
 
 // --- Variabel Konfigurasi ---
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-// --- Komponen UI Umum (Konsisten dengan Halaman Riwayat) ---
+// --- Komponen UI Umum ---
 
 // Komponen untuk menampilkan pesan error
 const Alert = ({ message, onClose }) => (
@@ -16,9 +17,11 @@ const Alert = ({ message, onClose }) => (
             <AlertCircle className="h-5 w-5 text-red-500 mr-3" />
             <span className="font-medium">{message}</span>
         </div>
-        <button onClick={onClose} className="text-red-600 hover:text-red-800">
-            <X size={20} />
-        </button>
+        {onClose && (
+             <button onClick={onClose} className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-100">
+                <X size={20} />
+            </button>
+        )}
     </div>
 );
 
@@ -79,12 +82,14 @@ const AkunModal = ({ isOpen, onClose, onSave, user, isSaving }) => {
     const [formData, setFormData] = useState({ name: '', email: '', password: '' });
 
     useEffect(() => {
-        if (user) {
-            setFormData({ name: user.name, email: user.email, password: '' });
-        } else {
-            setFormData({ name: '', email: '', password: '' });
+        if (isOpen) {
+            if (user) {
+                setFormData({ name: user.name, email: user.email, password: '' });
+            } else {
+                setFormData({ name: '', email: '', password: '' });
+            }
         }
-    }, [user]);
+    }, [user, isOpen]);
 
     if (!isOpen) return null;
 
@@ -103,27 +108,26 @@ const AkunModal = ({ isOpen, onClose, onSave, user, isSaving }) => {
 
     return (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-40 p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-2xl p-6 md:p-8 w-full max-w-md transform transition-all duration-300 ease-out scale-95 animate-in fade-in-0 zoom-in-95">
+            <div className="bg-white rounded-xl shadow-2xl p-6 md:p-8 w-full max-w-lg transform transition-all duration-300 ease-out scale-95 animate-in fade-in-0 zoom-in-95">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-gray-900">{user ? 'Edit Akun Admin' : 'Tambah Akun Admin Baru'}</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors">
                         <X size={24} />
                     </button>
                 </div>
-                <form onSubmit={handleSubmit}>
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Nama</label>
-                            <input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" required />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                            <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" required />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                            <input type="password" name="password" value={formData.password} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder={user ? 'Kosongkan jika tidak diubah' : 'Wajib diisi'} required={!user} />
-                        </div>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div>
+                        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Nama</label>
+                        <input id="name" type="text" name="name" value={formData.name} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow" required />
+                    </div>
+                    <div>
+                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input id="email" type="email" name="email" value={formData.email} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow" required />
+                    </div>
+                    <div>
+                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input id="password" type="password" name="password" value={formData.password} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow" placeholder={user ? 'Kosongkan jika tidak diubah' : 'Wajib diisi'} required={!user} />
+                        {user && <p className="text-xs text-gray-500 mt-2">Biarkan kosong jika Anda tidak ingin mengubah password.</p>}
                     </div>
                     <div className="mt-8 flex justify-end gap-4">
                         <button type="button" onClick={onClose} className="px-6 py-2 border border-gray-300 rounded-lg text-gray-800 font-semibold hover:bg-gray-100 transition-colors duration-200">
@@ -146,60 +150,86 @@ const AkunModal = ({ isOpen, onClose, onSave, user, isSaving }) => {
     );
 };
 
-// Komponen Tabel Akun (Responsif)
-const AkunTable = ({ users, onEdit, onDelete, isDeleting }) => {
+// --- [UPDATED] Komponen Tabel Akun yang Responsif dan Konsisten ---
+const AkunTable = ({ users, onEdit, onDelete, isActionDisabled }) => {
     if (users.length === 0) {
         return (
             <div className="text-center text-gray-500 py-24">
-                <p className="text-xl">Belum ada akun admin.</p>
-                <p className="mt-2">Klik tombol "Tambah Akun" untuk membuat akun baru.</p>
+                <p className="text-xl font-semibold">Belum ada data akun.</p>
+                <p className="mt-2 text-gray-600">Klik tombol "Tambah Akun" untuk memulai.</p>
             </div>
         );
     }
 
     return (
         <>
-            {/* Tampilan Kartu untuk Mobile */}
-            <div className="space-y-4 md:hidden">
+            {/* Tampilan Kartu untuk Mobile (Telah Ditingkatkan) */}
+            <div className="grid grid-cols-1 gap-4 md:hidden">
                 {users.map((user) => (
-                    <div key={user.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                        <div className="font-bold text-lg text-gray-900">{user.name}</div>
-                        <div className="text-sm text-gray-500 mt-1">{user.email}</div>
-                        <div className="mt-4 border-t pt-3 flex justify-end space-x-4">
-                            <button onClick={() => onEdit(user)} className="text-indigo-600 hover:text-indigo-800 font-medium text-sm flex items-center gap-1.5">
-                                <Edit size={16} /> Edit
+                    <div 
+                        key={user.id} 
+                        className="bg-white rounded-xl shadow-md border border-gray-200 p-4 flex flex-col transition-shadow hover:shadow-lg"
+                    >
+                        {/* Bagian Utama: ID, Nama, dan Email */}
+                        <div className="flex-grow">
+                             <span className="bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-1 rounded-full">
+                                ID: {user.id}
+                            </span>
+                            <p className="mt-3 text-lg font-semibold text-gray-900">
+                                {user.name}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
+                                <Mail size={14} />
+                                <span>{user.email}</span>
+                            </div>
+                        </div>
+
+                        {/* Bagian Aksi */}
+                        <div className="mt-4 pt-3 border-t border-gray-100 grid grid-cols-2 gap-2">
+                            <button 
+                                onClick={() => onEdit(user)} 
+                                className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors disabled:opacity-50" 
+                                disabled={isActionDisabled}
+                            >
+                                <Edit size={16} />
+                                Edit
                             </button>
-                            <button onClick={() => onDelete(user.id)} className="text-red-600 hover:text-red-800 font-medium text-sm flex items-center gap-1.5" disabled={isDeleting}>
-                                <Trash2 size={16} /> Hapus
+                            <button 
+                                onClick={() => onDelete(user.id)} 
+                                className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50" 
+                                disabled={isActionDisabled}
+                            >
+                                <Trash2 size={16} />
+                                Hapus
                             </button>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Tampilan Tabel untuk Desktop */}
-            <div className="hidden md:block overflow-x-auto border border-gray-200 rounded-lg">
+            {/* Tampilan Tabel untuk Desktop (Dibuat lebih konsisten) */}
+            <div className="hidden md:block overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            {['Nama', 'Email', 'Aksi'].map((head) => (
-                                <th key={head} scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                                    {head}
-                                </th>
-                            ))}
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider w-16 rounded-tl-lg">ID</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Nama</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Email</th>
+                            <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider rounded-tr-lg">Aksi</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {users.map((user) => (
                             <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{user.email}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-4">
-                                    <button onClick={() => onEdit(user)} className="text-indigo-600 hover:text-indigo-900 flex items-center gap-1.5">
-                                        <Edit size={16} /> Edit
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.id}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">{user.name}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.email}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-4">
+                                    <button onClick={() => onEdit(user)} className="text-indigo-600 hover:text-indigo-900 p-2 rounded-md hover:bg-indigo-50 transition-colors" disabled={isActionDisabled}>
+                                        Edit
                                     </button>
-                                    <button onClick={() => onDelete(user.id)} className="text-red-600 hover:text-red-900 flex items-center gap-1.5" disabled={isDeleting}>
-                                        <Trash2 size={16} /> Hapus
+                                    <button onClick={() => onDelete(user.id)} className="text-red-600 hover:text-red-900 p-2 rounded-md hover:bg-red-50 transition-colors" disabled={isActionDisabled}>
+                                        Hapus
                                     </button>
                                 </td>
                             </tr>
@@ -285,11 +315,10 @@ export default function AkunPage() {
                 const errData = await res.json();
                 throw new Error(errData.message || 'Gagal menyimpan akun');
             }
-            await fetchUsers(); // Re-fetch data untuk sinkronisasi
+            await fetchUsers();
             closeModal();
         } catch (err) {
             setError(err.message);
-            // Jangan tutup modal jika ada error, agar user bisa perbaiki
         } finally {
             setIsSaving(false);
         }
@@ -324,7 +353,7 @@ export default function AkunPage() {
     const openModal = (user = null) => {
         setEditingUser(user);
         setIsModalOpen(true);
-        setError(''); // Bersihkan error saat membuka modal
+        setError('');
     };
 
     const closeModal = () => {
@@ -352,14 +381,14 @@ export default function AkunPage() {
                     </div>
                     <button
                         onClick={() => openModal()}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors duration-200 shadow-sm"
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-md"
                     >
                         <UserPlus size={18} />
                         Tambah Akun
                     </button>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+                <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 sm:p-6">
                     {error && <Alert message={error} onClose={() => setError('')} />}
 
                     {loading ? (
@@ -369,7 +398,7 @@ export default function AkunPage() {
                             users={users}
                             onEdit={openModal}
                             onDelete={confirmDeleteHandler}
-                            isDeleting={isDeleting}
+                            isActionDisabled={isSaving || isDeleting || loading}
                         />
                     )}
                 </div>
@@ -392,4 +421,3 @@ export default function AkunPage() {
         </div>
     );
 }
-
