@@ -1,13 +1,17 @@
 import Link from 'next/link';
-import ImageWithFallback from '@/app/(user)/artikel/ImageWithFallback'; 
+import ImageWithFallback from '@/components/user/ImageWithFallback'; 
+
+// Definisikan base URL untuk API dan aset statis
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function ArticleCard({ article }) {
     if (!article || !article.slug || !article.id) {
         return null;
     }
 
+    // Perbaikan: Gunakan API_BASE_URL untuk membuat URL gambar yang lengkap
     const imageUrl = article.gambar 
-        ? `/${article.gambar}`
+        ? `${API_BASE_URL}${article.gambar}`
         : 'https://placehold.co/600x400/e2e8f0/e2e8f0?text=Gambar';
 
     return (
@@ -24,7 +28,7 @@ export default function ArticleCard({ article }) {
                 </div>
                 <div className="p-6 flex-grow flex flex-col justify-between">
                     <div>
-                        <h2 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-700 transition duration-200 leading-tight">
+                        <h2 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-indigo-700 transition duration-200 leading-tight">
                             {article.judul}
                         </h2>
                     </div>
