@@ -1,9 +1,8 @@
 import Link from 'next/link';
-import ArticleCard from '@/components/user/ArticleCard'; // Menggunakan kembali komponen kartu artikel
+import ArticleCard from '@/components/user/ArticleCard'; 
 import { Smartphone, FileText, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 
-// Fungsi untuk mengambil 3 artikel terbaru
 async function getLatestArticles() {
     try {
         const res = await fetch('http://localhost:5000/api/artikel', {
@@ -16,7 +15,6 @@ async function getLatestArticles() {
         }
         
         const articles = await res.json();
-        // Mengurutkan artikel dari yang terbaru dan mengambil 3 pertama
         return articles
             .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
             .slice(0, 3);
@@ -65,7 +63,6 @@ export default async function HomePage() {
                         <div className="flex-shrink-0 mt-6 md:mt-0">
                              <Link href="/diagnosa" className="inline-flex items-center justify-center w-full md:w-auto px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300">
                                 Lakukan Tes
-                                <ArrowRight className="ml-2 h-5 w-5" />
                             </Link>
                         </div>  
                     </div>

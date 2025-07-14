@@ -9,15 +9,17 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@ckeditor/ckeditor5-build-classic": "^41.4.2",
-    "@ckeditor/ckeditor5-react": "^11.0.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.3",
+    "is-hotkey": "^0.2.0",
     "lucide-react": "^0.525.0",
     "next": "15.3.5",
     "postcss": "^8.5.6",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "slate": "^0.117.2",
+    "slate-history": "^0.113.1",
+    "slate-react": "^0.117.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
