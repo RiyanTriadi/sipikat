@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { 
     PlusCircle, Edit, Trash2, Loader2, AlertCircle, RefreshCw, 
-    Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Quote, UploadCloud, X
+    Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Quote, UploadCloud, X,
 } from 'lucide-react';
 import { createEditor, Editor as SlateEditor, Transforms, Text, Element as SlateElement } from 'slate';
 import { Slate, Editable, withReact } from 'slate-react';
@@ -28,12 +28,12 @@ const Alert = ({ message, type = 'error' }) => {
 
 const Spinner = ({ text }) => (
     <div className="flex flex-col justify-center items-center h-64 text-gray-500">
-        <Loader2 className="animate-spin h-10 w-10 text-indigo-600" />
+        <Loader2 className="animate-spin h-10 w-10 text-blue-600" />
         <p className="mt-4 text-lg">{text}</p>
     </div>
 );
 
-// --- Konfigurasi dan Utilitas Slate.js (Tidak Berubah) ---
+// --- Konfigurasi dan Utilitas Slate.js ---
 const HOTKEYS = { 'mod+b': 'bold', 'mod+i': 'italic', 'mod+u': 'underline' };
 const LIST_TYPES = ['numbered-list', 'bulleted-list'];
 const TEXT_ALIGN_TYPES = ['left', 'center', 'right', 'justify'];
@@ -43,10 +43,10 @@ const toggleBlock = (editor, format) => { const isActive = isBlockActive(editor,
 const isBlockActive = (editor, format, blockType = 'type') => { const { selection } = editor; if (!selection) return false; const [match] = SlateEditor.nodes(editor, { at: SlateEditor.unhangRange(editor, selection), match: n => !SlateEditor.isEditor(n) && SlateElement.isElement(n) && n[blockType] === format, }); return !!match; };
 const Element = ({ attributes, children, element }) => { const style = { textAlign: element.align }; switch (element.type) { case 'block-quote': return <blockquote className="border-l-4 pl-4 italic text-gray-500" style={style} {...attributes}>{children}</blockquote>; case 'bulleted-list': return <ul className="list-disc pl-8" style={style} {...attributes}>{children}</ul>; case 'heading-one': return <h1 className="text-3xl font-bold" style={style} {...attributes}>{children}</h1>; case 'heading-two': return <h2 className="text-2xl font-bold" style={style} {...attributes}>{children}</h2>; case 'list-item': return <li style={style} {...attributes}>{children}</li>; case 'numbered-list': return <ol className="list-decimal pl-8" style={style} {...attributes}>{children}</ol>; default: return <p style={style} {...attributes}>{children}</p>; } };
 const Leaf = ({ attributes, children, leaf }) => { if (leaf.bold) { children = <strong>{children}</strong>; } if (leaf.italic) { children = <em>{children}</em>; } if (leaf.underline) { children = <u>{children}</u>; } return <span {...attributes}>{children}</span>; };
-const MarkButton = ({ format, icon: Icon, editor }) => ( <button type="button" onMouseDown={event => { event.preventDefault(); toggleMark(editor, format); }} className={`p-2 rounded ${isMarkActive(editor, format) ? 'bg-indigo-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-indigo-200`} > <Icon size={16} /> </button> );
-const BlockButton = ({ format, icon: Icon, editor }) => ( <button type="button" onMouseDown={event => { event.preventDefault(); toggleBlock(editor, format); }} className={`p-2 rounded ${isBlockActive(editor, format, TEXT_ALIGN_TYPES.includes(format) ? 'align' : 'type') ? 'bg-indigo-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-indigo-200`} > <Icon size={16} /> </button> );
+const MarkButton = ({ format, icon: Icon, editor }) => ( <button type="button" onMouseDown={event => { event.preventDefault(); toggleMark(editor, format); }} className={`p-2 rounded ${isMarkActive(editor, format) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-blue-200`} > <Icon size={16} /> </button> );
+const BlockButton = ({ format, icon: Icon, editor }) => ( <button type="button" onMouseDown={event => { event.preventDefault(); toggleBlock(editor, format); }} className={`p-2 rounded ${isBlockActive(editor, format, TEXT_ALIGN_TYPES.includes(format) ? 'align' : 'type') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-blue-200`} > <Icon size={16} /> </button> );
 const SlateToolbar = ({ editor }) => ( <div className="flex items-center gap-2 p-2 bg-gray-100 border-b border-gray-300 rounded-t-lg"> <MarkButton format="bold" icon={Bold} editor={editor} /> <MarkButton format="italic" icon={Italic} editor={editor} /> <MarkButton format="underline" icon={Underline} editor={editor} /> <div className="w-px h-6 bg-gray-300 mx-1"></div> <BlockButton format="heading-one" icon={Heading1} editor={editor} /> <BlockButton format="heading-two" icon={Heading2} editor={editor} /> <BlockButton format="block-quote" icon={Quote} editor={editor} /> <BlockButton format="numbered-list" icon={ListOrdered} editor={editor} /> <BlockButton format="bulleted-list" icon={List} editor={editor} /> </div> );
-const SlateRichEditor = ({ value, onChange }) => { const renderElement = useCallback(props => <Element {...props} />, []); const renderLeaf = useCallback(props => <Leaf {...props} />, []); const editor = useMemo(() => withHistory(withReact(createEditor())), []); return ( <Slate editor={editor} initialValue={value} onValueChange={onChange}> <SlateToolbar editor={editor} /> <div className="p-4 min-h-[200px] focus-within:ring-2 focus-within:ring-indigo-500 rounded-b-lg"> <Editable renderElement={renderElement} renderLeaf={renderLeaf} placeholder="Mulai tulis artikel Anda di sini..." spellCheck autoFocus onKeyDown={event => { for (const hotkey in HOTKEYS) { if (isHotkey(hotkey, event)) { event.preventDefault(); const mark = HOTKEYS[hotkey]; toggleMark(editor, mark); } } }} className="prose max-w-none" /> </div> </Slate> ); };
+const SlateRichEditor = ({ value, onChange }) => { const renderElement = useCallback(props => <Element {...props} />, []); const renderLeaf = useCallback(props => <Leaf {...props} />, []); const editor = useMemo(() => withHistory(withReact(createEditor())), []); return ( <Slate editor={editor} initialValue={value} onValueChange={onChange}> <SlateToolbar editor={editor} /> <div className="p-4 min-h-[200px] focus-within:ring-2 focus-within:ring-blue-500 rounded-b-lg"> <Editable renderElement={renderElement} renderLeaf={renderLeaf} placeholder="Mulai tulis artikel Anda di sini..." spellCheck autoFocus onKeyDown={event => { for (const hotkey in HOTKEYS) { if (isHotkey(hotkey, event)) { event.preventDefault(); const mark = HOTKEYS[hotkey]; toggleMark(editor, mark); } } }} className="prose max-w-none" /> </div> </Slate> ); };
 const initialSlateValue = [{ type: 'paragraph', children: [{ text: '' }] }];
 const parseToSlate = (dbString) => { if (!dbString) return initialSlateValue; try { const parsed = JSON.parse(dbString); if (Array.isArray(parsed) && parsed.length > 0) { return parsed; } } catch (e) { return [{ type: 'paragraph', children: [{ text: dbString.replace(/<[^>]+>/g, '') || '' }] }]; } return initialSlateValue; };
 
@@ -73,6 +73,7 @@ const ConfirmationModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
     );
 };
 
+// --- [FIXED] Komponen ArtikelModal dengan Scroll ---
 const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
     const [judul, setJudul] = useState('');
     const [konten, setKonten] = useState(initialSlateValue);
@@ -132,46 +133,57 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
 
     return (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl transform transition-all duration-300 ease-out scale-95 animate-in fade-in-0 zoom-in-95 p-6 md:p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">{artikel ? 'Edit Artikel' : 'Tambah Artikel Baru'}</h2>
-                {formError && <Alert message={formError} />}
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div>
-                        <label htmlFor="judul" className="block text-gray-700 text-sm font-medium mb-2">Judul Artikel</label>
-                        <input type="text" id="judul" value={judul} onChange={(e) => setJudul(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" required />
-                    </div>
-                    
-                    <div>
-                        <label className="block text-gray-700 text-sm font-medium mb-2">Gambar Sampul (Thumbnail)</label>
-                        <div className="mt-2 flex items-center gap-4">
-                            <div className="w-32 h-32 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border">
-                                {previewUrl ? (
-                                    <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                                ) : (
-                                    <UploadCloud className="w-10 h-10 text-gray-400" />
-                                )}
+            {/* PERBAIKAN: Mengubah modal menjadi flex container dengan tinggi maksimal */}
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl transform transition-all duration-300 ease-out scale-95 animate-in fade-in-0 zoom-in-95 flex flex-col max-h-[90vh]">
+                {/* Header Modal (Tidak bisa di-scroll) */}
+                <div className="flex-shrink-0 p-6 border-b border-gray-200">
+                    <h2 className="text-2xl font-bold text-gray-900">{artikel ? 'Edit Artikel' : 'Tambah Artikel Baru'}</h2>
+                </div>
+                
+                {/* PERBAIKAN: Form dibuat menjadi flex container agar bisa memisahkan konten dan tombol aksi */}
+                <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
+                    {/* Area Konten (Bisa di-scroll) */}
+                    <div className="flex-grow p-6 space-y-6 overflow-y-auto">
+                        {formError && <Alert message={formError} />}
+                        <div>
+                            <label htmlFor="judul" className="block text-gray-700 text-sm font-medium mb-2">Judul Artikel</label>
+                            <input type="text" id="judul" value={judul} onChange={(e) => setJudul(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-gray-700 text-sm font-medium mb-2">Gambar Sampul (Thumbnail)</label>
+                            <div className="mt-2 flex items-center gap-4">
+                                <div className="w-32 h-32 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border">
+                                    {previewUrl ? (
+                                        <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <UploadCloud className="w-10 h-10 text-gray-400" />
+                                    )}
+                                </div>
+                                <div className="flex-grow">
+                                    <input type="file" accept="image/*" onChange={handleFileChange} ref={fileInputRef} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+                                    <p className="text-xs text-gray-500 mt-2">PNG, JPG, GIF hingga 5MB.</p>
+                                    {previewUrl && (
+                                        <button type="button" onClick={handleRemoveImage} className="mt-2 text-sm text-red-600 hover:text-red-800 flex items-center gap-1">
+                                            <X size={14} /> Hapus Gambar
+                                        </button>
+                                    )}
+                                </div>
                             </div>
-                            <div className="flex-grow">
-                                <input type="file" accept="image/*" onChange={handleFileChange} ref={fileInputRef} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"/>
-                                <p className="text-xs text-gray-500 mt-2">PNG, JPG, GIF hingga 5MB.</p>
-                                {previewUrl && (
-                                    <button type="button" onClick={handleRemoveImage} className="mt-2 text-sm text-red-600 hover:text-red-800 flex items-center gap-1">
-                                        <X size={14} /> Hapus Gambar
-                                    </button>
-                                )}
+                        </div>
+
+                        <div>
+                            <label className="block text-gray-700 text-sm font-medium mb-2">Konten</label>
+                            <div className="border border-gray-300 rounded-lg">
+                               <SlateRichEditor value={konten} onChange={setKonten} />
                             </div>
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-gray-700 text-sm font-medium mb-2">Konten</label>
-                        <div className="border border-gray-300 rounded-lg">
-                           <SlateRichEditor value={konten} onChange={setKonten} />
-                        </div>
-                    </div>
-                    <div className="flex justify-end gap-3 pt-4">
+                    {/* Footer Aksi (Tidak bisa di-scroll) */}
+                    <div className="flex-shrink-0 flex justify-end gap-3 p-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
                         <button type="button" onClick={onClose} disabled={isSaving} className="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors">Batal</button>
-                        <button type="submit" disabled={isSaving} className="px-5 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center disabled:opacity-50">
+                        <button type="submit" disabled={isSaving} className="px-5 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center disabled:opacity-50">
                             {isSaving ? <><Loader2 className="animate-spin h-5 w-5 mr-2" /> Menyimpan...</> : 'Simpan Artikel'}
                         </button>
                     </div>
@@ -181,7 +193,7 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
     );
 };
 
-// PERBAIKAN: Komponen ArtikelTable dengan tampilan mobile
+
 const ArtikelTable = ({ data, onEdit, onDelete, isDeleting }) => {
     if (data.length === 0) {
         return (
@@ -219,7 +231,7 @@ const ArtikelTable = ({ data, onEdit, onDelete, isDeleting }) => {
                             <h3 className="font-bold text-md text-gray-900 leading-tight mb-1 line-clamp-3">{artikel.judul}</h3>
                             <p className="text-sm text-gray-500 mb-3">{formatArticleDate(artikel.created_at)}</p>
                             <div className="flex space-x-4 mt-auto">
-                                <button onClick={() => onEdit(artikel)} className="text-indigo-600 hover:text-indigo-800 font-medium text-sm flex items-center gap-1" disabled={isDeleting}><Edit size={14} /> Edit</button>
+                                <button onClick={() => onEdit(artikel)} className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1" disabled={isDeleting}><Edit size={14} /> Edit</button>
                                 <button onClick={() => onDelete(artikel.id)} className="text-red-600 hover:text-red-800 font-medium text-sm flex items-center gap-1" disabled={isDeleting}><Trash2 size={14} /> Hapus</button>
                             </div>
                         </div>
@@ -235,7 +247,7 @@ const ArtikelTable = ({ data, onEdit, onDelete, isDeleting }) => {
                             <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider w-24">Gambar</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Judul</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Tanggal Publikasi</th>
-                            <th scope="col" className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">Aksi</th>
+                            <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Aksi</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -253,8 +265,8 @@ const ArtikelTable = ({ data, onEdit, onDelete, isDeleting }) => {
                                 <td className="px-6 py-4 text-sm font-medium text-gray-900 align-top pt-6" title={artikel.judul}>{artikel.judul}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 align-top pt-6">{formatArticleDate(artikel.created_at)}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium align-top pt-6">
-                                    <div className="flex items-center justify-end space-x-4">
-                                        <button onClick={() => onEdit(artikel)} className="text-indigo-600 hover:text-indigo-800 flex items-center gap-1.5" disabled={isDeleting}><Edit size={16} /> Edit</button>
+                                    <div className="flex items-center justify-center space-x-4">
+                                        <button onClick={() => onEdit(artikel)} className="text-blue-600 hover:text-blue-800 flex items-center gap-1.5" disabled={isDeleting}><Edit size={16} /> Edit</button>
                                         <button onClick={() => onDelete(artikel.id)} className="text-red-600 hover:text-red-800 flex items-center gap-1.5" disabled={isDeleting}><Trash2 size={16} /> Hapus</button>
                                     </div>
                                 </td>
@@ -347,7 +359,7 @@ export default function ArtikelAdminPage() {
                 return;
             }
         } else if (gambarUrlLama === '' || gambarUrlLama === null) {
-             finalGambarUrl = null;
+            finalGambarUrl = null;
         } else if (!gambarFile && !gambarUrlLama) {
             finalGambarUrl = null;
         }
@@ -428,7 +440,7 @@ export default function ArtikelAdminPage() {
                             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                             Refresh
                         </button>
-                        <button onClick={() => openModal()} className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-md disabled:opacity-50">
+                        <button onClick={() => openModal()} className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md disabled:opacity-50">
                             <PlusCircle className="h-5 w-5" />
                             Tambah Artikel
                         </button>
