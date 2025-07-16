@@ -42,12 +42,12 @@ export default function Navbar() {
     const linkClasses = (href) => {
         const isActive = pathname === href;
         const baseClasses = 'relative px-1 py-2 text-sm font-medium text-gray-700 transition-colors duration-300 outline-none';
-        const activeClasses = 'font-semibold text-indigo-600';
-        const inactiveClasses = 'hover:text-indigo-600';
+        const activeClasses = 'font-semibold text-blue-600';
+        const inactiveClasses = 'hover:text-blue-600';
         // Kelas untuk pseudo-element ::after (garis bawah)
         const afterClasses = `
             after:content-[''] after:absolute after:left-0 after:bottom-0 
-            after:h-[2px] after:bg-indigo-600 after:transition-all after:duration-300
+            after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300
         `;
         const activeAfter = 'after:w-full';
         const inactiveAfter = 'after:w-0 group-hover:after:w-full';
@@ -59,7 +59,7 @@ export default function Navbar() {
     const mobileLinkClasses = (href) => 
         `block px-3 py-2 rounded-md text-base font-medium text-center ${
             pathname === href 
-            ? 'bg-indigo-100 text-indigo-700 font-semibold' 
+            ? 'bg-blue-100 text-blue-700 font-semibold' 
             : 'text-gray-700 hover:bg-gray-100'
         }`;
 
@@ -68,7 +68,7 @@ export default function Navbar() {
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     <div className="flex-shrink-0">
-                        <Link href="/" className="text-2xl font-bold text-indigo-600">
+                        <Link href="/" className="text-2xl font-bold text-blue-600">
                             SIPAKAT
                         </Link>
                     </div>
@@ -82,12 +82,12 @@ export default function Navbar() {
                         </div>
                     </div>
                     <div className="hidden md:block">
-                         <Link href="/admin/login" className="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                         <Link href="/admin/login" className="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Admin Login
                         </Link>
                     </div>
                     <div className="-mr-2 flex md:hidden">
-                        <button onClick={toggleMenu} className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                        <button onClick={toggleMenu} className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
                             <span className="sr-only">Open main menu</span>
                             {isOpen ? <X className="block h-6 w-6" /> : <Menu className="block h-6 w-6" />}
                         </button>
@@ -107,7 +107,7 @@ export default function Navbar() {
                     </div>
                     <div className="pt-4 pb-3 border-t border-gray-200">
                         <div className="flex items-center justify-center px-5">
-                             <Link href="/admin/login" className="w-full text-center inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                             <Link href="/admin/login" className="w-full text-center inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                 Admin Login
                             </Link>
                         </div>

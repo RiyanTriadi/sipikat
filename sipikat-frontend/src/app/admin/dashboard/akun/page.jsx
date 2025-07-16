@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-// Impor ikon yang dibutuhkan, Mail ditambahkan untuk UI yang lebih baik
-import { Loader2, Trash2, AlertCircle, UserPlus, Edit, X, Mail } from 'lucide-react';
+import { Loader2, Edit, Trash2, AlertCircle, UserPlus, Pencil, X, Mail, RefreshCw } from 'lucide-react';
 
 // --- Variabel Konfigurasi ---
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -19,7 +18,7 @@ const Alert = ({ message, onClose }) => (
         </div>
         {onClose && (
              <button onClick={onClose} className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-100">
-                <X size={20} />
+                 <X size={20} />
             </button>
         )}
     </div>
@@ -28,7 +27,7 @@ const Alert = ({ message, onClose }) => (
 // Komponen untuk indikator loading
 const Spinner = ({ text }) => (
     <div className="flex flex-col justify-center items-center h-64 text-gray-500">
-        <Loader2 className="animate-spin h-10 w-10 text-indigo-600" />
+        <Loader2 className="animate-spin h-10 w-10 text-blue-600" />
         <p className="mt-4 text-lg">{text}</p>
     </div>
 );
@@ -118,22 +117,22 @@ const AkunModal = ({ isOpen, onClose, onSave, user, isSaving }) => {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Nama</label>
-                        <input id="name" type="text" name="name" value={formData.name} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow" required />
+                        <input id="name" type="text" name="name" value={formData.name} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow" required />
                     </div>
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                        <input id="email" type="email" name="email" value={formData.email} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow" required />
+                        <input id="email" type="email" name="email" value={formData.email} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow" required />
                     </div>
                     <div>
                         <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                        <input id="password" type="password" name="password" value={formData.password} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow" placeholder={user ? 'Kosongkan jika tidak diubah' : 'Wajib diisi'} required={!user} />
+                        <input id="password" type="password" name="password" value={formData.password} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow" placeholder={user ? 'Kosongkan jika tidak diubah' : 'Wajib diisi'} required={!user} />
                         {user && <p className="text-xs text-gray-500 mt-2">Biarkan kosong jika Anda tidak ingin mengubah password.</p>}
                     </div>
                     <div className="mt-8 flex justify-end gap-4">
                         <button type="button" onClick={onClose} className="px-6 py-2 border border-gray-300 rounded-lg text-gray-800 font-semibold hover:bg-gray-100 transition-colors duration-200">
                             Batal
                         </button>
-                        <button type="submit" disabled={isSaving} className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                        <button type="submit" disabled={isSaving} className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
                             {isSaving ? (
                                 <>
                                     <Loader2 className="animate-spin h-5 w-5 mr-2" />
@@ -163,51 +162,52 @@ const AkunTable = ({ users, onEdit, onDelete, isActionDisabled }) => {
 
     return (
         <>
-            {/* Tampilan Kartu untuk Mobile (Telah Ditingkatkan) */}
-            <div className="grid grid-cols-1 gap-4 md:hidden">
+            {/* Tampilan Kartu untuk Mobile (Konsisten dengan halaman Gejala) */}
+            <div className="space-y-4 md:hidden">
                 {users.map((user) => (
-                    <div 
-                        key={user.id} 
-                        className="bg-white rounded-xl shadow-md border border-gray-200 p-4 flex flex-col transition-shadow hover:shadow-lg"
-                    >
-                        {/* Bagian Utama: ID, Nama, dan Email */}
-                        <div className="flex-grow">
-                             <span className="bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-1 rounded-full">
-                                ID: {user.id}
-                            </span>
-                            <p className="mt-3 text-lg font-semibold text-gray-900">
-                                {user.name}
-                            </p>
-                            <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
-                                <Mail size={14} />
-                                <span>{user.email}</span>
+                    <div key={user.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+                        {/* Konten utama: Nama */}
+                        <p className="text-gray-900 font-semibold text-lg">{user.name}</p>
+                        
+                        {/* Detail: ID dan Email */}
+                        <div className="mt-3 text-sm text-gray-700 space-y-2 pt-3">
+                            <div className="flex justify-between items-center">
+                                <span className="font-medium text-gray-500">ID Akun:</span>
+                                <span className="font-mono text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">{user.id}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="font-medium text-gray-500">Email:</span>
+                                <div className="flex items-center gap-2 text-gray-800">
+                                    <Mail size={14} />
+                                    <span>{user.email}</span>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Bagian Aksi */}
-                        <div className="mt-4 pt-3 border-t border-gray-100 grid grid-cols-2 gap-2">
+                        {/* Aksi */}
+                        <div className="mt-4 pt-3 flex justify-end space-x-2">
                             <button 
                                 onClick={() => onEdit(user)} 
-                                className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors disabled:opacity-50" 
+                                className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1.5 p-2 rounded-md hover:bg-blue-50 transition-colors disabled:opacity-50" 
                                 disabled={isActionDisabled}
                             >
-                                <Edit size={16} />
-                                Edit
+                                <Edit size={14} />
+                                <span>Edit</span>
                             </button>
                             <button 
                                 onClick={() => onDelete(user.id)} 
-                                className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50" 
+                                className="text-red-600 hover:text-red-800 font-medium text-sm flex items-center gap-1.5 p-2 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50" 
                                 disabled={isActionDisabled}
                             >
-                                <Trash2 size={16} />
-                                Hapus
+                                <Trash2 size={14} />
+                                <span>Hapus</span>
                             </button>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Tampilan Tabel untuk Desktop (Dibuat lebih konsisten) */}
+            {/* Tampilan Tabel untuk Desktop */}
             <div className="hidden md:block overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
@@ -224,11 +224,11 @@ const AkunTable = ({ users, onEdit, onDelete, isActionDisabled }) => {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.id}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">{user.name}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.email}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-4">
-                                    <button onClick={() => onEdit(user)} className="text-indigo-600 hover:text-indigo-900 p-2 rounded-md hover:bg-indigo-50 transition-colors" disabled={isActionDisabled}>
+                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-4 flex items-center justify-center">
+                                    <button onClick={() => onEdit(user)} className="text-blue-600 hover:text-blue-900 p-2 rounded-md hover:bg-blue-50 transition-colors flex items-center gap-1.5" disabled={isActionDisabled}><Edit size={16} /> 
                                         Edit
                                     </button>
-                                    <button onClick={() => onDelete(user.id)} className="text-red-600 hover:text-red-900 p-2 rounded-md hover:bg-red-50 transition-colors" disabled={isActionDisabled}>
+                                    <button onClick={() => onDelete(user.id)} className="text-red-600 hover:text-red-900 p-2 rounded-md hover:bg-red-50 transition-colors flex items-center gap-1.5" disabled={isActionDisabled}><Trash2 size={16} /> 
                                         Hapus
                                     </button>
                                 </td>
@@ -371,21 +371,34 @@ export default function AkunPage() {
         setUserToDelete(null);
     };
 
+    const isActionDisabled = isSaving || isDeleting || loading;
+
     return (
-        <div className="min-h-screen bg-gray-50 font-sans p-4 sm:p-6 lg:p-8">
+        <div className="min-h-screen bg-gray-50 font-inter antialiased p-4 sm:p-6 lg:p-8">
             <main className="max-w-7xl mx-auto">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">Kelola Akun Admin</h1>
                         <p className="mt-1 text-gray-600">Tambah, edit, atau hapus akun administrator sistem.</p>
                     </div>
-                    <button
-                        onClick={() => openModal()}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-md"
-                    >
-                        <UserPlus size={18} />
-                        Tambah Akun
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                                onClick={() => fetchUsers()}
+                                disabled={isActionDisabled}
+                                className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                            Refresh
+                        </button>
+                        <button
+                            onClick={() => openModal()}
+                            disabled={isActionDisabled}
+                            className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <UserPlus size={16} />
+                            Tambah Akun
+                        </button>
+                    </div>
                 </div>
 
                 <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 sm:p-6">
@@ -398,7 +411,7 @@ export default function AkunPage() {
                             users={users}
                             onEdit={openModal}
                             onDelete={confirmDeleteHandler}
-                            isActionDisabled={isSaving || isDeleting || loading}
+                            isActionDisabled={isActionDisabled}
                         />
                     )}
                 </div>

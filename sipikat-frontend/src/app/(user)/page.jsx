@@ -51,8 +51,8 @@ export default async function HomePage() {
             <section className="py-16 sm:py-24">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="bg-gray-50 rounded-2xl shadow-lg max-w-5xl mx-auto p-8 md:p-12 flex flex-col md:flex-row items-center gap-8 border border-gray-200">
-                        <div className="flex-shrink-0 text-indigo-600">
-                            <Image src="/diagnose.svg" alt="Logo Kabupaten Pandeglang" width={158} height={48} unoptimized />
+                        <div className="flex-shrink-0 text-blue-600">
+                            <Image src="/diagnose.svg" alt="Diagnose icon" width={158} height={48} unoptimized />
                         </div>
                         <div className="text-center md:text-left flex-grow">
                             <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Siap Mengambil Langkah Pertama?</h2>
@@ -61,7 +61,7 @@ export default async function HomePage() {
                             </p>
                         </div>
                         <div className="flex-shrink-0 mt-6 md:mt-0">
-                             <Link href="/diagnosa" className="inline-flex items-center justify-center w-full md:w-auto px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300">
+                             <Link href="/diagnosa" className="inline-flex items-center justify-center w-full md:w-auto px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300">
                                 Lakukan Tes
                             </Link>
                         </div>  
@@ -83,7 +83,7 @@ export default async function HomePage() {
                             ))}
                         </div>
                         <div className="text-center mt-12">
-                            <Link href="/artikel" className="inline-flex items-center font-semibold text-indigo-600 hover:text-indigo-800 transition-colors group">
+                            <Link href="/artikel" className="inline-flex items-center font-semibold text-blue-600 hover:text-blue-800 transition-colors group">
                                 Lihat Semua Artikel
                             </Link>
                         </div>

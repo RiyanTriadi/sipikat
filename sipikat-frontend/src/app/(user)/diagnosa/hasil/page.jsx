@@ -94,7 +94,7 @@ export default function HasilPage() {
                 <div className="text-center bg-white p-10 rounded-lg shadow-xl">
                     <h1 className="text-2xl font-bold text-gray-800 mb-4">Hasil Tidak Ditemukan</h1>
                     <p className="mb-8 text-gray-600">Sepertinya Anda belum melakukan diagnosa atau sesi telah berakhir.</p>
-                    <Link href="/diagnosa" className="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-transform transform hover:scale-105">
+                    <Link href="/diagnosa" className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-transform transform hover:scale-105">
                         <ArrowLeft className="mr-2 h-5 w-5" />
                         Kembali ke Halaman Diagnosa
                     </Link>
@@ -132,14 +132,14 @@ export default function HasilPage() {
                     </div>
                     
                     <div className="grid md:grid-cols-2 gap-8">
-                        <InfoCard icon={<User className="h-6 w-6 text-indigo-600" />} title="Detail Pasien">
+                        <InfoCard icon={<User className="h-6 w-6 text-blue-600" />} title="Detail Pasien">
                             <p><strong>Nama:</strong> {result.user.nama}</p>
                             <p><strong>Usia:</strong> {result.user.usia} tahun</p>
                             <p><strong>Jenis Kelamin:</strong> {result.user.jenis_kelamin}</p>
                             <p><strong>Alamat:</strong> {result.user.alamat}</p>
                         </InfoCard>
 
-                        <InfoCard icon={<List className="h-6 w-6 text-indigo-600" />} title="Gejala yang Dialami">
+                        <InfoCard icon={<List className="h-6 w-6 text-blue-600" />} title="Gejala yang Dialami">
                             <ul className="list-disc list-inside space-y-1">
                                 {result.gejala_terpilih.map(g => (
                                     <li key={g.id}>
@@ -151,7 +151,7 @@ export default function HasilPage() {
                     </div>
 
                     <div className="text-center mt-12 pt-8 border-t border-gray-200">
-                        <Link href="/diagnosa" className="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-transform transform hover:scale-105">
+                        <Link href="/diagnosa" className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-transform transform hover:scale-105">
                             <RefreshCw className="mr-2 h-5 w-5" />
                             Lakukan Diagnosa Ulang
                         </Link>

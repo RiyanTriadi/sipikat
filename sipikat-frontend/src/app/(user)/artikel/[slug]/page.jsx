@@ -75,7 +75,7 @@ export default async function ArtikelDetailPage({ params }) {
                 <div className="text-center bg-white p-10 rounded-lg shadow-md max-w-md w-full">
                     <h1 className="text-3xl font-bold text-gray-900 mb-4">Artikel Tidak Ditemukan</h1>
                     <p className="text-gray-600 mt-4 mb-8">Maaf, artikel yang Anda cari tidak ada atau telah dihapus.</p>
-                    <Link href="/artikel" className="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition">
+                    <Link href="/artikel" className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition">
                         <ArrowLeft className="mr-2 h-5 w-5" />
                         Kembali ke Daftar Artikel
                     </Link>
@@ -92,7 +92,7 @@ export default async function ArtikelDetailPage({ params }) {
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <article className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8 md:p-12 w-full border border-gray-200">
                     <div className="mb-8">
-                        <Link href="/artikel" className="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-semibold group transition-colors">
+                        <Link href="/artikel" className="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold group transition-colors">
                             <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
                             Kembali ke semua artikel
                         </Link>

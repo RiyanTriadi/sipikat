@@ -63,7 +63,7 @@ export default function Sidebar() {
             {/* Header Sidebar */}
             <div className="flex h-16 items-center justify-between border-b border-slate-700/50 px-6">
                 <Link href="/admin/dashboard" className="flex items-center gap-2.5 text-xl font-bold">
-                    <ShieldCheck className="h-7 w-7 text-indigo-400" />
+                    <ShieldCheck className="h-7 w-7 text-blue-400" />
                     <span>Admin Panel</span>
                 </Link>
                 {/* Tombol Close untuk mobile */}
@@ -102,7 +102,7 @@ export default function Sidebar() {
             {/* --- Header untuk Mobile (berisi tombol hamburger) --- */}
             <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-slate-900 px-4 md:hidden">
                  <Link href="/admin/dashboard" className="flex items-center gap-2 text-lg font-bold text-white">
-                    <ShieldCheck className="h-6 w-6 text-indigo-600" />
+                    <ShieldCheck className="h-6 w-6 text-blue-600" />
                     <span>Admin Panel</span>
                 </Link>
                 <button onClick={() => setIsSidebarOpen(true)} className="rounded-lg p-2 text-slate-100 hover:bg-slate-600">

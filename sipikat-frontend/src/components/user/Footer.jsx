@@ -22,12 +22,17 @@ const Footer = () => {
                            </li>
                            <li>
                               <Link href="/diagnosa" className="hover:text-indigo-400 transition-colors">
-                                  Mulai Diagnosa
+                                 Diagnosa
                               </Link>
                            </li>
                            <li>
                               <Link href="/artikel" className="hover:text-indigo-400 transition-colors">
                                   Artikel
+                              </Link>
+                           </li>
+                           <li>
+                              <Link href="/tentang" className="hover:text-indigo-400 transition-colors">
+                                  Tentang
                               </Link>
                            </li>
                       </ul>
@@ -42,10 +47,10 @@ const Footer = () => {
                       &copy; {new Date().getFullYear()} SIPKAT. Seluruh hak cipta dilindungi.
                    </p>
                    <div className="flex space-x-6 order-1 sm:order-2 text-sm">
-                      <Link href="/kebijakan-privasi" className="text-gray-400 hover:text-indigo-400 transition-colors">
+                      <Link href="/kebijakan-privasi" className="text-gray-400 hover:text-blue-400 transition-colors">
                            Kebijakan Privasi
                       </Link>
-                      <Link href="/syarat-ketentuan" className="text-gray-400 hover:text-indigo-400 transition-colors">
+                      <Link href="/syarat-ketentuan" className="text-gray-400 hover:text-blue-400 transition-colors">
                            Syarat & Ketentuan
                       </Link>
                    </div>

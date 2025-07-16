@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, Trash2, AlertCircle, RefreshCw, Plus, X, Pencil } from 'lucide-react';
+import { Loader2, Trash2, AlertCircle, RefreshCw, Plus, X, Edit } from 'lucide-react';
 
 // --- Variabel Konfigurasi ---
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -24,7 +24,7 @@ const Alert = ({ message }) => (
 
 const Spinner = ({ text }) => (
     <div className="flex flex-col justify-center items-center h-64 text-gray-500">
-        <Loader2 className="animate-spin h-10 w-10 text-indigo-600" />
+        <Loader2 className="animate-spin h-10 w-10 text-blue-600" />
         <p className="mt-4 text-lg">{text}</p>
     </div>
 );
@@ -90,16 +90,16 @@ const GejalaModal = ({ isOpen, onClose, onSave, gejala, isSaving }) => {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <label htmlFor="gejala" className="block text-sm font-medium text-gray-700 mb-2">Teks Gejala</label>
-                        <textarea id="gejala" name="gejala" value={formData.gejala} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow placeholder-gray-400" required rows="4" placeholder="Contoh: Mengalami demam tinggi lebih dari 3 hari"></textarea>
+                        <textarea id="gejala" name="gejala" value={formData.gejala} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow placeholder-gray-400" required rows="4" placeholder="Contoh: Mengalami demam tinggi lebih dari 3 hari"></textarea>
                     </div>
                     <div>
                         <label htmlFor="mb" className="block text-sm font-medium text-gray-700 mb-2">Nilai MB (Bobot Pakar)</label>
-                        <input type="number" id="mb" name="mb" value={formData.mb} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow" required step="0.01" min="0" max="1" />
+                        <input type="number" id="mb" name="mb" value={formData.mb} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow" required step="0.01" min="0" max="1" />
                         <p className="text-xs text-gray-500 mt-2">Masukkan nilai antara 0.00 dan 1.00.</p>
                     </div>
                     <div className="mt-8 flex justify-end space-x-4">
                         <button type="button" onClick={onClose} disabled={isSaving} className="px-6 py-2 border border-gray-300 rounded-lg text-gray-800 font-semibold hover:bg-gray-100 transition-colors duration-200 disabled:opacity-50">Batal</button>
-                        <button type="submit" disabled={isSaving} className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                        <button type="submit" disabled={isSaving} className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
                             {isSaving ? (<><Loader2 className="animate-spin h-5 w-5 mr-2" /> Menyimpan...</>) : 'Simpan Gejala'}
                         </button>
                     </div>
@@ -128,11 +128,11 @@ const GejalaTable = ({ data, onEdit, onConfirmDelete, isActionDisabled }) => {
                         <div className="mt-4 pt-3 border-t border-gray-100">
                             <div className="flex justify-between items-center text-sm">
                                 <span className="font-medium text-gray-500">Nilai MB:</span>
-                                <span className="font-bold text-indigo-700">{formatMbValue(item.mb)}</span>
+                                <span className="font-bold text-blue-700">{formatMbValue(item.mb)}</span>
                             </div>
                         </div>
                         <div className="mt-4 flex justify-end space-x-3">
-                            <button onClick={() => onEdit(item)} className="text-indigo-600 hover:text-indigo-800 font-medium text-sm flex items-center gap-1.5" disabled={isActionDisabled}><Pencil size={16} /> Edit</button>
+                            <button onClick={() => onEdit(item)} className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1.5" disabled={isActionDisabled}><Edit size={16} /> Edit</button>
                             <button onClick={() => onConfirmDelete(item.id)} className="text-red-600 hover:text-red-800 font-medium text-sm flex items-center gap-1.5" disabled={isActionDisabled}><Trash2 size={16} /> Hapus</button>
                         </div>
                     </div>
@@ -154,10 +154,10 @@ const GejalaTable = ({ data, onEdit, onConfirmDelete, isActionDisabled }) => {
                             <tr key={gejala.id} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{gejala.id}</td>
                                 <td className="px-6 py-4 text-sm text-gray-700">{gejala.gejala}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-indigo-700">{formatMbValue(gejala.mb)}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
-                                    <button onClick={() => onEdit(gejala)} className="text-indigo-600 hover:text-indigo-800 p-2 rounded-md hover:bg-indigo-50 transition-colors" disabled={isActionDisabled}><Pencil size={16} /></button>
-                                    <button onClick={() => onConfirmDelete(gejala.id)} className="text-red-600 hover:text-red-800 p-2 rounded-md hover:bg-red-50 transition-colors" disabled={isActionDisabled}><Trash2 size={16} /></button>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-700">{formatMbValue(gejala.mb)}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2 flex items-center justify-center   ">
+                                    <button onClick={() => onEdit(gejala)} className="text-blue-600 hover:text-blue-800 p-2 rounded-md hover:bg-blue-50 transition-colors flex items-center justify-center" disabled={isActionDisabled}><Edit size={16} /> Edit</button>
+                                    <button onClick={() => onConfirmDelete(gejala.id)} className="text-red-600 hover:text-red-800 p-2 rounded-md hover:bg-red-50 transition-colors flex items-center justify-center" disabled={isActionDisabled}><Trash2 size={16} /> Hapus</button>
                                 </td>
                             </tr>
                         ))}
@@ -320,7 +320,7 @@ export default function GejalaPage() {
                         <button onClick={() => fetchGejala()} disabled={isActionDisabled} className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50">
                             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
                         </button>
-                        <button onClick={() => openModalHandler()} disabled={isActionDisabled} className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50">
+                        <button onClick={() => openModalHandler()} disabled={isActionDisabled} className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50">
                             <Plus size={16} /> Tambah Gejala
                         </button>
                     </div>

@@ -18,7 +18,7 @@ const Alert = ({ message }) => (
 
 const Spinner = ({ text }) => (
     <div className="flex flex-col justify-center items-center h-64 text-gray-500">
-        <Loader2 className="animate-spin h-10 w-10 text-indigo-600" />
+        <Loader2 className="animate-spin h-10 w-10 text-blue-600" />
         <p className="mt-4 text-lg">{text}</p>
     </div>
 );
@@ -147,7 +147,7 @@ export default function DashboardPage() {
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                            <LayoutDashboard className="h-8 w-8 text-indigo-600" /> Dashboard Admin
+                            <LayoutDashboard className="h-8 w-8 text-blue-600" /> Dashboard Admin
                         </h1>
                         <p className="mt-1 text-gray-600 text-lg">Selamat datang di panel administrasi SIPAKAT. Berikut adalah ringkasan data Anda.</p>
                     </div>

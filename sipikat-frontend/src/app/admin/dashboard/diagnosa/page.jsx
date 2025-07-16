@@ -20,7 +20,7 @@ const Alert = ({ message }) => (
 // Komponen untuk indikator loading
 const Spinner = ({ text }) => (
     <div className="flex flex-col justify-center items-center h-64 text-gray-500">
-        <Loader2 className="animate-spin h-10 w-10 text-indigo-600" />
+        <Loader2 className="animate-spin h-10 w-10 text-blue-600" />
         <p className="mt-4 text-lg">{text}</p>
     </div>
 );
@@ -93,11 +93,11 @@ const HistoryTable = ({ data, onConfirmDelete, isDeleting }) => {
                         <div className="mt-3 text-sm text-gray-700 space-y-2">
                             <div className="flex justify-between">
                                 <span className="font-medium text-gray-500">Kategori:</span>
-                                <span className="font-semibold text-indigo-600">{item.kategori}</span>
+                                <span className="font-semibold text-blue-600">{item.kategori}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="font-medium text-gray-500">Skor CF:</span>
-                                <span className="font-bold text-indigo-700">{(item.total_cf * 100).toFixed(2)}%</span>
+                                <span className="font-bold text-blue-700">{(item.total_cf * 100).toFixed(2)}%</span>
                             </div>
                              <div className="flex justify-between">
                                 <span className="font-medium text-gray-500">Usia:</span>
@@ -108,7 +108,7 @@ const HistoryTable = ({ data, onConfirmDelete, isDeleting }) => {
                                 <span>{item.alamat}</span>
                             </div>
                         </div>
-                        <div className="mt-4 border-t pt-3 flex justify-end">
+                        <div className="mt-4 pt-3 flex justify-end">
                             <button onClick={() => onConfirmDelete(item.id)} className="text-red-600 hover:text-red-800 font-medium text-sm flex items-center gap-1.5" disabled={isDeleting}>
                                 <Trash2 size={16} /> Hapus
                             </button>
@@ -136,8 +136,8 @@ const HistoryTable = ({ data, onConfirmDelete, isDeleting }) => {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{diagnosa.usia}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{diagnosa.jenis_kelamin}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{diagnosa.alamat}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600">{diagnosa.kategori}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-indigo-700">{(diagnosa.total_cf * 100).toFixed(2)}%</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-blue-600">{diagnosa.kategori}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-700">{(diagnosa.total_cf * 100).toFixed(2)}%</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(diagnosa.created_at).toLocaleString('id-ID')}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                     <button onClick={() => onConfirmDelete(diagnosa.id)} className="text-red-600 hover:text-red-800 flex items-center gap-1.5" disabled={isDeleting}>

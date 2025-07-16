@@ -32,13 +32,13 @@ const ProgressIndicator = ({ currentStep }) => {
                 return (
                     <React.Fragment key={step}>
                         <div className="flex flex-col items-center">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${isActive ? 'bg-indigo-600 text-white scale-110' : isCompleted ? 'bg-indigo-200 text-indigo-700' : 'bg-gray-200 text-gray-500'}`}>
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${isActive ? 'bg-blue-600 text-white scale-110' : isCompleted ? 'bg-blue-200 text-blue-700' : 'bg-gray-200 text-gray-500'}`}>
                                 {isCompleted ? '✓' : stepIndex}
                             </div>
-                            <p className={`mt-2 text-xs text-center font-semibold ${isActive ? 'text-indigo-600' : 'text-gray-500'}`}>{step}</p>
+                            <p className={`mt-2 text-xs text-center font-semibold ${isActive ? 'text-blue-600' : 'text-gray-500'}`}>{step}</p>
                         </div>
                         {index < steps.length - 1 && (
-                            <div className={`flex-1 h-1 transition-colors duration-300 mx-2 ${currentStep > stepIndex ? 'bg-indigo-400' : 'bg-gray-200'}`}></div>
+                            <div className={`flex-1 h-1 transition-colors duration-300 mx-2 ${currentStep > stepIndex ? 'bg-blue-400' : 'bg-gray-200'}`}></div>
                         )}
                     </React.Fragment>
                 );
@@ -128,7 +128,7 @@ export default function DiagnosaPage() {
     };
 
     // --- STYLING CLASSES ---
-    const inputClasses = "block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out";
+    const inputClasses = "block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out";
     const labelClasses = "block text-gray-700 text-sm font-semibold mb-2";
 
     // --- ANIMATION VARIANTS ---
@@ -157,7 +157,7 @@ export default function DiagnosaPage() {
                         {step === 1 && (
                             <motion.section key="step1" variants={formVariants} initial="hidden" animate="visible" exit="exit" transition={{ duration: 0.3 }}>
                                 <h2 className="text-2xl font-bold text-gray-800 mb-6 pb-3 border-b border-gray-200 flex items-center">
-                                    <User className="w-6 h-6 mr-3 text-indigo-600" />Langkah 1: Data Diri Pasien
+                                    <User className="w-6 h-6 mr-3 text-blue-600" />Langkah 1: Data Diri Pasien
                                 </h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
@@ -192,13 +192,13 @@ export default function DiagnosaPage() {
                         {step === 2 && (
                             <motion.section key="step2" variants={formVariants} initial="hidden" animate="visible" exit="exit" transition={{ duration: 0.3 }}>
                                 <h2 className="text-2xl font-bold text-gray-800 mb-6 pb-3 border-b border-gray-200 flex items-center">
-                                    <ClipboardList className="w-6 h-6 mr-3 text-indigo-600" />Langkah 2: Kuesioner Gejala
+                                    <ClipboardList className="w-6 h-6 mr-3 text-blue-600" />Langkah 2: Kuesioner Gejala
                                 </h2>
                                 <p className="text-gray-600 mb-8 text-md">Pilih tingkat keyakinan Anda untuk setiap gejala yang dialami.</p>
                                 <div className="space-y-6">
                                     {gejalaLoading ? (
                                         <div className="flex justify-center items-center h-48 text-gray-500">
-                                            <Loader2 className="animate-spin h-8 w-8 text-indigo-600 mr-3" />
+                                            <Loader2 className="animate-spin h-8 w-8 text-blue-600 mr-3" />
                                             <p>Memuat gejala...</p>
                                         </div>
                                     ) : gejala.length > 0 ? (
@@ -207,7 +207,7 @@ export default function DiagnosaPage() {
                                                 <p className="font-semibold text-gray-800 mb-4 text-md">{index + 1}. {g.gejala}</p>
                                                 <fieldset className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
                                                     {confidenceLevels.map(level => (
-                                                        <label key={level.value} className="relative flex items-center justify-center p-2 rounded-lg border-2 cursor-pointer transition-all duration-200 ease-in-out has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-500 has-[:checked]:shadow-inner text-center">
+                                                        <label key={level.value} className="relative flex items-center justify-center p-2 rounded-lg border-2 cursor-pointer transition-all duration-200 ease-in-out has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:shadow-inner text-center">
                                                             <input type="radio" name={`gejala_${g.id}`} value={level.value}
                                                                 onChange={() => handleGejalaChange(g.id, level.value)}
                                                                 checked={selectedGejala[g.id] === level.value}
@@ -232,19 +232,19 @@ export default function DiagnosaPage() {
                     <div className="flex justify-between items-center mt-12 pt-6 border-t border-gray-200">
                         <div>
                             {step > 1 && (
-                                <button type="button" onClick={prevStep} className="inline-flex items-center px-6 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
+                                <button type="button" onClick={prevStep} className="inline-flex items-center px-6 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
                                     Kembali
                                 </button>
                             )}
                         </div>
                         <div className="flex-grow flex justify-end">
                             {step === 1 && (
-                                <button type="button" onClick={nextStep} className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
+                                <button type="button" onClick={nextStep} className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
                                     Lanjut ke Kuesioner
                                 </button>
                             )}
                             {step === 2 && (
-                                <button type="submit" disabled={loading || gejalaLoading} className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
+                                <button type="submit" disabled={loading || gejalaLoading} className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
                                     {loading ? (
                                         <><Loader2 className="animate-spin mr-3 h-5 w-5" /> Memproses...</>
                                     ) : (

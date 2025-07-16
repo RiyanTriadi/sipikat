@@ -28,7 +28,7 @@ export default function ArticleCard({ article }) {
                 </div>
                 <div className="p-6 flex-grow flex flex-col justify-between">
                     <div>
-                        <h2 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-indigo-700 transition duration-200 leading-tight">
+                        <h2 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-700 transition duration-200 leading-tight">
                             {article.judul}
                         </h2>
                     </div>
