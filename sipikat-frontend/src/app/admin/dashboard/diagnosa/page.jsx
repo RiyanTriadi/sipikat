@@ -4,12 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Trash2, AlertCircle, RefreshCw } from 'lucide-react'; // Ikon modern & ringan
 
-// --- Variabel Konfigurasi (Praktik Terbaik) ---
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-// --- Komponen UI Terpisah untuk Konsistensi ---
 
-// Komponen untuk menampilkan pesan error
 const Alert = ({ message }) => (
     <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center space-x-3 shadow-sm mb-6" role="alert">
         <AlertCircle className="h-5 w-5 text-red-500" />
@@ -17,7 +14,6 @@ const Alert = ({ message }) => (
     </div>
 );
 
-// Komponen untuk indikator loading
 const Spinner = ({ text }) => (
     <div className="flex flex-col justify-center items-center h-64 text-gray-500">
         <Loader2 className="animate-spin h-10 w-10 text-blue-600" />
@@ -25,7 +21,6 @@ const Spinner = ({ text }) => (
     </div>
 );
 
-// Komponen untuk Modal Konfirmasi Hapus
 const ConfirmationModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
     if (!isOpen) return null;
 
@@ -69,7 +64,6 @@ const ConfirmationModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
     );
 };
 
-// Komponen untuk menampilkan data dalam bentuk tabel di desktop dan kartu di mobile
 const HistoryTable = ({ data, onConfirmDelete, isDeleting }) => {
     if (data.length === 0) {
         return (
@@ -80,7 +74,6 @@ const HistoryTable = ({ data, onConfirmDelete, isDeleting }) => {
         );
     }
 
-    // Tampilan Kartu untuk Mobile (Layar di bawah 'md')
     return (
         <>
             <div className="space-y-4 md:hidden">
@@ -117,7 +110,6 @@ const HistoryTable = ({ data, onConfirmDelete, isDeleting }) => {
                 ))}
             </div>
 
-            {/* Tampilan Tabel untuk Desktop (Layar 'md' ke atas) */}
             <div className="hidden md:block overflow-x-auto border border-gray-200 rounded-lg">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
@@ -153,8 +145,6 @@ const HistoryTable = ({ data, onConfirmDelete, isDeleting }) => {
     );
 };
 
-
-// --- Komponen Halaman Utama ---
 
 export default function DiagnosaHistoryPage() {
     const [diagnosaList, setDiagnosaList] = useState([]);
@@ -239,12 +229,10 @@ export default function DiagnosaHistoryPage() {
                 throw new Error(errData.message || res.statusText);
             }
 
-            // Optimistic UI update: hapus dari state sebelum fetch ulang
             setDiagnosaList(prevList => prevList.filter(d => d.id !== diagnosaToDelete));
         
         } catch (err) {
             setError(err.message);
-            // Jika gagal, panggil fetchDiagnosa() untuk sinkronisasi ulang data
             fetchDiagnosa();
         } finally {
             setIsDeleting(false);

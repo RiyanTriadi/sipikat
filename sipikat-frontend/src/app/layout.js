@@ -4,7 +4,7 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'SIPAKAT - Sistem Pakar Kecanduan Gadget',
+  title: 'SIPIKAT - Sistem Pakar Kecanduan Gadget',
   description: 'Identifikasi tingkat kecanduan gadget Anda dengan sistem pakar menggunakan metode Certainty Factor.',
 };
 

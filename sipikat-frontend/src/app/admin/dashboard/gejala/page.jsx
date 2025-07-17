@@ -4,16 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Trash2, AlertCircle, RefreshCw, Plus, X, Edit } from 'lucide-react';
 
-// --- Variabel Konfigurasi ---
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-// --- Fungsi Helper ---
 const formatMbValue = (mb) => {
     const value = parseFloat(mb);
     return !isNaN(value) ? value.toFixed(2) : '0.00';
 };
 
-// --- Komponen UI ---
 
 const Alert = ({ message }) => (
     <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center space-x-3 shadow-sm mb-6" role="alert">
@@ -168,7 +165,6 @@ const GejalaTable = ({ data, onEdit, onConfirmDelete, isActionDisabled }) => {
     );
 };
 
-// --- Komponen Halaman Utama ---
 export default function GejalaPage() {
     const [gejalaList, setGejalaList] = useState([]);
     const [error, setError] = useState('');
@@ -191,25 +187,23 @@ export default function GejalaPage() {
         }
 
         try {
-            // Langkah 1: Ambil daftar gejala dasar (hanya id dan nama)
             const listRes = await fetch(`${API_BASE_URL}/gejala`);
             if (!listRes.ok) {
                 throw new Error('Gagal memuat daftar gejala dasar.');
             }
             const gejalaListBasic = await listRes.json();
 
-            // Langkah 2: Ambil detail untuk setiap gejala secara paralel
             const detailPromises = gejalaListBasic.map(gejala =>
                 fetch(`${API_BASE_URL}/gejala/${gejala.id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 }).then(res => {
                     if (res.status === 401 || res.status === 403) throw new Error('Authentication failed');
-                    if (!res.ok) return null; // Abaikan jika ada error individual
+                    if (!res.ok) return null; 
                     return res.json();
                 })
             );
             
-            const detailedGejalaList = (await Promise.all(detailPromises)).filter(Boolean); // filter(Boolean) untuk menghapus hasil null
+            const detailedGejalaList = (await Promise.all(detailPromises)).filter(Boolean); 
 
             setGejalaList(detailedGejalaList.sort((a, b) => a.id - b.id));
 

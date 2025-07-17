@@ -4,12 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Edit, Trash2, AlertCircle, UserPlus, Pencil, X, Mail, RefreshCw } from 'lucide-react';
 
-// --- Variabel Konfigurasi ---
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-// --- Komponen UI Umum ---
-
-// Komponen untuk menampilkan pesan error
 const Alert = ({ message, onClose }) => (
     <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between shadow-sm mb-6" role="alert">
         <div className="flex items-center">
@@ -24,7 +20,6 @@ const Alert = ({ message, onClose }) => (
     </div>
 );
 
-// Komponen untuk indikator loading
 const Spinner = ({ text }) => (
     <div className="flex flex-col justify-center items-center h-64 text-gray-500">
         <Loader2 className="animate-spin h-10 w-10 text-blue-600" />
@@ -32,7 +27,6 @@ const Spinner = ({ text }) => (
     </div>
 );
 
-// Komponen untuk Modal Konfirmasi Hapus
 const ConfirmationModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
     if (!isOpen) return null;
 
@@ -76,7 +70,6 @@ const ConfirmationModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
     );
 };
 
-// Komponen Modal untuk Tambah/Edit Akun
 const AkunModal = ({ isOpen, onClose, onSave, user, isSaving }) => {
     const [formData, setFormData] = useState({ name: '', email: '', password: '' });
 
@@ -149,7 +142,6 @@ const AkunModal = ({ isOpen, onClose, onSave, user, isSaving }) => {
     );
 };
 
-// --- [UPDATED] Komponen Tabel Akun yang Responsif dan Konsisten ---
 const AkunTable = ({ users, onEdit, onDelete, isActionDisabled }) => {
     if (users.length === 0) {
         return (
@@ -162,7 +154,6 @@ const AkunTable = ({ users, onEdit, onDelete, isActionDisabled }) => {
 
     return (
         <>
-            {/* Tampilan Kartu untuk Mobile (Konsisten dengan halaman Gejala) */}
             <div className="space-y-4 md:hidden">
                 {users.map((user) => (
                     <div key={user.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
@@ -184,7 +175,6 @@ const AkunTable = ({ users, onEdit, onDelete, isActionDisabled }) => {
                             </div>
                         </div>
 
-                        {/* Aksi */}
                         <div className="mt-4 pt-3 flex justify-end space-x-2">
                             <button 
                                 onClick={() => onEdit(user)} 
@@ -207,7 +197,6 @@ const AkunTable = ({ users, onEdit, onDelete, isActionDisabled }) => {
                 ))}
             </div>
 
-            {/* Tampilan Tabel untuk Desktop */}
             <div className="hidden md:block overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
@@ -242,7 +231,6 @@ const AkunTable = ({ users, onEdit, onDelete, isActionDisabled }) => {
 };
 
 
-// --- Komponen Halaman Utama ---
 export default function AkunPage() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);

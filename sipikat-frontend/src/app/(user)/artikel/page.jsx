@@ -1,7 +1,5 @@
-// src/app/(user)/artikel/page.jsx
 import ArticleCard from '@/components/user/ArticleCard';
 
-// Fungsi getArticles (tanpa perubahan fungsionalitas)
 async function getArticles() {
     try {
         const res = await fetch('http://localhost:5000/api/artikel', {

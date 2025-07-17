@@ -1,6 +1,5 @@
 import Link from 'next/link';
-import ArticleCard from '@/components/user/ArticleCard'; 
-import { Smartphone, FileText, ArrowRight } from 'lucide-react';
+import ArticleCard from '@/components/user/ArticleCard';
 import Image from 'next/image';
 
 async function getLatestArticles() {
@@ -30,7 +29,6 @@ export default async function HomePage() {
 
     return (
         <main className="bg-gray-50">
-            {/* --- Hero Section --- */}
             <section className="relative w-full h-[60vh] min-h-[400px] flex items-center justify-center text-white overflow-hidden">
                 <div 
                     className="absolute top-0 left-0 w-full h-full bg-cover bg-center"
@@ -47,7 +45,6 @@ export default async function HomePage() {
                 </div>
             </section>
 
-            {/* --- Diagnosis Card Section --- */}
             <section className="py-16 sm:py-24">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="bg-gray-50 rounded-2xl shadow-lg max-w-5xl mx-auto p-8 md:p-12 flex flex-col md:flex-row items-center gap-8 border border-gray-200">
@@ -69,7 +66,6 @@ export default async function HomePage() {
                 </div>
             </section>
           
-            {/* --- Latest Articles Section --- */}
             {latestArticles.length > 0 && (
                 <section className="py-16 sm:py-24 bg-gray-100">
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -91,15 +87,18 @@ export default async function HomePage() {
                 </section>
             )}
 
-            {/* --- Supported By Section --- */}
             <section className="py-16 bg-white border-t border-gray-200">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <h2 className="text-center text-xl font-semibold text-gray-600 mb-10">
                         Didukung Oleh
                     </h2>
                     <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-8">
-                            <Image src="/unma logo.png" alt="Logo Universitas Mathla'ul Anwar" width={158} height={48} unoptimized />
-                            <Image src="/pandeglang logo.png" alt="Logo Kabupaten Pandeglang" width={158} height={48} unoptimized />
+                        <div className="w-20 sm:w-32 md:w-[158px]">
+                            <Image src="/unma logo.png" alt="Logo Universitas Mathla'ul Anwar" layout="responsive" width={158} height={48} unoptimized />
+                        </div>
+                        <div className="w-20 sm:w-32 md:w-[158px]">
+                            <Image src="/pandeglang logo.png" alt="Logo Kabupaten Pandeglang" layout="responsive" width={158} height={48} unoptimized />
+                        </div>
                     </div>
                 </div>
             </section>

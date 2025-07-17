@@ -1,15 +1,12 @@
-// src/app/(user)/syarat/page.jsx
-
 import Link from 'next/link';
 import { FileText, BookText, Target, CheckCircle, ShieldAlert, Copyright, Settings, LockKeyhole, UserX, Ban } from 'lucide-react';
 
 export default function TermsAndConditionsPage() {
     return (
         <div className="bg-white font-sans text-gray-800">
-            {/* --- Bagian Header --- */}
             <header className="bg-gray-800 text-white text-center py-20">
                 <div className="container mx-auto px-6">
-                    <FileText className="w-20 h-20 mx-auto mb-4 text-indigo-400" />
+                    <FileText className="w-20 h-20 mx-auto mb-4 text-blue-400" />
                     <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
                         Syarat dan Ketentuan
                     </h1>
@@ -19,7 +16,6 @@ export default function TermsAndConditionsPage() {
                 </div>
             </header>
 
-            {/* --- Konten Syarat dan Ketentuan --- */}
             <main className="py-16 md:py-24">
                 <div className="container mx-auto px-4 max-w-4xl space-y-12">
 
@@ -30,7 +26,6 @@ export default function TermsAndConditionsPage() {
                          <p className="mt-2 text-sm text-gray-500">Terakhir diperbarui: 16 Juli 2025</p>
                     </div>
 
-                    {/* 1. Definisi */}
                     <SectionWrapper icon={<BookText className="text-blue-600" />} title="1. Definisi">
                         <ul className="space-y-3 list-disc list-inside text-gray-700">
                             <li><strong>Aplikasi:</strong> Merujuk pada aplikasi mobile SIPIKAT.</li>
@@ -39,7 +34,6 @@ export default function TermsAndConditionsPage() {
                         </ul>
                     </SectionWrapper>
                     
-                    {/* 2. Tujuan Aplikasi */}
                     <SectionWrapper icon={<Target className="text-green-600" />} title="2. Tujuan Aplikasi">
                         <p className="mb-3">SIPIKAT adalah aplikasi sistem pakar yang bertujuan untuk membantu pengguna mengidentifikasi tingkat kemungkinan kecanduan gadget berdasarkan input yang diberikan oleh pengguna melalui kuisioner atau interaksi tertentu.</p>
                         <p className="mt-4 text-sm bg-yellow-100 text-yellow-800 p-3 rounded-lg border border-yellow-200">
@@ -47,7 +41,6 @@ export default function TermsAndConditionsPage() {
                         </p>
                     </SectionWrapper>
 
-                    {/* 3. Penggunaan yang Diperbolehkan */}
                      <SectionWrapper icon={<CheckCircle className="text-cyan-600" />} title="3. Penggunaan yang Diperbolehkan">
                         <p className="mb-3">Pengguna diperbolehkan untuk:</p>
                         <ul className="space-y-3 list-disc list-inside text-gray-700">
@@ -57,29 +50,24 @@ export default function TermsAndConditionsPage() {
                         </ul>
                     </SectionWrapper>
 
-                    {/* 4. Batasan Tanggung Jawab */}
                      <SectionWrapper icon={<ShieldAlert className="text-red-600" />} title="4. Batasan Tanggung Jawab">
                         <p className="mb-3">Developer tidak bertanggung jawab atas segala bentuk kerugian atau kerusakan yang timbul akibat penggunaan informasi dari aplikasi ini.</p>
                         <p>Hasil analisis yang disajikan bersifat indikatif dan tidak dapat dijadikan dasar tunggal untuk diagnosis atau rencana terapi medis.</p>
                     </SectionWrapper>
                     
-                    {/* 5. Hak Kekayaan Intelektual */}
                     <SectionWrapper icon={<Copyright className="text-purple-600" />} title="5. Hak Kekayaan Intelektual">
                         <p className="mb-3">Seluruh konten, fitur, kode sumber, dan desain aplikasi SIPIKAT adalah milik mutlak developer.</p>
                         <p>Dilarang keras menggandakan, menyebarluaskan, merekayasa balik, atau memodifikasi bagian mana pun dari aplikasi ini tanpa izin tertulis dari pihak developer.</p>
                     </SectionWrapper>
 
-                    {/* 6. Perubahan Layanan */}
                     <SectionWrapper icon={<Settings className="text-gray-600" />} title="6. Perubahan Layanan">
                         <p>Developer berhak untuk mengubah, menambah, atau menghapus fitur aplikasi tanpa pemberitahuan terlebih dahulu demi peningkatan kualitas dan fungsionalitas layanan.</p>
                     </SectionWrapper>
                     
-                    {/* 7. Privasi Pengguna */}
                     <SectionWrapper icon={<LockKeyhole className="text-blue-600" />} title="7. Privasi Pengguna">
                         <p>Setiap data yang Anda masukkan akan dikelola dengan kerahasiaan penuh sesuai dengan <Link href="/privasi" className="text-blue-600 hover:underline font-medium">Kebijakan Privasi</Link> kami.</p>
                     </SectionWrapper>
                     
-                    {/* 8. Penyalahgunaan Aplikasi */}
                     <SectionWrapper icon={<Ban className="text-red-600" />} title="8. Penyalahgunaan Aplikasi">
                         <p className="mb-3">Pengguna dilarang keras menggunakan aplikasi ini untuk:</p>
                         <ul className="space-y-3 list-disc list-inside text-gray-700">
@@ -89,7 +77,6 @@ export default function TermsAndConditionsPage() {
                         </ul>
                     </SectionWrapper>
 
-                    {/* 9. Pengakhiran Akses */}
                     <SectionWrapper icon={<UserX className="text-orange-600" />} title="9. Pengakhiran Akses">
                         <p>Developer berhak membatasi atau menghentikan akses pengguna secara sepihak jika terdapat indikasi kuat adanya pelanggaran terhadap syarat dan ketentuan ini.</p>
                     </SectionWrapper>
@@ -100,7 +87,6 @@ export default function TermsAndConditionsPage() {
     );
 }
 
-// Komponen Pembungkus untuk setiap bagian agar lebih rapi
 const SectionWrapper = ({ icon, title, children }) => {
     return (
         <div className="p-8 bg-gray-50 rounded-xl border border-gray-200">

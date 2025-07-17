@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, LayoutDashboard, FileText, Stethoscope, Users, AlertCircle, Clock, UserPlus, FilePlus } from 'lucide-react';
+import { Loader2, LayoutDashboard, FileText, Stethoscope, Users, AlertCircle, Clock, UserPlus, FilePlus, Lightbulb } from 'lucide-react'; 
 import { formatDistanceToNow } from 'date-fns';
 import { id } from 'date-fns/locale';
 
@@ -41,6 +41,11 @@ const ActivityItem = ({ activity }) => {
                 return [
                     <UserPlus key="icon" className="h-5 w-5 text-blue-500 flex-shrink-0" />,
                     <p key="text">Pengguna baru telah terdaftar: <span className="font-semibold text-gray-800">{activity.nama}</span>.</p>
+                ];
+            case 'solusi': 
+                return [
+                    <Lightbulb key="icon" className="h-5 w-5 text-yellow-500 flex-shrink-0" />,
+                    <p key="text">Solusi baru ditambahkan dengan kategori: <span className="font-semibold text-gray-800">"{activity.nama}"</span>.</p>
                 ];
             default:
                 return [];
@@ -149,7 +154,7 @@ export default function DashboardPage() {
                         <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
                             <LayoutDashboard className="h-8 w-8 text-blue-600" /> Dashboard Admin
                         </h1>
-                        <p className="mt-1 text-gray-600 text-lg">Selamat datang di panel administrasi SIPAKAT. Berikut adalah ringkasan data Anda.</p>
+                        <p className="mt-1 text-gray-600 text-lg">Selamat datang di panel administrasi SIPIKAT. Berikut adalah ringkasan data Anda.</p>
                     </div>
                 </div>
 

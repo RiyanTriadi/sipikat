@@ -1,12 +1,8 @@
-// src/app/(user)/privasi/page.jsx
-
-import Link from 'next/link';
-import { ShieldCheck, Info, Database, Share2, UserCheck, RefreshCw, Mail } from 'lucide-react';
+import { ShieldCheck, Info, Database, Share2, UserCheck, RefreshCw } from 'lucide-react';
 
 export default function PrivacyPolicyPage() {
     return (
         <div className="bg-white font-sans text-gray-800">
-            {/* --- Bagian Header --- */}
             <header className="bg-gray-800 text-white text-center py-20">
                 <div className="container mx-auto px-6">
                     <ShieldCheck className="w-20 h-20 mx-auto mb-4 text-blue-400" />
@@ -19,7 +15,6 @@ export default function PrivacyPolicyPage() {
                 </div>
             </header>
 
-            {/* --- Konten Kebijakan --- */}
             <main className="py-16 md:py-24">
                 <div className="container mx-auto px-4 max-w-4xl space-y-12">
 
@@ -30,7 +25,6 @@ export default function PrivacyPolicyPage() {
                          <p className="mt-2 text-sm text-gray-500">Terakhir diperbarui: 16 Juli 2025</p>
                     </div>
 
-                    {/* 1. Informasi yang Kami Kumpulkan */}
                     <div className="p-8 bg-gray-50 rounded-xl border border-gray-200">
                         <div className="flex items-center mb-4">
                             <Info className="w-8 h-8 mr-4 text-blue-600" />
@@ -47,7 +41,6 @@ export default function PrivacyPolicyPage() {
                         </p>
                     </div>
                     
-                    {/* 2. Penggunaan Informasi */}
                     <div className="p-8 bg-gray-50 rounded-xl border border-gray-200">
                         <div className="flex items-center mb-4">
                             <ShieldCheck className="w-8 h-8 mr-4 text-green-600" />
@@ -61,7 +54,6 @@ export default function PrivacyPolicyPage() {
                         </ul>
                     </div>
 
-                    {/* 3. Penyimpanan dan Keamanan Data */}
                      <div className="p-8 bg-gray-50 rounded-xl border border-gray-200">
                         <div className="flex items-center mb-4">
                             <Database className="w-8 h-8 mr-4 text-yellow-600" />
@@ -73,7 +65,6 @@ export default function PrivacyPolicyPage() {
                         </ul>
                     </div>
 
-                    {/* 4. Berbagi Informasi */}
                      <div className="p-8 bg-gray-50 rounded-xl border border-gray-200">
                         <div className="flex items-center mb-4">
                             <Share2 className="w-8 h-8 mr-4 text-red-600" />
@@ -86,7 +77,6 @@ export default function PrivacyPolicyPage() {
                         </ul>
                     </div>
 
-                    {/* 5. Hak Pengguna */}
                     <div className="p-8 bg-gray-50 rounded-xl border border-gray-200">
                         <div className="flex items-center mb-4">
                             <UserCheck className="w-8 h-8 mr-4 text-purple-600" />
@@ -99,7 +89,6 @@ export default function PrivacyPolicyPage() {
                         </ul>
                     </div>
 
-                    {/* 6. Perubahan Kebijakan */}
                     <div className="p-8 bg-gray-50 rounded-xl border border-gray-200">
                         <div className="flex items-center mb-4">
                             <RefreshCw className="w-8 h-8 mr-4 text-teal-600" />

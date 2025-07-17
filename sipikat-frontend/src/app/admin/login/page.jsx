@@ -16,7 +16,6 @@ export default function LoginPage() {
         setError('');
 
         try {
-            // Basic validation for empty fields
             if (!email || !password) {
                 throw new Error('Email dan password harus diisi.');
             }
@@ -29,13 +28,12 @@ export default function LoginPage() {
 
             if (!res.ok) {
                 const errData = await res.json();
-                // Display specific error message from the backend if available, otherwise a generic one
                 throw new Error(errData.message || 'Login gagal! Periksa kembali email dan password Anda.');
             }
 
             const { token } = await res.json();
-            localStorage.setItem('adminToken', token); // Save the token
-            router.push('/admin/dashboard'); // Redirect to dashboard
+            localStorage.setItem('adminToken', token); 
+            router.push('/admin/dashboard'); 
 
         } catch (err) {
             setError(err.message);
@@ -55,7 +53,6 @@ export default function LoginPage() {
                 </div>
                 
                 <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-                    {/* Email Input */}
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email:</label>
                         <input
@@ -70,7 +67,6 @@ export default function LoginPage() {
                             placeholder="admin@example.com"
                         />
                     </div>
-                    {/* Password Input */}
                     <div>
                         <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password:</label>
                         <input
@@ -86,14 +82,12 @@ export default function LoginPage() {
                         />
                     </div>
 
-                    {/* Error Message Display */}
                     {error && (
                         <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-md relative text-center text-sm font-medium shadow-sm" role="alert">
                             <p>{error}</p>
                         </div>
                     )}
 
-                    {/* Submit Button */}
                     <div>
                         <button 
                             type="submit" 

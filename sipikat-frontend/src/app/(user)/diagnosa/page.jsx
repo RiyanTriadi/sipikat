@@ -1,4 +1,3 @@
-// src/app/(user)/diagnosa/page.jsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -127,11 +126,9 @@ export default function DiagnosaPage() {
         }
     };
 
-    // --- STYLING CLASSES ---
     const inputClasses = "block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out";
     const labelClasses = "block text-gray-700 text-sm font-semibold mb-2";
 
-    // --- ANIMATION VARIANTS ---
     const formVariants = {
         hidden: { opacity: 0, x: -50 },
         visible: { opacity: 1, x: 0 },
