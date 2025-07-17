@@ -1,17 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { 
-    PlusCircle, Edit, Trash2, Loader2, AlertCircle, RefreshCw, 
-    Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Quote, UploadCloud, X,
-} from 'lucide-react';
-import { createEditor, Editor as SlateEditor, Transforms, Text, Element as SlateElement } from 'slate';
+import { PlusCircle, Edit, Trash2, Loader2, AlertCircle, RefreshCw, Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Quote, UploadCloud, X,} from 'lucide-react';
+import { createEditor, Editor as SlateEditor, Transforms, Element as SlateElement } from 'slate';
 import { Slate, Editable, withReact } from 'slate-react';
 import { withHistory } from 'slate-history';
 import isHotkey from 'is-hotkey';
 
-// --- Variabel Konfigurasi & Komponen UI Dasar ---
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'; // URL base tanpa /api
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'; 
 
 const Alert = ({ message, type = 'error' }) => {
     const colors = {
@@ -33,24 +29,213 @@ const Spinner = ({ text }) => (
     </div>
 );
 
-// --- Konfigurasi dan Utilitas Slate.js ---
 const HOTKEYS = { 'mod+b': 'bold', 'mod+i': 'italic', 'mod+u': 'underline' };
 const LIST_TYPES = ['numbered-list', 'bulleted-list'];
 const TEXT_ALIGN_TYPES = ['left', 'center', 'right', 'justify'];
-const toggleMark = (editor, format) => { const isActive = isMarkActive(editor, format); if (isActive) { SlateEditor.removeMark(editor, format); } else { SlateEditor.addMark(editor, format, true); } };
-const isMarkActive = (editor, format) => { const marks = SlateEditor.marks(editor); return marks ? marks[format] === true : false; };
-const toggleBlock = (editor, format) => { const isActive = isBlockActive(editor, format, TEXT_ALIGN_TYPES.includes(format) ? 'align' : 'type'); const isList = LIST_TYPES.includes(format); Transforms.unwrapNodes(editor, { match: n => !SlateEditor.isEditor(n) && SlateElement.isElement(n) && LIST_TYPES.includes(n.type) && !TEXT_ALIGN_TYPES.includes(format), split: true, }); let newProperties; if (TEXT_ALIGN_TYPES.includes(format)) { newProperties = { align: isActive ? undefined : format }; } else { newProperties = { type: isActive ? 'paragraph' : isList ? 'list-item' : format }; } Transforms.setNodes(editor, newProperties); if (!isActive && isList) { const block = { type: format, children: [] }; Transforms.wrapNodes(editor, block); } };
-const isBlockActive = (editor, format, blockType = 'type') => { const { selection } = editor; if (!selection) return false; const [match] = SlateEditor.nodes(editor, { at: SlateEditor.unhangRange(editor, selection), match: n => !SlateEditor.isEditor(n) && SlateElement.isElement(n) && n[blockType] === format, }); return !!match; };
-const Element = ({ attributes, children, element }) => { const style = { textAlign: element.align }; switch (element.type) { case 'block-quote': return <blockquote className="border-l-4 pl-4 italic text-gray-500" style={style} {...attributes}>{children}</blockquote>; case 'bulleted-list': return <ul className="list-disc pl-8" style={style} {...attributes}>{children}</ul>; case 'heading-one': return <h1 className="text-3xl font-bold" style={style} {...attributes}>{children}</h1>; case 'heading-two': return <h2 className="text-2xl font-bold" style={style} {...attributes}>{children}</h2>; case 'list-item': return <li style={style} {...attributes}>{children}</li>; case 'numbered-list': return <ol className="list-decimal pl-8" style={style} {...attributes}>{children}</ol>; default: return <p style={style} {...attributes}>{children}</p>; } };
-const Leaf = ({ attributes, children, leaf }) => { if (leaf.bold) { children = <strong>{children}</strong>; } if (leaf.italic) { children = <em>{children}</em>; } if (leaf.underline) { children = <u>{children}</u>; } return <span {...attributes}>{children}</span>; };
-const MarkButton = ({ format, icon: Icon, editor }) => ( <button type="button" onMouseDown={event => { event.preventDefault(); toggleMark(editor, format); }} className={`p-2 rounded ${isMarkActive(editor, format) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-blue-200`} > <Icon size={16} /> </button> );
-const BlockButton = ({ format, icon: Icon, editor }) => ( <button type="button" onMouseDown={event => { event.preventDefault(); toggleBlock(editor, format); }} className={`p-2 rounded ${isBlockActive(editor, format, TEXT_ALIGN_TYPES.includes(format) ? 'align' : 'type') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-blue-200`} > <Icon size={16} /> </button> );
-const SlateToolbar = ({ editor }) => ( <div className="flex items-center gap-2 p-2 bg-gray-100 border-b border-gray-300 rounded-t-lg"> <MarkButton format="bold" icon={Bold} editor={editor} /> <MarkButton format="italic" icon={Italic} editor={editor} /> <MarkButton format="underline" icon={Underline} editor={editor} /> <div className="w-px h-6 bg-gray-300 mx-1"></div> <BlockButton format="heading-one" icon={Heading1} editor={editor} /> <BlockButton format="heading-two" icon={Heading2} editor={editor} /> <BlockButton format="block-quote" icon={Quote} editor={editor} /> <BlockButton format="numbered-list" icon={ListOrdered} editor={editor} /> <BlockButton format="bulleted-list" icon={List} editor={editor} /> </div> );
-const SlateRichEditor = ({ value, onChange }) => { const renderElement = useCallback(props => <Element {...props} />, []); const renderLeaf = useCallback(props => <Leaf {...props} />, []); const editor = useMemo(() => withHistory(withReact(createEditor())), []); return ( <Slate editor={editor} initialValue={value} onValueChange={onChange}> <SlateToolbar editor={editor} /> <div className="p-4 min-h-[200px] focus-within:ring-2 focus-within:ring-blue-500 rounded-b-lg"> <Editable renderElement={renderElement} renderLeaf={renderLeaf} placeholder="Mulai tulis artikel Anda di sini..." spellCheck autoFocus onKeyDown={event => { for (const hotkey in HOTKEYS) { if (isHotkey(hotkey, event)) { event.preventDefault(); const mark = HOTKEYS[hotkey]; toggleMark(editor, mark); } } }} className="prose max-w-none" /> </div> </Slate> ); };
-const initialSlateValue = [{ type: 'paragraph', children: [{ text: '' }] }];
-const parseToSlate = (dbString) => { if (!dbString) return initialSlateValue; try { const parsed = JSON.parse(dbString); if (Array.isArray(parsed) && parsed.length > 0) { return parsed; } } catch (e) { return [{ type: 'paragraph', children: [{ text: dbString.replace(/<[^>]+>/g, '') || '' }] }]; } return initialSlateValue; };
 
-// --- Komponen Modal & Tabel ---
+const toggleMark = (editor, format) => {
+  const isActive = isMarkActive(editor, format);
+  if (isActive) {
+    SlateEditor.removeMark(editor, format);
+  } else {
+    SlateEditor.addMark(editor, format, true);
+  }
+};
+
+const isMarkActive = (editor, format) => {
+  const marks = SlateEditor.marks(editor);
+  return marks ? marks[format] === true : false;
+};
+
+const toggleBlock = (editor, format) => {
+  const isActive = isBlockActive(editor, format, TEXT_ALIGN_TYPES.includes(format) ? 'align' : 'type');
+  const isList = LIST_TYPES.includes(format);
+
+  Transforms.unwrapNodes(editor, {
+    match: n =>
+      !SlateEditor.isEditor(n) &&
+      SlateElement.isElement(n) &&
+      LIST_TYPES.includes(n.type) &&
+      !TEXT_ALIGN_TYPES.includes(format),
+    split: true,
+  });
+
+  let newProperties;
+  if (TEXT_ALIGN_TYPES.includes(format)) {
+    newProperties = { align: isActive ? undefined : format };
+  } else {
+    newProperties = { type: isActive ? 'paragraph' : isList ? 'list-item' : format };
+  }
+  Transforms.setNodes(editor, newProperties);
+
+  if (!isActive && isList) {
+    const block = { type: format, children: [] };
+    Transforms.wrapNodes(editor, block);
+  }
+};
+
+const isBlockActive = (editor, format, blockType = 'type') => {
+  const { selection } = editor;
+  if (!selection) return false;
+
+  const [match] = SlateEditor.nodes(editor, {
+    at: SlateEditor.unhangRange(editor, selection),
+    match: n =>
+      !SlateEditor.isEditor(n) &&
+      SlateElement.isElement(n) &&
+      n[blockType] === format,
+  });
+
+  return !!match;
+};
+
+const Element = ({ attributes, children, element }) => {
+  const style = { textAlign: element.align };
+  switch (element.type) {
+    case 'block-quote':
+      return (
+        <blockquote className="border-l-4 pl-4 italic text-gray-500" style={style} {...attributes}>
+          {children}
+        </blockquote>
+      );
+    case 'bulleted-list':
+      return (
+        <ul className="list-disc pl-8" style={style} {...attributes}>
+          {children}
+        </ul>
+      );
+    case 'heading-one':
+      return (
+        <h1 className="text-3xl font-bold" style={style} {...attributes}>
+          {children}
+        </h1>
+      );
+    case 'heading-two':
+      return (
+        <h2 className="text-2xl font-bold" style={style} {...attributes}>
+          {children}
+        </h2>
+      );
+    case 'list-item':
+      return (
+        <li style={style} {...attributes}>
+          {children}
+        </li>
+      );
+    case 'numbered-list':
+      return (
+        <ol className="list-decimal pl-8" style={style} {...attributes}>
+          {children}
+        </ol>
+      );
+    default:
+      return (
+        <p style={style} {...attributes}>
+          {children}
+        </p>
+      );
+  }
+};
+
+const Leaf = ({ attributes, children, leaf }) => {
+  if (leaf.bold) {
+    children = <strong>{children}</strong>;
+  }
+  if (leaf.italic) {
+    children = <em>{children}</em>;
+  }
+  if (leaf.underline) {
+    children = <u>{children}</u>;
+  }
+  return <span {...attributes}>{children}</span>;
+};
+
+const MarkButton = ({ format, icon: Icon, editor }) => (
+  <button
+    type="button"
+    onMouseDown={event => {
+      event.preventDefault();
+      toggleMark(editor, format);
+    }}
+    className={`p-2 rounded ${isMarkActive(editor, format) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-blue-200`}
+  >
+    <Icon size={16} />
+  </button>
+);
+
+const BlockButton = ({ format, icon: Icon, editor }) => (
+  <button
+    type="button"
+    onMouseDown={event => {
+      event.preventDefault();
+      toggleBlock(editor, format);
+    }}
+    className={`p-2 rounded ${isBlockActive(editor, format, TEXT_ALIGN_TYPES.includes(format) ? 'align' : 'type') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-blue-200`}
+  >
+    <Icon size={16} />
+  </button>
+);
+
+const SlateToolbar = ({ editor }) => (
+  // PERBAIKAN: Menambahkan kelas `flex-wrap` agar tombol toolbar dapat pindah ke baris baru pada layar kecil.
+  <div className="flex items-center flex-wrap gap-2 p-2 bg-gray-100 border-b border-gray-300 rounded-t-lg">
+    <MarkButton format="bold" icon={Bold} editor={editor} />
+    <MarkButton format="italic" icon={Italic} editor={editor} />
+    <MarkButton format="underline" icon={Underline} editor={editor} />
+    <div className="w-px h-6 bg-gray-300 mx-1"></div>
+    <BlockButton format="heading-one" icon={Heading1} editor={editor} />
+    <BlockButton format="heading-two" icon={Heading2} editor={editor} />
+    <BlockButton format="block-quote" icon={Quote} editor={editor} />
+    <BlockButton format="numbered-list" icon={ListOrdered} editor={editor} />
+    <BlockButton format="bulleted-list" icon={List} editor={editor} />
+  </div>
+);
+
+const SlateRichEditor = ({ value, onChange }) => {
+  const renderElement = useCallback(props => <Element {...props} />, []);
+  const renderLeaf = useCallback(props => <Leaf {...props} />, []);
+  const editor = useMemo(() => withHistory(withReact(createEditor())), []);
+
+  return (
+    <Slate editor={editor} initialValue={value} onValueChange={onChange}>
+      <SlateToolbar editor={editor} />
+      <div className="p-4 min-h-[200px] focus-within:ring-2 focus-within:ring-blue-500 rounded-b-lg">
+        <Editable
+          renderElement={renderElement}
+          renderLeaf={renderLeaf}
+          placeholder="Mulai tulis artikel Anda di sini..."
+          spellCheck
+          autoFocus
+          onKeyDown={event => {
+            for (const hotkey in HOTKEYS) {
+              if (isHotkey(hotkey, event)) {
+                event.preventDefault();
+                const mark = HOTKEYS[hotkey];
+                toggleMark(editor, mark);
+              }
+            }
+          }}
+          className="prose max-w-none"
+        />
+      </div>
+    </Slate>
+  );
+};
+
+const initialSlateValue = [{ type: 'paragraph', children: [{ text: '' }] }];
+
+const parseToSlate = (dbString) => {
+  if (!dbString) return initialSlateValue;
+  try {
+    const parsed = JSON.parse(dbString);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed;
+    }
+  } catch (e) {
+    return [{ type: 'paragraph', children: [{ text: dbString.replace(/<[^>]+>/g, '') || '' }] }];
+  }
+  return initialSlateValue;
+};
 
 const ConfirmationModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
     if (!isOpen) return null;
@@ -73,7 +258,6 @@ const ConfirmationModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
     );
 };
 
-// --- [FIXED] Komponen ArtikelModal dengan Scroll ---
 const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
     const [judul, setJudul] = useState('');
     const [konten, setKonten] = useState(initialSlateValue);
@@ -133,16 +317,12 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
 
     return (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-            {/* PERBAIKAN: Mengubah modal menjadi flex container dengan tinggi maksimal */}
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl transform transition-all duration-300 ease-out scale-95 animate-in fade-in-0 zoom-in-95 flex flex-col max-h-[90vh]">
-                {/* Header Modal (Tidak bisa di-scroll) */}
                 <div className="flex-shrink-0 p-6 border-b border-gray-200">
                     <h2 className="text-2xl font-bold text-gray-900">{artikel ? 'Edit Artikel' : 'Tambah Artikel Baru'}</h2>
                 </div>
                 
-                {/* PERBAIKAN: Form dibuat menjadi flex container agar bisa memisahkan konten dan tombol aksi */}
                 <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
-                    {/* Area Konten (Bisa di-scroll) */}
                     <div className="flex-grow p-6 space-y-6 overflow-y-auto">
                         {formError && <Alert message={formError} />}
                         <div>
@@ -162,7 +342,7 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
                                 </div>
                                 <div className="flex-grow">
                                     <input type="file" accept="image/*" onChange={handleFileChange} ref={fileInputRef} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
-                                    <p className="text-xs text-gray-500 mt-2">PNG, JPG, GIF hingga 5MB.</p>
+                                    <p className="text-xs text-gray-500 mt-2">PNG, JPG, JPEG hingga 5MB.</p>
                                     {previewUrl && (
                                         <button type="button" onClick={handleRemoveImage} className="mt-2 text-sm text-red-600 hover:text-red-800 flex items-center gap-1">
                                             <X size={14} /> Hapus Gambar
@@ -180,7 +360,6 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
                         </div>
                     </div>
 
-                    {/* Footer Aksi (Tidak bisa di-scroll) */}
                     <div className="flex-shrink-0 flex justify-end gap-3 p-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
                         <button type="button" onClick={onClose} disabled={isSaving} className="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors">Batal</button>
                         <button type="submit" disabled={isSaving} className="px-5 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center disabled:opacity-50">
@@ -214,7 +393,6 @@ const ArtikelTable = ({ data, onEdit, onDelete, isDeleting }) => {
 
     return (
         <>
-            {/* Tampilan Mobile (Card View) */}
             <div className="space-y-4 md:hidden">
                 {data.map((artikel) => (
                     <div key={artikel.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow flex gap-4 items-start">
@@ -239,7 +417,6 @@ const ArtikelTable = ({ data, onEdit, onDelete, isDeleting }) => {
                 ))}
             </div>
 
-            {/* Tampilan Desktop (Table View) */}
             <div className="hidden md:block border border-gray-200 rounded-lg overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
@@ -280,7 +457,6 @@ const ArtikelTable = ({ data, onEdit, onDelete, isDeleting }) => {
 };
 
 
-// --- Komponen Halaman Utama ---
 export default function ArtikelAdminPage() {
     const [articles, setArticles] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
