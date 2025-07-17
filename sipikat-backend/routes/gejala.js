@@ -1,4 +1,3 @@
-// routes/gejala.js
 const express = require('express');
 const router = express.Router();
 const gejalaController = require('../controllers/gejalaController');

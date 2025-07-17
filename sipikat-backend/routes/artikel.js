@@ -1,4 +1,3 @@
-// routes/artikel.js
 const express = require('express');
 const router = express.Router();
 const artikelController = require('../controllers/artikelController');

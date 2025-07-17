@@ -1,4 +1,3 @@
-// controllers/gejalaController.js
 const pool = require('../config/db');
 
 exports.getAllGejalaForAdmin = async (req, res) => {

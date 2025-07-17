@@ -1,4 +1,3 @@
-// controllers/aktivitasController.js
 const pool = require('../config/db');
 
 exports.getRecentActivities = async (req, res) => {
@@ -9,6 +8,8 @@ exports.getRecentActivities = async (req, res) => {
             (SELECT id, NULL as nama, judul, created_at, 'artikel' as type FROM tb_artikel)
             UNION ALL
             (SELECT id, name as nama, NULL as judul, created_at, 'user' as type FROM tb_user)
+            UNION ALL
+            (SELECT id, kategori as nama, solusi as judul, created_at, 'solusi' as type FROM tb_solusi) -- Tambahkan baris ini
             ORDER BY created_at DESC
             LIMIT 5;
         `;

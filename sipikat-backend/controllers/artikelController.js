@@ -1,4 +1,3 @@
-// controllers/artikelController.js (Backend)
 const pool = require('../config/db');
 const slugify = require('slugify');
 

@@ -10,7 +10,6 @@ exports.diagnoseUser = async (req, res) => {
         selectedSymptoms
     } = req.body;
 
-    // Validasi input
     if (!nama || !jenis_kelamin || !usia || !alamat || !selectedSymptoms || !Array.isArray(selectedSymptoms) || selectedSymptoms.length === 0) {
         return res.status(400).json({
             message: 'Mohon berikan semua data pengguna dan gejala yang dipilih.'
@@ -26,59 +25,56 @@ exports.diagnoseUser = async (req, res) => {
     }
 
     try {
-        // PERBAIKAN 1: Ambil juga nama gejala dari database
         const [allGejala] = await pool.execute('SELECT id, gejala, mb FROM tb_gejala');
+        const [allSolusi] = await pool.execute('SELECT kategori, solusi FROM tb_solusi');
 
-        // Kalkulasi Certainty Factor
         const {
             total_cf,
             kategori,
             solusi
-        } = calculateCF(selectedSymptoms, allGejala);
+        } = calculateCF(selectedSymptoms, allGejala, allSolusi);
 
         const created_at = new Date();
 
-        // Simpan hasil diagnosa ke database
         const [result] = await pool.execute(
             'INSERT INTO tb_diagnosa (nama, jenis_kelamin, usia, alamat, total_cf, kategori, solusi, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
             [nama, jenis_kelamin, usia, alamat, total_cf, kategori, solusi, created_at]
         );
 
-        // PERBAIKAN 2: Gabungkan nama gejala ke dalam `selectedSymptoms` untuk dikirim ke frontend
-        const gejala_terpilih_dengan_nama = selectedSymptoms.map(symptom => {
-            const detailGejala = allGejala.find(g => g.id === symptom.id);
+        const diagnosaId = result.insertId;
+
+        const gejalaTerpilihDenganNama = selectedSymptoms.map(symptom => {
+            const fullGejala = allGejala.find(g => g.id === symptom.id);
             return {
-                ...symptom,
-                gejala: detailGejala ? detailGejala.gejala : 'Gejala tidak ditemukan',
+                id: symptom.id,
+                gejala: fullGejala ? fullGejala.gejala : 'Nama Gejala Tidak Ditemukan',
+                cf_user: symptom.cf_user
             };
         });
 
-        // PERBAIKAN 3: Sertakan objek 'user' dan 'gejala_terpilih' dalam respon JSON
         res.status(201).json({
-            message: 'Diagnosis complete!',
-            diagnosis_id: result.insertId,
-            total_cf,
-            kategori,
-            solusi,
-            user: { // Objek user ditambahkan di sini
+            message: 'Diagnosa berhasil disimpan',
+            id: diagnosaId,
+            user: {
                 nama,
                 jenis_kelamin,
                 usia,
                 alamat
             },
-            gejala_terpilih: gejala_terpilih_dengan_nama // Gejala terpilih ditambahkan di sini
+            gejala_terpilih: gejalaTerpilihDenganNama,
+            total_cf,
+            kategori,
+            solusi,
+            created_at,
         });
-
     } catch (err) {
         console.error('Error in diagnoseUser:', err.message);
         res.status(500).json({
-            message: 'Server Error'
+            message: 'Server Error',
+            error: err.message
         });
     }
 };
-
-
-// --- FUNGSI LAINNYA (TETAP SAMA) ---
 
 exports.getAllDiagnosa = async (req, res) => {
     try {
