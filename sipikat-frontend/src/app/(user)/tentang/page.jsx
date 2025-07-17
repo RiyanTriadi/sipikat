@@ -1,7 +1,64 @@
 import { BrainCircuit, HeartHandshake, Github, Linkedin, Instagram } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
+
+const getTechIcon = (techName, size = 24) => {
+    const fileName = techName.toLowerCase().replace(/\s+/g, '-');
+    
+    const imagePath = `/icons/tech/${fileName}.svg`;
+
+    return (
+        <Image
+            src={imagePath}
+            alt={`${techName} logo`}
+            width={size}
+            height={size}
+            className="transition-transform hover:scale-110"
+        />
+    );
+};
+
+const TechStackIcons = ({ technologies }) => (
+    <div className="flex flex-wrap justify-center gap-4 mt-2 mb-4">
+        {technologies.map((tech, index) => (
+            <div key={index} title={tech}> 
+                {getTechIcon(tech, 24)}
+            </div>
+        ))}
+    </div>
+);
 
 export default function TentangPage() {
+    const dadiTechStack = [
+        'HTML5', 
+        'CSS3', 
+        'JavaScript', 
+        'Php',
+        'NodeJS',
+        'Laravel', 
+        'Flutter', 
+        'TailwindCSS',
+        'Bootstrap', 
+        'Bulma', 
+        'MySQL', 
+        'Git',
+    ];
+
+    const riyanTechStack = [
+        'HTML5', 
+        'CSS3', 
+        'JavaScript', 
+        'PHP',
+        'NodeJS', 
+        'ExpressJS', 
+        'ReactJS', 
+        'NextJS', 
+        'TailwindCSS', 
+        'Bootstrap', 
+        'MySQL', 
+        'Git'
+    ];
+
     return (
         <div className="bg-white font-sans">
             <section className="relative text-white text-center py-20 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1495653797063-114787b77b23?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')" }}>
@@ -13,7 +70,7 @@ export default function TentangPage() {
                     </p>
                 </div>
             </section>
-
+/
             <main className="py-16 sm:py-24">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-20">
                     <section className="flex flex-col md:flex-row items-center gap-12">
@@ -70,7 +127,6 @@ export default function TentangPage() {
                             </p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-4xl mx-auto">
-                            {/* Card Developer 1 */}
                             <div className="bg-white rounded-lg p-6 shadow-lg border border-gray-200 text-center flex flex-col items-center">
                                 <img
                                     src="https://i.pravatar.cc/150?u=developer1"
@@ -82,10 +138,8 @@ export default function TentangPage() {
                                 <p className="text-gray-600 mb-2 flex-grow">
                                     Mahasiswa Teknik Informatika yang berfokus pada pengembangan web dan AI untuk menciptakan solusi inovatif.
                                 </p>
-                                <div className="text-gray-700 text-sm mb-4">
-                                    <span className="font-semibold">Tech Stack:</span> React, Next.js, Node.js, Python, MongoDB
-                                </div>
-                                <div className="flex justify-center space-x-4 mt-auto"> 
+                                <TechStackIcons technologies={riyanTechStack} />
+                                <div className="flex justify-center space-x-4 mt-auto">
                                     <Link href="#" className="text-gray-500 hover:text-gray-900 transition-colors">
                                         <Github className="w-6 h-6" />
                                     </Link>
@@ -109,10 +163,8 @@ export default function TentangPage() {
                                 <p className="text-gray-600 mb-2 flex-grow">
                                     Memiliki hasrat dalam merancang antarmuka yang intuitif. Percaya bahwa desain yang baik adalah kunci dari teknologi yang bermanfaat.
                                 </p>
-                                <div className="text-gray-700 text-sm mb-4">
-                                    <span className="font-semibold">Tech Stack:</span> React, Tailwind CSS, JavaScript, Express.js, PostgreSQL
-                                </div>
-                                <div className="flex justify-center space-x-4 mt-auto"> 
+                                <TechStackIcons technologies={dadiTechStack} />
+                                <div className="flex justify-center space-x-4 mt-auto">
                                     <Link href="#" className="text-gray-500 hover:text-gray-900 transition-colors">
                                         <Github className="w-6 h-6" />
                                     </Link>
