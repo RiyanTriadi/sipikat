@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, User, List, Lightbulb, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { parseAndRenderContent } from '@/app/(user)/artikel/[slug]/page'; 
 
 const RadialProgress = ({ percentage, styles }) => {
     const radius = 80;
@@ -16,7 +17,7 @@ const RadialProgress = ({ percentage, styles }) => {
         <div className="relative flex items-center justify-center">
             <svg height={radius * 2} width={radius * 2} className="transform -rotate-90">
                 <circle
-                    stroke="#e5e7eb" 
+                    stroke="#e5e7eb"
                     fill="transparent"
                     strokeWidth={stroke}
                     r={normalizedRadius}
@@ -24,7 +25,7 @@ const RadialProgress = ({ percentage, styles }) => {
                     cy={radius}
                 />
                 <motion.circle
-                    stroke={styles.progress.replace('bg-', '')} 
+                    stroke={styles.progress.replace('bg-', '')}
                     fill="transparent"
                     strokeWidth={stroke}
                     strokeDasharray={circumference + ' ' + circumference}
@@ -59,7 +60,6 @@ const InfoCard = ({ icon, title, children }) => (
         </div>
     </div>
 );
-
 
 export default function HasilPage() {
     const [result, setResult] = useState(null);
@@ -102,13 +102,13 @@ export default function HasilPage() {
             </div>
         );
     }
-    
+
     const percentage = (result.total_cf * 100).toFixed(2);
     const styles = getCategoryStyles(result.kategori);
 
     return (
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <motion.div 
+            <motion.div
                 className="max-w-4xl mx-auto"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -117,7 +117,7 @@ export default function HasilPage() {
                 <div className="bg-white p-8 sm:p-10 rounded-xl shadow-lg border border-gray-200">
                     <h1 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-4">Hasil Diagnosa Anda</h1>
                     <p className="text-center text-gray-500 mb-10">Berikut adalah hasil analisis sistem berdasarkan gejala yang Anda berikan.</p>
-                    
+
                     <div className="grid md:grid-cols-2 gap-8 items-center mb-10">
                         <div className="flex flex-col items-center justify-center p-6 rounded-lg bg-gray-50 border">
                             <RadialProgress percentage={percentage} styles={styles} />
@@ -127,10 +127,10 @@ export default function HasilPage() {
                         </div>
 
                         <InfoCard icon={<Lightbulb className={`h-6 w-6 ${styles.text}`} />} title="Solusi & Rekomendasi">
-                            <p className="leading-relaxed">{result.solusi}</p>
+                            <div dangerouslySetInnerHTML={{ __html: parseAndRenderContent(result.solusi) }} />
                         </InfoCard>
                     </div>
-                    
+
                     <div className="grid md:grid-cols-2 gap-8">
                         <InfoCard icon={<User className="h-6 w-6 text-blue-600" />} title="Detail Pasien">
                             <p><strong>Nama:</strong> {result.user.nama}</p>
