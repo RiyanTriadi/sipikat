@@ -1,4 +1,3 @@
-// backend/routes/solusi.js
 const express = require('express');
 const router = express.Router();
 const solusiController = require('../controllers/solusiController');
