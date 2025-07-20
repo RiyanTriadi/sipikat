@@ -1,0 +1,10 @@
+.env
+
+/sipikat-frontend/node_modules
+/sipikat-backend/node_modules
+
+/dist
+/build
+
+.env
+*.env.local
