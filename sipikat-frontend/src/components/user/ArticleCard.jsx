@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import ImageWithFallback from '@/components/user/ImageWithFallback'; 
 
-// Definisikan base URL untuk API dan aset statis
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function ArticleCard({ article }) {
@@ -9,7 +8,6 @@ export default function ArticleCard({ article }) {
         return null;
     }
 
-    // Perbaikan: Gunakan API_BASE_URL untuk membuat URL gambar yang lengkap
     const imageUrl = article.gambar 
         ? `${API_BASE_URL}${article.gambar}`
         : 'https://placehold.co/600x400/e2e8f0/e2e8f0?text=Gambar';

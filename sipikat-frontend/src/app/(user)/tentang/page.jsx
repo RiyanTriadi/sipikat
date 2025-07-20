@@ -129,14 +129,14 @@ export default function TentangPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-4xl mx-auto">
                             <div className="bg-white rounded-lg p-6 shadow-lg border border-gray-200 text-center flex flex-col items-center">
                                 <img
-                                    src="https://i.pravatar.cc/150?u=developer1"
+                                    src="https://i.pravatar.cc/150?u=developer12"
                                     alt="Foto Developer 1"
                                     className="w-32 h-32 rounded-full mx-auto mb-4 shadow-md object-cover"
                                 />
                                 <h3 className="text-2xl font-bold text-gray-900">Riyan Triadi</h3>
                                 <p className="text-blue-600 font-semibold mb-3">Full-Stack Developer</p>
                                 <p className="text-gray-600 mb-2 flex-grow">
-                                    Mahasiswa Teknik Informatika yang berfokus pada pengembangan web dan AI untuk menciptakan solusi inovatif.
+                                    Mahasiswa Sistem Informasi yang aktif dalam pengembangan web Full-Stack dan UI/UX Design. Bersemangat menciptakan solusi digital yang intuitif dan fungsional.
                                 </p>
                                 <TechStackIcons technologies={riyanTechStack} />
                                 <div className="flex justify-center space-x-4 mt-auto">

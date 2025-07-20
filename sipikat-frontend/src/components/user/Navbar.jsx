@@ -1,4 +1,3 @@
-// src/components/user/Navbar.jsx
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -17,7 +16,6 @@ export default function Navbar() {
         { href: "/tentang", label: "Tentang" },
     ];
 
-    // Effect untuk mendeteksi scroll
     useEffect(() => {
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 10);
@@ -30,21 +28,17 @@ export default function Navbar() {
         setIsOpen(!isOpen);
     };
     
-    // Effect untuk menutup menu mobile saat halaman berubah
     useEffect(() => {
         if(isOpen) {
             setIsOpen(false);
         }
     }, [pathname]);
 
-    // --- PERUBAHAN UTAMA DI SINI ---
-    // Fungsi untuk kelas styling link desktop
     const linkClasses = (href) => {
         const isActive = pathname === href;
         const baseClasses = 'relative px-1 py-2 text-sm font-medium text-gray-700 transition-colors duration-300 outline-none';
         const activeClasses = 'font-semibold text-blue-600';
         const inactiveClasses = 'hover:text-blue-600';
-        // Kelas untuk pseudo-element ::after (garis bawah)
         const afterClasses = `
             after:content-[''] after:absolute after:left-0 after:bottom-0 
             after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300
@@ -55,7 +49,6 @@ export default function Navbar() {
         return `group ${baseClasses} ${isActive ? activeClasses : inactiveClasses} ${afterClasses} ${isActive ? activeAfter : inactiveAfter}`;
     };
 
-    // Fungsi untuk kelas styling link mobile
     const mobileLinkClasses = (href) => 
         `block px-3 py-2 rounded-md text-base font-medium text-center ${
             pathname === href 
@@ -64,7 +57,7 @@ export default function Navbar() {
         }`;
 
     return (
-        <nav className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 shadow-lg backdrop-blur-lg' : 'bg-white border-b border-gray-200'}`}>
+        <nav className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 shadow-lg backdrop-blur-lg' : 'bg-white'}`}>
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     <div className="flex-shrink-0">
@@ -95,7 +88,6 @@ export default function Navbar() {
                 </div>
             </div>
 
-            {/* Menu Mobile */}
             {isOpen && (
                 <div className="md:hidden border-t border-gray-200 bg-white">
                     <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">

@@ -37,11 +37,8 @@ const Footer = () => {
                            </li>
                       </ul>
                    </div>
-
-                        {/* Anda bisa menambahkan kolom ketiga di sini jika perlu */}
                  </div>
 
-                 {/* --- BAGIAN YANG DIPERBARUI --- */}
                  <div className="mt-12 flex flex-col items-center border-t border-gray-700 pt-8 sm:flex-row sm:justify-between">
                    <p className="text-sm text-gray-500 order-2 sm:order-1 mt-4 sm:mt-0">
                       &copy; {new Date().getFullYear()} SIPIKAT. Seluruh hak cipta dilindungi.

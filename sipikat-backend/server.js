@@ -11,6 +11,7 @@ const userRoutes = require('./routes/user');
 const aktivitasRoutes = require('./routes/aktivitas');
 const uploadRoutes = require('./routes/upload');
 const solusiRoutes = require('./routes/solusi');
+const pageRoutes = require('./routes/page');
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use('/api/admin/users', userRoutes);
 app.use('/api/aktivitas', aktivitasRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/solusi', solusiRoutes);
+app.use('/api/pages', pageRoutes);
 
 app.get('/', (req, res) => {
   res.send('Expert System Backend API is running!');

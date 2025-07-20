@@ -6,6 +6,7 @@ import { ArrowLeft, User, List, Lightbulb, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { parseAndRenderContent } from '@/app/(user)/artikel/[slug]/page'; 
 
+
 const RadialProgress = ({ percentage, styles }) => {
     const radius = 80;
     const stroke = 15;
@@ -25,7 +26,7 @@ const RadialProgress = ({ percentage, styles }) => {
                     cy={radius}
                 />
                 <motion.circle
-                    stroke={styles.progress.replace('bg-', '')}
+                    stroke={styles.progress}
                     fill="transparent"
                     strokeWidth={stroke}
                     strokeDasharray={circumference + ' ' + circumference}
@@ -50,7 +51,7 @@ const RadialProgress = ({ percentage, styles }) => {
 };
 
 const InfoCard = ({ icon, title, children }) => (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-full">
         <div className="flex items-center mb-4">
             {icon}
             <h3 className="text-lg font-semibold text-gray-800 ml-3">{title}</h3>
@@ -74,14 +75,14 @@ export default function HasilPage() {
     }, []);
 
     const getCategoryStyles = (kategori) => {
-        const lowerKategori = kategori.toLowerCase();
+        const lowerKategori = kategori ? kategori.toLowerCase() : '';
         if (lowerKategori.includes('kecanduan') || lowerKategori.includes('tinggi')) {
-            return { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-400', progress: 'bg-red-500' };
+            return { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-400', progress: '#ef4444' };
         }
         if (lowerKategori.includes('waspada') || lowerKategori.includes('sedang')) {
-            return { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-400', progress: 'bg-yellow-500' };
+            return { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-400', progress: '#eab308' };
         }
-        return { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-400', progress: 'bg-green-600' };
+        return { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-400', progress: '#16a34a' };
     };
 
     if (loading) {
@@ -91,7 +92,7 @@ export default function HasilPage() {
     if (!result) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-                <div className="text-center bg-white p-10 rounded-lg shadow-xl">
+                <div className="text-center bg-white p-10 rounded-xl shadow-xl border">
                     <h1 className="text-2xl font-bold text-gray-800 mb-4">Hasil Tidak Ditemukan</h1>
                     <p className="mb-8 text-gray-600">Sepertinya Anda belum melakukan diagnosa atau sesi telah berakhir.</p>
                     <Link href="/diagnosa" className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-transform transform hover:scale-105">
@@ -103,7 +104,7 @@ export default function HasilPage() {
         );
     }
 
-    const percentage = (result.total_cf * 100).toFixed(2);
+    const percentage = parseFloat((result.total_cf * 100).toFixed(2));
     const styles = getCategoryStyles(result.kategori);
 
     return (
@@ -119,15 +120,15 @@ export default function HasilPage() {
                     <p className="text-center text-gray-500 mb-10">Berikut adalah hasil analisis sistem berdasarkan gejala yang Anda berikan.</p>
 
                     <div className="grid md:grid-cols-2 gap-8 items-center mb-10">
-                        <div className="flex flex-col items-center justify-center p-6 rounded-lg bg-gray-50 border">
+                        <div className="flex flex-col items-center justify-center p-6 rounded-xl bg-gray-50 border">
                             <RadialProgress percentage={percentage} styles={styles} />
-                            <div className={`mt-6 text-center ${styles.bg} ${styles.text} px-4 py-2 rounded-full font-semibold`}>
+                            <div className={`mt-6 text-center ${styles.bg} ${styles.text} px-4 py-2 rounded-full font-semibold text-sm`}>
                                 Kategori: {result.kategori}
                             </div>
                         </div>
 
                         <InfoCard icon={<Lightbulb className={`h-6 w-6 ${styles.text}`} />} title="Solusi & Rekomendasi">
-                            <div dangerouslySetInnerHTML={{ __html: parseAndRenderContent(result.solusi) }} />
+                            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: parseAndRenderContent(result.solusi) }} />
                         </InfoCard>
                     </div>
 
@@ -143,7 +144,7 @@ export default function HasilPage() {
                             <ul className="list-disc list-inside space-y-1">
                                 {result.gejala_terpilih.map(g => (
                                     <li key={g.id}>
-                                        {g.gejala} <span className="text-gray-500">- ({(g.cf_user * 100).toFixed(0)}%)</span>
+                                        {g.gejala} <span className="text-gray-500 text-sm">- ({(g.cf_user * 100).toFixed(0)}% yakin)</span>
                                     </li>
                                 ))}
                             </ul>
@@ -151,7 +152,7 @@ export default function HasilPage() {
                     </div>
 
                     <div className="text-center mt-12 pt-8 border-t border-gray-200">
-                        <Link href="/diagnosa" className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-transform transform hover:scale-105">
+                        <Link href="/diagnosa" className="inline-flex items-center justify-center px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-transform transform hover:scale-105">
                             <RefreshCw className="mr-2 h-5 w-5" />
                             Lakukan Diagnosa Ulang
                         </Link>
