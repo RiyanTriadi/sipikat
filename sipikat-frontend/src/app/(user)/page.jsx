@@ -4,9 +4,7 @@ import Image from 'next/image';
 
 async function getLatestArticles() {
     try {
-        const res = await fetch('http://localhost:5000/api/artikel', {
-            cache: 'no-store' 
-        });
+        const res = await fetch('http://localhost:5000/api/artikel');
 
         if (!res.ok) {
             console.error("Gagal mengambil data artikel dari server.");
@@ -65,7 +63,7 @@ export default async function HomePage() {
                     </div>
                 </div>
             </section>
-          
+        
             {latestArticles.length > 0 && (
                 <section className="py-16 sm:py-24 bg-gray-100">
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8">

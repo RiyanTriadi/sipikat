@@ -2,7 +2,7 @@ import { FileText } from 'lucide-react';
 
 async function getPageContent(slug) {
     try {
-        const res = await fetch(`http://localhost:5000/api/pages/${slug}`, { cache: 'no-store' });
+        const res = await fetch(`http://localhost:5000/api/pages/${slug}`);
         if (!res.ok) return null;
         return res.json();
     } catch (error) {

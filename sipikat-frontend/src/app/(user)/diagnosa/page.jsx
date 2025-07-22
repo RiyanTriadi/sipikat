@@ -7,9 +7,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import React from 'react'; 
 
 const confidenceLevels = [
-    { label: "Tidak", value: 0 }, { label: "Jarang", value: 0.2 },
-    { label: "Kadang-kadang", value: 0.4 }, { label: "Sering", value: 0.6 },
-    { label: "Sangat Sering", value: 0.8 }, { label: "Selalu", value: 1.0 },
+    { label: "Tidak Pernah", value: 0 },
+    { label: "Kadang-kadang", value: 0.33 },
+    { label: "Sering", value: 0.67 },
+    { label: "Selalu", value: 1.0 },
 ];
 const namaKampung = ["Leuwi Kolot", "Tegalwangi", "Cibuntu", "Cilaja", "Ciparay", "Pasirpeuteuy"];
 

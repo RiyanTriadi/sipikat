@@ -2,9 +2,7 @@ import ArticleCard from '@/components/user/ArticleCard';
 
 async function getArticles() {
     try {
-        const res = await fetch('http://localhost:5000/api/artikel', {
-            cache: 'no-store' 
-        });
+        const res = await fetch('http://localhost:5000/api/artikel');
         if (!res.ok) {
             const errorData = await res.json().catch(() => ({})); 
             throw new Error(errorData.message || 'Gagal mengambil data artikel dari server.');
