@@ -34,29 +34,21 @@ export default function TentangPage() {
         'CSS3', 
         'JavaScript', 
         'Php',
-        'NodeJS',
         'Laravel', 
         'Flutter', 
         'TailwindCSS',
-        'Bootstrap', 
-        'Bulma', 
         'MySQL', 
-        'Git',
     ];
 
     const riyanTechStack = [
         'HTML5', 
         'CSS3', 
         'JavaScript', 
-        'PHP',
-        'NodeJS', 
         'ExpressJS', 
         'ReactJS', 
         'NextJS', 
         'TailwindCSS', 
-        'Bootstrap', 
         'MySQL', 
-        'Git'
     ];
 
     return (
@@ -121,45 +113,32 @@ export default function TentangPage() {
 
                     <section>
                         <div className="text-center mb-12">
-                            <h2 className="text-3xl font-bold text-gray-900">Tim Developer Kami</h2>
-                            <p className="mt-2 text-lg text-gray-600 max-w-3xl mx-auto">
-                                Perkenalkan tim di balik layar yang berdedikasi untuk mewujudkan SIPIKAT.
-                            </p>
+                            <h2 className="text-3xl font-bold text-gray-900">Tim Developer SIPIKAT</h2>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-4xl mx-auto">
                             <div className="bg-white rounded-lg p-6 shadow-lg border border-gray-200 text-center flex flex-col items-center">
-                                <img
-                                    src="https://i.pravatar.cc/150?u=developer12"
-                                    alt="Foto Developer 1"
-                                    className="w-32 h-32 rounded-full mx-auto mb-4 shadow-md object-cover"
-                                />
                                 <h3 className="text-2xl font-bold text-gray-900">Riyan Triadi</h3>
-                                <p className="text-blue-600 font-semibold mb-3">Full-Stack Developer</p>
+                                <p className="text-blue-600 font-semibold mb-3">Developer Web SIPIKAT</p>
                                 <p className="text-gray-600 mb-2 flex-grow">
-                                    Mahasiswa Sistem Informasi yang aktif dalam pengembangan web Full-Stack dan UI/UX Design. Bersemangat menciptakan solusi digital yang intuitif dan fungsional.
+                                    Mahasiswa Sistem Informasi dengan ketertarikan pada frontend development menggunakan JavaScript.
                                 </p>
                                 <TechStackIcons technologies={riyanTechStack} />
                                 <div className="flex justify-center space-x-4 mt-auto">
-                                    <Link href="#" className="text-gray-500 hover:text-gray-900 transition-colors">
+                                    <Link href="https://github.com/RiyanTriadi" className="text-gray-500 hover:text-gray-900 transition-colors">
                                         <Github className="w-6 h-6" />
                                     </Link>
                                     <Link href="#" className="text-gray-500 hover:text-blue-700 transition-colors">
                                         <Linkedin className="w-6 h-6" />
                                     </Link>
-                                    <Link href="#" className="text-gray-500 hover:text-pink-600 transition-colors">
+                                    <Link href="https://www.instagram.com/ryn3d/" className="text-gray-500 hover:text-pink-600 transition-colors">
                                         <Instagram className="w-6 h-6" />
                                     </Link>
                                 </div>
                             </div>
 
                             <div className="bg-white rounded-lg p-6 shadow-lg border border-gray-200 text-center flex flex-col items-center">
-                                <img
-                                    src="https://i.pravatar.cc/150?u=developer2"
-                                    alt="Foto Developer 2"
-                                    className="w-32 h-32 rounded-full mx-auto mb-4 shadow-md object-cover"
-                                />
                                 <h3 className="text-2xl font-bold text-gray-900">Dadi Suhendi</h3>
-                                <p className="text-blue-600 font-semibold mb-3">Full-Stack Developer</p>
+                                <p className="text-blue-600 font-semibold mb-3">Developer SIPIKAT Mobile</p>
                                 <p className="text-gray-600 mb-2 flex-grow">
                                     Memiliki hasrat dalam merancang antarmuka yang intuitif. Percaya bahwa desain yang baik adalah kunci dari teknologi yang bermanfaat.
                                 </p>
