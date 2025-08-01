@@ -38,7 +38,7 @@ export default async function HomePage() {
                         Kenali & Atasi Kecanduan Gadget
                     </h1>
                     <p className="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-gray-200 drop-shadow-md">
-                        Temukan tingkat ketergantungan Anda pada gadget dan dapatkan solusi yang dipersonalisasi melalui sistem pakar kami.
+                        Cari tahu seberapa sering Anda memakai gadget dan dapatkan saran khusus dari kami untuk mengaturnya.
                     </p>
                 </div>
             </section>
