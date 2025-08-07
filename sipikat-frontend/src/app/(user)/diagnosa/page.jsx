@@ -50,16 +50,15 @@ export default function DiagnosaPage() {
     const [step, setStep] = useState(1);
     const [user, setUser] = useState({ nama: '', jenis_kelamin: '', usia: '', alamat: '' });
     const [gejala, setGejala] = useState([]);
-    const [addresses, setAddresses] = useState([]); // State baru untuk alamat
+    const [addresses, setAddresses] = useState([]); 
     const [selectedGejala, setSelectedGejala] = useState({});
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [gejalaLoading, setGejalaLoading] = useState(true);
-    const [addressLoading, setAddressLoading] = useState(true); // State loading untuk alamat
+    const [addressLoading, setAddressLoading] = useState(true); 
     const router = useRouter();
 
     useEffect(() => {
-        // Fetch Gejala
         const fetchGejala = async () => {
             setGejalaLoading(true);
             try {
@@ -77,7 +76,6 @@ export default function DiagnosaPage() {
             }
         };
 
-        // Fetch Alamat dari API baru
         const fetchAddresses = async () => {
             setAddressLoading(true);
             try {
