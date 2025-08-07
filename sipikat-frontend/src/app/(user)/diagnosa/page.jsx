@@ -12,7 +12,6 @@ const confidenceLevels = [
     { label: "Sering", value: 0.67 },
     { label: "Selalu", value: 1.0 },
 ];
-const namaKampung = ["Leuwi Kolot", "Tegalwangi", "Cibuntu", "Cilaja", "Ciparay", "Pasirpeuteuy"];
 
 const Alert = ({ message }) => (
     <div className="px-4 py-3 rounded-md relative text-center text-sm font-medium shadow-sm bg-red-50 border border-red-300 text-red-700 flex items-center justify-center space-x-2" role="alert">
@@ -51,16 +50,18 @@ export default function DiagnosaPage() {
     const [step, setStep] = useState(1);
     const [user, setUser] = useState({ nama: '', jenis_kelamin: '', usia: '', alamat: '' });
     const [gejala, setGejala] = useState([]);
+    const [addresses, setAddresses] = useState([]); // State baru untuk alamat
     const [selectedGejala, setSelectedGejala] = useState({});
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [gejalaLoading, setGejalaLoading] = useState(true);
+    const [addressLoading, setAddressLoading] = useState(true); // State loading untuk alamat
     const router = useRouter();
 
     useEffect(() => {
+        // Fetch Gejala
         const fetchGejala = async () => {
             setGejalaLoading(true);
-            setError('');
             try {
                 const res = await fetch('http://localhost:5000/api/gejala');
                 if (!res.ok) throw new Error('Gagal mengambil data gejala dari server.');
@@ -75,7 +76,26 @@ export default function DiagnosaPage() {
                 setGejalaLoading(false);
             }
         };
+
+        // Fetch Alamat dari API baru
+        const fetchAddresses = async () => {
+            setAddressLoading(true);
+            try {
+                const res = await fetch('https://mobile-api.edu-sipikat.com/api/v1/addresses');
+                if (!res.ok) throw new Error('Gagal mengambil data alamat.');
+                const data = await res.json();
+                if (data && data.data) {
+                    setAddresses(data.data);
+                }
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setAddressLoading(false);
+            }
+        };
+
         fetchGejala();
+        fetchAddresses();
     }, []);
 
     const handleUserChange = (e) => setUser({ ...user, [e.target.name]: e.target.value });
@@ -176,11 +196,15 @@ export default function DiagnosaPage() {
                                     </div>
                                     <div>
                                         <label htmlFor="alamat" className={labelClasses}>Alamat:</label>
-                                        <select id="alamat" name="alamat" value={user.alamat} onChange={handleUserChange} className={inputClasses}>
+                                        <select id="alamat" name="alamat" value={user.alamat} onChange={handleUserChange} className={inputClasses} disabled={addressLoading}>
                                             <option value="">Pilih Alamat</option>
-                                            {namaKampung.map((kampung, index) => (
-                                                <option key={index} value={kampung}>{kampung}</option>
-                                            ))}
+                                            {addressLoading ? (
+                                                <option disabled>Memuat alamat...</option>
+                                            ) : (
+                                                addresses.map((address) => (
+                                                    <option key={address.id} value={address.name}>{address.name}</option>
+                                                ))
+                                            )}
                                         </select>
                                     </div>
                                 </div>
@@ -203,7 +227,7 @@ export default function DiagnosaPage() {
                                         gejala.map((g, index) => (
                                             <div key={g.id} className="p-5 border border-gray-200 rounded-xl bg-white shadow-sm">
                                                 <p className="font-semibold text-gray-800 mb-4 text-md">{index + 1}. {g.gejala}</p>
-                                                <fieldset className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                                                <fieldset className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                                     {confidenceLevels.map(level => (
                                                         <label key={level.value} className="relative flex items-center justify-center p-2 rounded-lg border-2 cursor-pointer transition-all duration-200 ease-in-out has-[:checked]:bg-blue-50 has-[:checked]:border-blue-500 has-[:checked]:shadow-inner text-center">
                                                             <input type="radio" name={`gejala_${g.id}`} value={level.value}
@@ -242,11 +266,11 @@ export default function DiagnosaPage() {
                                 </button>
                             )}
                             {step === 2 && (
-                                <button type="submit" disabled={loading || gejalaLoading} className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
+                                <button type="submit" disabled={loading || gejalaLoading} className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:bg-blue-300">
                                     {loading ? (
                                         <><Loader2 className="animate-spin mr-3 h-5 w-5" /> Memproses...</>
                                     ) : (
-                                        "Diagnosa"
+                                        "Lihat Hasil Diagnosa"
                                     )}
                                 </button>
                             )}
