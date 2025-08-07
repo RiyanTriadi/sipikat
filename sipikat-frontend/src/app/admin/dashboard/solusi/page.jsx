@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation'; 
 import {
-    PlusCircle, Edit, Trash2, Loader2, AlertCircle, RefreshCw,
+    Edit, Trash2, Loader2, AlertCircle, RefreshCw,
     Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Quote, X,
 } from 'lucide-react';
 import { createEditor, Editor as SlateEditor, Transforms, Text, Element as SlateElement } from 'slate';
@@ -379,7 +379,7 @@ const SolusiTable = ({ data, onEdit, onDelete, isDeleting }) => {
                 ))}
             </div>
 
-            <div className="hidden md:block border border-gray-200 rounded-lg overflow-x-auto">
+            <div className="hidden md:block border border-gray-200 rounded-lg overflow-x-auto bg-white">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
@@ -557,14 +557,10 @@ export default function SolusiAdminPage() {
                             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                             Refresh
                         </button>
-                        <button onClick={() => openModal()} className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md disabled:opacity-50">
-                            <PlusCircle className="h-5 w-5" />
-                            Tambah Solusi
-                        </button>
                     </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+                <div>
                     {error && <Alert message={error} />}
                     {loading ? (
                         <Spinner text="Memuat daftar solusi..." />
