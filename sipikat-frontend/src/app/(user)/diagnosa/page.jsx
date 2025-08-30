@@ -249,22 +249,24 @@ export default function DiagnosaPage() {
 
                     {error && <div className="mt-8"><Alert message={error} /></div>}
 
-                    <div className="flex justify-between items-center mt-12 pt-6 border-t border-gray-200">
-                        <div>
-                            {step > 1 && (
-                                <button type="button" onClick={prevStep} className="inline-flex items-center px-6 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
-                                    Kembali
-                                </button>
-                            )}
-                        </div>
-                        <div className="flex-grow flex justify-end">
+                    <div className="flex flex-col sm:flex-row justify-between items-center mt-12 pt-6 border-t border-gray-200 gap-4">
+                        {step > 1 && (
+                            <button 
+                                type="button" 
+                                onClick={prevStep} 
+                                className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
+                            >
+                                Kembali
+                            </button>
+                        )}
+                        <div className="flex-grow flex justify-end w-full sm:w-auto">
                             {step === 1 && (
-                                <button type="button" onClick={nextStep} className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
+                                <button type="button" onClick={nextStep} className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
                                     Lanjut ke Kuesioner
                                 </button>
                             )}
                             {step === 2 && (
-                                <button type="submit" disabled={loading || gejalaLoading} className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:bg-blue-300">
+                                <button type="submit" disabled={loading || gejalaLoading} className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:bg-blue-300">
                                     {loading ? (
                                         <><Loader2 className="animate-spin mr-3 h-5 w-5" /> Memproses...</>
                                     ) : (

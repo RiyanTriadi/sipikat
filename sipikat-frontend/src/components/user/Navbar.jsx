@@ -27,37 +27,31 @@ export default function Navbar() {
     const toggleMenu = () => {
         setIsOpen(!isOpen);
     };
-    
+
     useEffect(() => {
-        if(isOpen) {
+        if (isOpen) {
             setIsOpen(false);
         }
     }, [pathname]);
 
     const linkClasses = (href) => {
         const isActive = pathname === href;
-        const baseClasses = 'relative px-1 py-2 text-sm font-medium text-gray-700 transition-colors duration-300 outline-none';
-        const activeClasses = 'font-semibold text-blue-600';
-        const inactiveClasses = 'hover:text-blue-600';
-        const afterClasses = `
-            after:content-[''] after:absolute after:left-0 after:bottom-0 
-            after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300
-        `;
-        const activeAfter = 'after:w-full';
-        const inactiveAfter = 'after:w-0 group-hover:after:w-full';
-
-        return `group ${baseClasses} ${isActive ? activeClasses : inactiveClasses} ${afterClasses} ${isActive ? activeAfter : inactiveAfter}`;
+        return `
+        group relative px-1 py-2 text-sm font-medium text-gray-700 transition-colors duration-300 outline-none
+        ${isActive ? 'font-semibold text-blue-600' : 'hover:text-blue-600'}
+        after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300
+        ${isActive ? 'after:w-full' : 'after:w-0 group-hover:after:w-full'}
+     `;
     };
 
-    const mobileLinkClasses = (href) => 
-        `block px-3 py-2 rounded-md text-base font-medium text-center ${
-            pathname === href 
-            ? 'bg-blue-100 text-blue-700 font-semibold' 
+    const mobileLinkClasses = (href) =>
+        `block px-3 py-2 rounded-md text-base font-medium text-center transition-colors ${pathname === href
+            ? 'bg-blue-100 text-blue-700 font-semibold'
             : 'text-gray-700 hover:bg-gray-100'
         }`;
 
     return (
-        <nav className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 shadow-lg backdrop-blur-lg' : 'bg-white'}`}>
+        <nav className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 shadow-md backdrop-blur-sm' : 'bg-white'}`}>
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     <div className="flex-shrink-0">
@@ -74,38 +68,36 @@ export default function Navbar() {
                             ))}
                         </div>
                     </div>
-                    <div className="hidden md:block">
-                         <Link href="/admin/login" className="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Admin Login
-                        </Link>
-                    </div>
                     <div className="-mr-2 flex md:hidden">
-                        <button onClick={toggleMenu} className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
+                        <button
+                            onClick={toggleMenu}
+                            className="relative inline-flex items-center justify-center h-10 w-10 rounded-md text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                            aria-expanded={isOpen}
+                            aria-controls="mobile-menu"
+                        >
                             <span className="sr-only">Open main menu</span>
-                            {isOpen ? <X className="block h-6 w-6" /> : <Menu className="block h-6 w-6" />}
+                            <Menu className={`block h-6 w-6 transition-all duration-300 ease-in-out ${isOpen ? 'opacity-0 -rotate-90' : 'opacity-100 rotate-0'}`} />
+                            <X className={`absolute block h-6 w-6 transition-all duration-300 ease-in-out ${isOpen ? 'opacity-100 rotate-0' : 'opacity-0 rotate-90'}`} />
                         </button>
                     </div>
                 </div>
             </div>
 
-            {isOpen && (
-                <div className="md:hidden border-t border-gray-200 bg-white">
-                    <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                        {navLinks.map(link => (
-                            <Link key={link.href} href={link.href} className={mobileLinkClasses(link.href)}>
-                                {link.label}
-                            </Link>
-                        ))}
-                    </div>
-                    <div className="pt-4 pb-3 border-t border-gray-200">
-                        <div className="flex items-center justify-center px-5">
-                             <Link href="/admin/login" className="w-full text-center inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                Admin Login
-                            </Link>
-                        </div>
-                    </div>
+            <div
+                id="mobile-menu"
+                className={`
+           md:hidden border-t border-gray-200 bg-white transition-all duration-300 ease-in-out overflow-hidden
+           ${isOpen ? 'max-h-96' : 'max-h-0'}
+          `}
+            >
+                <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                    {navLinks.map(link => (
+                        <Link key={link.href} href={link.href} className={mobileLinkClasses(link.href)}>
+                            {link.label}
+                        </Link>
+                    ))}
                 </div>
-            )}
+            </div>
         </nav>
     );
 }

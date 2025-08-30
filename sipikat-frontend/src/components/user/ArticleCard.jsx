@@ -15,7 +15,7 @@ export default function ArticleCard({ article }) {
     return (
         <Link href={`/artikel/${article.slug}`} passHref>
             <div className="bg-white rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 cursor-pointer h-full flex flex-col border border-gray-100 group">
-                <div className="w-full h-52 overflow-hidden rounded-t-xl">
+                <div className="w-full h-40 sm:h-52 overflow-hidden rounded-t-xl">
                     <ImageWithFallback
                         src={imageUrl}
                         alt={`Gambar untuk ${article.judul}`}
@@ -24,9 +24,9 @@ export default function ArticleCard({ article }) {
                         height={400}
                     />
                 </div>
-                <div className="p-6 flex-grow flex flex-col justify-between">
+                <div className="p-4 sm:p-6 flex-grow flex flex-col justify-between">
                     <div>
-                        <h2 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-700 transition duration-200 leading-tight">
+                        <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-700 transition duration-200 leading-tight">
                             {article.judul}
                         </h2>
                     </div>

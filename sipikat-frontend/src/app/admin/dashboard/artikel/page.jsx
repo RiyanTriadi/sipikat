@@ -1,13 +1,16 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { PlusCircle, Edit, Trash2, Loader2, AlertCircle, RefreshCw, Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Quote, UploadCloud, X } from 'lucide-react';
-import { createEditor, Editor as SlateEditor, Transforms, Element as SlateElement } from 'slate';
-import { Slate, Editable, withReact } from 'slate-react';
-import { withHistory } from 'slate-history';
-import isHotkey from 'is-hotkey';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { PlusCircle, Edit, Trash2, Loader2, AlertCircle, RefreshCw, Bold, Italic, Underline as UnderlineIcon, List, ListOrdered, Heading1, Heading2, Quote, UploadCloud, X } from 'lucide-react';
+
+// TipTap Imports
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Underline from '@tiptap/extension-underline';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+// --- KOMPONEN UTILITAS ---
 
 const Alert = ({ message, type = 'error' }) => {
     const colors = {
@@ -29,21 +32,99 @@ const Spinner = ({ text }) => (
     </div>
 );
 
-const HOTKEYS = { 'mod+b': 'bold', 'mod+i': 'italic', 'mod+u': 'underline' };
-const LIST_TYPES = ['numbered-list', 'bulleted-list'];
-const TEXT_ALIGN_TYPES = ['left', 'center', 'right', 'justify'];
-const toggleMark = (editor, format) => { const isActive = isMarkActive(editor, format); if (isActive) { SlateEditor.removeMark(editor, format); } else { SlateEditor.addMark(editor, format, true); } };
-const isMarkActive = (editor, format) => { const marks = SlateEditor.marks(editor); return marks ? marks[format] === true : false; };
-const toggleBlock = (editor, format) => { const isActive = isBlockActive(editor, format, TEXT_ALIGN_TYPES.includes(format) ? 'align' : 'type'); const isList = LIST_TYPES.includes(format); Transforms.unwrapNodes(editor, { match: n => !SlateEditor.isEditor(n) && SlateElement.isElement(n) && LIST_TYPES.includes(n.type) && !TEXT_ALIGN_TYPES.includes(format), split: true, }); let newProperties; if (TEXT_ALIGN_TYPES.includes(format)) { newProperties = { align: isActive ? undefined : format }; } else { newProperties = { type: isActive ? 'paragraph' : isList ? 'list-item' : format }; } Transforms.setNodes(editor, newProperties); if (!isActive && isList) { const block = { type: format, children: [] }; Transforms.wrapNodes(editor, block); } };
-const isBlockActive = (editor, format, blockType = 'type') => { const { selection } = editor; if (!selection) return false; const [match] = SlateEditor.nodes(editor, { at: SlateEditor.unhangRange(editor, selection), match: n => !SlateEditor.isEditor(n) && SlateElement.isElement(n) && n[blockType] === format, }); return !!match; };
-const Element = ({ attributes, children, element }) => { const style = { textAlign: element.align }; switch (element.type) { case 'block-quote': return (<blockquote className="border-l-4 pl-4 italic text-gray-500" style={style} {...attributes}>{children}</blockquote>); case 'bulleted-list': return (<ul className="list-disc pl-8" style={style} {...attributes}>{children}</ul>); case 'heading-one': return (<h1 className="text-3xl font-bold" style={style} {...attributes}>{children}</h1>); case 'heading-two': return (<h2 className="text-2xl font-bold" style={style} {...attributes}>{children}</h2>); case 'list-item': return (<li style={style} {...attributes}>{children}</li>); case 'numbered-list': return (<ol className="list-decimal pl-8" style={style} {...attributes}>{children}</ol>); default: return (<p style={style} {...attributes}>{children}</p>); } };
-const Leaf = ({ attributes, children, leaf }) => { if (leaf.bold) { children = <strong>{children}</strong>; } if (leaf.italic) { children = <em>{children}</em>; } if (leaf.underline) { children = <u>{children}</u>; } return <span {...attributes}>{children}</span>; };
-const MarkButton = ({ format, icon: Icon, editor }) => ( <button type="button" onMouseDown={event => { event.preventDefault(); toggleMark(editor, format); }} className={`p-2 rounded ${isMarkActive(editor, format) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-blue-200`}> <Icon size={16} /> </button> );
-const BlockButton = ({ format, icon: Icon, editor }) => ( <button type="button" onMouseDown={event => { event.preventDefault(); toggleBlock(editor, format); }} className={`p-2 rounded ${isBlockActive(editor, format, TEXT_ALIGN_TYPES.includes(format) ? 'align' : 'type') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-blue-200`}> <Icon size={16} /> </button> );
-const SlateToolbar = ({ editor }) => ( <div className="flex items-center flex-wrap gap-2 p-2 bg-gray-100 border-b border-gray-300 rounded-t-lg"> <MarkButton format="bold" icon={Bold} editor={editor} /> <MarkButton format="italic" icon={Italic} editor={editor} /> <MarkButton format="underline" icon={Underline} editor={editor} /> <div className="w-px h-6 bg-gray-300 mx-1"></div> <BlockButton format="heading-one" icon={Heading1} editor={editor} /> <BlockButton format="heading-two" icon={Heading2} editor={editor} /> <BlockButton format="block-quote" icon={Quote} editor={editor} /> <BlockButton format="numbered-list" icon={ListOrdered} editor={editor} /> <BlockButton format="bulleted-list" icon={List} editor={editor} /> </div> );
-const SlateRichEditor = ({ value, onChange }) => { const renderElement = useCallback(props => <Element {...props} />, []); const renderLeaf = useCallback(props => <Leaf {...props} />, []); const editor = useMemo(() => withHistory(withReact(createEditor())), []); return ( <Slate editor={editor} initialValue={value} onValueChange={onChange}> <SlateToolbar editor={editor} /> <div className="p-4 min-h-[200px] focus-within:ring-2 focus-within:ring-blue-500 rounded-b-lg"> <Editable renderElement={renderElement} renderLeaf={renderLeaf} placeholder="Mulai tulis artikel Anda di sini..." spellCheck autoFocus onKeyDown={event => { for (const hotkey in HOTKEYS) { if (isHotkey(hotkey, event)) { event.preventDefault(); const mark = HOTKEYS[hotkey]; toggleMark(editor, mark); } } }} className="prose max-w-none" /> </div> </Slate> ); };
-const initialSlateValue = [{ type: 'paragraph', children: [{ text: '' }] }];
-const parseToSlate = (dbString) => { if (!dbString) return initialSlateValue; try { const parsed = JSON.parse(dbString); if (Array.isArray(parsed) && parsed.length > 0) { return parsed; } } catch (e) { return [{ type: 'paragraph', children: [{ text: dbString.replace(/<[^>]+>/g, '') || '' }] }]; } return initialSlateValue; };
+// --- KOMPONEN TIPTAP EDITOR ---
+
+const MenuBar = ({ editor }) => {
+    if (!editor) {
+        return null;
+    }
+
+    const menuItems = [
+        { type: 'button', action: () => editor.chain().focus().toggleBold().run(), icon: Bold, name: 'bold', isActive: editor.isActive('bold') },
+        { type: 'button', action: () => editor.chain().focus().toggleItalic().run(), icon: Italic, name: 'italic', isActive: editor.isActive('italic') },
+        { type: 'button', action: () => editor.chain().focus().toggleUnderline().run(), icon: UnderlineIcon, name: 'underline', isActive: editor.isActive('underline') },
+        { type: 'divider' },
+        { type: 'button', action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(), icon: Heading1, name: 'heading', isActive: editor.isActive('heading', { level: 1 }) },
+        { type: 'button', action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), icon: Heading2, name: 'heading', isActive: editor.isActive('heading', { level: 2 }) },
+        { type: 'button', action: () => editor.chain().focus().toggleBlockquote().run(), icon: Quote, name: 'blockquote', isActive: editor.isActive('blockquote') },
+        { type: 'button', action: () => editor.chain().focus().toggleBulletList().run(), icon: List, name: 'bulletList', isActive: editor.isActive('bulletList') },
+        { type: 'button', action: () => editor.chain().focus().toggleOrderedList().run(), icon: ListOrdered, name: 'orderedList', isActive: editor.isActive('orderedList') },
+    ];
+
+    return (
+        <div className="flex items-center flex-wrap gap-2 p-2 bg-gray-100 border-b border-gray-300 rounded-t-lg">
+            {menuItems.map((item, index) =>
+                item.type === 'divider' ? (
+                    <div key={index} className="w-px h-6 bg-gray-300 mx-1"></div>
+                ) : (
+                    <button
+                        key={index}
+                        type="button"
+                        onClick={item.action}
+                        className={`p-2 rounded ${item.isActive ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-blue-200`}
+                    >
+                        <item.icon size={16} />
+                    </button>
+                )
+            )}
+        </div>
+    );
+};
+
+// =================================================================
+// PERBAIKAN UTAMA: Komponen TiptapEditor dibuat Client-Side Only
+// =================================================================
+const TiptapEditor = ({ content, onChange }) => {
+    const [isClient, setIsClient] = useState(false);
+
+    // useEffect hanya akan berjalan di sisi klien setelah komponen di-mount
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    const editor = useEditor({
+        extensions: [
+            StarterKit.configure({
+                heading: { levels: [1, 2] },
+            }),
+            Underline,
+        ],
+        content: content,
+        onUpdate: ({ editor }) => {
+            onChange(editor.getHTML());
+        },
+        editorProps: {
+            attributes: {
+                class: 'prose max-w-none p-4 min-h-[200px] focus:outline-none',
+            },
+        },
+    });
+    
+    // Efek untuk menyinkronkan konten dari props jika ada perubahan
+    useEffect(() => {
+        if (editor && editor.getHTML() !== content) {
+            editor.commands.setContent(content, false);
+        }
+    }, [content, editor]);
+
+    // Tampilkan placeholder loading jika belum berada di sisi klien
+    if (!isClient) {
+         return (
+            <div className="p-4 border border-gray-300 rounded-lg min-h-[288px] bg-gray-50 animate-pulse flex items-center justify-center text-gray-500">
+                Memuat editor...
+            </div>
+        );
+    }
+
+    return (
+        <div className="border border-gray-300 rounded-lg">
+            <MenuBar editor={editor} />
+            <EditorContent editor={editor} />
+        </div>
+    );
+};
+
+// --- KOMPONEN MODAL ---
 
 const ConfirmationModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
     if (!isOpen) return null;
@@ -68,7 +149,7 @@ const ConfirmationModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
 
 const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
     const [judul, setJudul] = useState('');
-    const [konten, setKonten] = useState(initialSlateValue);
+    const [konten, setKonten] = useState('');
     const [gambarUrl, setGambarUrl] = useState('');
     const [gambarFile, setGambarFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState('');
@@ -79,12 +160,12 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
         if (isOpen) {
             if (artikel) {
                 setJudul(artikel.judul);
-                setKonten(parseToSlate(artikel.konten));
+                setKonten(artikel.konten || '');
                 setGambarUrl(artikel.gambar || '');
                 setPreviewUrl(artikel.gambar ? `${API_BASE_URL}${artikel.gambar}` : '');
             } else {
                 setJudul('');
-                setKonten(initialSlateValue);
+                setKonten('');
                 setGambarUrl('');
                 setPreviewUrl('');
                 setGambarFile(null);
@@ -115,8 +196,9 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setFormError('');
-        const isContentEmpty = konten.length === 1 && konten[0].children.length === 1 && konten[0].children[0].text === '';
-        if (!judul.trim() || isContentEmpty) {
+        
+        const plainTextContent = konten.replace(/<[^>]+>/g, '').trim();
+        if (!judul.trim() || !plainTextContent) {
             setFormError('Judul dan Konten tidak boleh kosong.');
             return;
         }
@@ -129,7 +211,7 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
                 <div className="flex-shrink-0 flex items-center justify-between p-6 border-b border-gray-200">
                     <h2 className="text-2xl font-bold text-gray-900">{artikel ? 'Edit Artikel' : 'Tambah Artikel Baru'}</h2>
                      <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors">
-                        <X size={24} />
+                         <X size={24} />
                     </button>
                 </div>
                 
@@ -165,9 +247,11 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
 
                         <div>
                             <label className="block text-gray-700 text-sm font-medium mb-2">Konten</label>
-                            <div className="border border-gray-300 rounded-lg">
-                               <SlateRichEditor value={konten} onChange={setKonten} />
-                            </div>
+                            <TiptapEditor
+                                key={artikel ? artikel.id : 'new-article'}
+                                content={konten}
+                                onChange={setKonten}
+                            />
                         </div>
                     </div>
 
@@ -182,6 +266,8 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
         </div>
     );
 };
+
+// --- KOMPONEN TABEL DAN HALAMAN UTAMA ---
 
 const ArtikelTable = ({ data, onEdit, onDelete, isDeleting }) => {
     if (data.length === 0) {
@@ -292,11 +378,15 @@ export default function ArtikelAdminPage() {
                 listData.map(async (article) => {
                     try {
                         const detailRes = await fetch(`${API_BASE_URL}/api/artikel/${article.slug}`);
-                        if (!detailRes.ok) return article;
+                        if (!detailRes.ok) {
+                            console.error(`Gagal memuat konten untuk artikel: ${article.slug}`);
+                            return { ...article, konten: '' }; 
+                        }
                         const detailData = await detailRes.json();
-                        return { ...article, konten: detailData.konten };
+                        return { ...article, konten: detailData.konten || '' };
                     } catch (e) {
-                        return article;
+                        console.error(`Error saat fetch konten untuk ${article.slug}:`, e);
+                        return { ...article, konten: '' };
                     }
                 })
             );
@@ -345,15 +435,13 @@ export default function ArtikelAdminPage() {
                 setIsSaving(false);
                 return;
             }
-        } else if (gambarUrlLama === '' || gambarUrlLama === null) {
-            finalGambarUrl = null;
-        } else if (!gambarFile && !gambarUrlLama) {
+        } else if (gambarUrlLama === '') {
             finalGambarUrl = null;
         }
 
         const dataToSave = {
             judul: judul,
-            konten: JSON.stringify(konten), 
+            konten: konten,
             gambar: finalGambarUrl, 
         };
 
