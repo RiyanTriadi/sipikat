@@ -2,25 +2,39 @@ import Link from 'next/link';
 import ArticleCard from '@/components/user/ArticleCard';
 import Image from 'next/image';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
 async function getLatestArticles() {
-    try {
-        const res = await fetch(`http://localhost:5000/api/artikel`);
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/artikel`, {
+      next: { revalidate: 60 }, // Revalidate every 60 seconds
+    });
 
-        if (!res.ok) {
-            console.error("Gagal mengambil data artikel dari server.");
-            return [];
-        }
-
-        const articles = await res.json();
-        return articles
-            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-            .slice(0, 3);
-
-    } catch (error) {
-        console.error("Error fetching articles:", error);
-        return [];
+    if (!res.ok) {
+      const newLocal = "Gagal mengambil data artikel dari server.";
+      console.error(newLocal);
+      return [];
     }
+
+    const articles = await res.json();
+    return articles
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, 3);
+
+  } catch (error) {
+    console.error("Error fetching articles:", error);
+    return [];
+  }
 }
+
+// Data untuk logo partner dibuat dalam bentuk array agar mudah dikelola
+const partnerLogos = [
+  { src: '/diktisaintek-logo.png', alt: 'Logo Diktisaintek' },
+  { src: '/unma logo.png', alt: "Logo Universitas Mathla'ul Anwar" },
+  { src: '/pandeglang logo.png', alt: 'Logo Kabupaten Pandeglang' },
+  { src: '/pmm-logo.png', alt: 'Logo PMM Tegalwangi' },
+  { src: '/kkn-logo.png', alt: 'Logo KKN 4 Tegalwangi UNMA' },
+];
 
 export default async function HomePage() {
   const latestArticles = await getLatestArticles();
@@ -30,7 +44,7 @@ export default async function HomePage() {
       {/* Hero Section */}
       <section className="relative w-full h-[60vh] min-h-[400px] flex items-center justify-center text-white overflow-hidden">
         <div
-          className="absolute top-0 lef t-0 w-full h-full bg-cover bg-center"
+          className="absolute top-0 left-0 w-full h-full bg-cover bg-center"
           style={{ backgroundImage: "url('https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')" }}
         ></div>
         <div className="absolute top-0 left-0 w-full h-full bg-black opacity-50"></div>
@@ -60,14 +74,13 @@ export default async function HomePage() {
           </div>
           <div className="max-w-2xl mx-auto bg-blue-100 border border-gray-200 rounded-2xl p-6 md:p-10 shadow-xl flex flex-col md:flex-row items-center space-y-6 md:space-y-0 md:space-x-8 transition-all duration-300 transform hover:scale-[1.02]">
             <div className="flex-shrink-0">
-              {/* Ikon besar aplikasi */}
               <div className="w-24 h-24 rounded-2xl bg-blue-500 flex items-center justify-center shadow-lg">
                 <Image
                   className="rounded-2xl"
                   src="/sipikat-logo.png"
                   width={500}
                   height={500}
-                  alt="Picture of the author"
+                  alt="Logo aplikasi SIPIKAT"
                 />
               </div>
             </div>
@@ -120,12 +133,18 @@ export default async function HomePage() {
             Didukung Oleh
           </h2>
           <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-8">
-            <div className="w-20 sm:w-32 md:w-[158px]">
-              <Image src="/unma logo.png" alt="Logo Universitas Mathla'ul Anwar" layout="responsive" width={158} height={48} unoptimized />
-            </div>
-            <div className="w-20 sm:w-32 md:w-[158px]">
-              <Image src="/pandeglang logo.png" alt="Logo Kabupaten Pandeglang" layout="responsive" width={158} height={48} unoptimized />
-            </div>
+            {partnerLogos.map((logo, index) => (
+              <div key={index} className="w-20 sm:w-32 md:w-[158px]">
+                <Image
+                  src={logo.src}
+                  alt={logo.alt}
+                  width={158}
+                  height={48}
+                  className="w-full h-auto"
+                  unoptimized
+                />
+              </div>
+            ))}
           </div>
         </div>
       </section>
