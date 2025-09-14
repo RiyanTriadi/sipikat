@@ -1,16 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { PlusCircle, Edit, Trash2, Loader2, AlertCircle, RefreshCw, Bold, Italic, Underline as UnderlineIcon, List, ListOrdered, Heading1, Heading2, Quote, UploadCloud, X } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Loader2, AlertCircle, RefreshCw, Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Quote, UploadCloud, X } from 'lucide-react';
 
-// TipTap Imports
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-
+// Pastikan variabel lingkungan ini diakses dengan benar
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-
-// --- KOMPONEN UTILITAS ---
 
 const Alert = ({ message, type = 'error' }) => {
     const colors = {
@@ -32,99 +26,206 @@ const Spinner = ({ text }) => (
     </div>
 );
 
-// --- KOMPONEN TIPTAP EDITOR ---
-
-const MenuBar = ({ editor }) => {
-    if (!editor) {
-        return null;
+// Fungsi untuk mengonversi HTML ke format JSON
+const parseHtmlToSlate = (htmlString) => {
+    if (!htmlString || htmlString.trim() === '') {
+        return [{ type: 'paragraph', children: [{ text: '' }] }];
     }
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(`<div>${htmlString}</div>`, 'text/html');
+    const root = doc.body.firstChild;
 
-    const menuItems = [
-        { type: 'button', action: () => editor.chain().focus().toggleBold().run(), icon: Bold, name: 'bold', isActive: editor.isActive('bold') },
-        { type: 'button', action: () => editor.chain().focus().toggleItalic().run(), icon: Italic, name: 'italic', isActive: editor.isActive('italic') },
-        { type: 'button', action: () => editor.chain().focus().toggleUnderline().run(), icon: UnderlineIcon, name: 'underline', isActive: editor.isActive('underline') },
-        { type: 'divider' },
-        { type: 'button', action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(), icon: Heading1, name: 'heading', isActive: editor.isActive('heading', { level: 1 }) },
-        { type: 'button', action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), icon: Heading2, name: 'heading', isActive: editor.isActive('heading', { level: 2 }) },
-        { type: 'button', action: () => editor.chain().focus().toggleBlockquote().run(), icon: Quote, name: 'blockquote', isActive: editor.isActive('blockquote') },
-        { type: 'button', action: () => editor.chain().focus().toggleBulletList().run(), icon: List, name: 'bulletList', isActive: editor.isActive('bulletList') },
-        { type: 'button', action: () => editor.chain().focus().toggleOrderedList().run(), icon: ListOrdered, name: 'orderedList', isActive: editor.isActive('orderedList') },
-    ];
+    const result = [];
 
-    return (
-        <div className="flex items-center flex-wrap gap-2 p-2 bg-gray-100 border-b border-gray-300 rounded-t-lg">
-            {menuItems.map((item, index) =>
-                item.type === 'divider' ? (
-                    <div key={index} className="w-px h-6 bg-gray-300 mx-1"></div>
-                ) : (
-                    <button
-                        key={index}
-                        type="button"
-                        onClick={item.action}
-                        className={`p-2 rounded ${item.isActive ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-blue-200`}
-                    >
-                        <item.icon size={16} />
-                    </button>
-                )
-            )}
-        </div>
-    );
-};
-
-// =================================================================
-// PERBAIKAN UTAMA: Komponen TiptapEditor dibuat Client-Side Only
-// =================================================================
-const TiptapEditor = ({ content, onChange }) => {
-    const [isClient, setIsClient] = useState(false);
-
-    // useEffect hanya akan berjalan di sisi klien setelah komponen di-mount
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
-
-    const editor = useEditor({
-        extensions: [
-            StarterKit.configure({
-                heading: { levels: [1, 2] },
-            }),
-            Underline,
-        ],
-        content: content,
-        onUpdate: ({ editor }) => {
-            onChange(editor.getHTML());
-        },
-        editorProps: {
-            attributes: {
-                class: 'prose max-w-none p-4 min-h-[200px] focus:outline-none',
-            },
-        },
-    });
+    const parseChildren = (node) => {
+        const children = [];
+        node.childNodes.forEach(child => {
+            if (child.nodeType === Node.TEXT_NODE) {
+                if (child.textContent.trim().length > 0) {
+                    children.push({ text: child.textContent });
+                }
+            } else if (child.nodeType === Node.ELEMENT_NODE) {
+                let text = child.textContent || '';
+                const marks = {};
+                if (child.tagName.toLowerCase() === 'strong' || child.tagName.toLowerCase() === 'b') marks.bold = true;
+                if (child.tagName.toLowerCase() === 'em' || child.tagName.toLowerCase() === 'i') marks.italic = true;
+                if (child.tagName.toLowerCase() === 'u') marks.underline = true;
+                
+                const childNodes = parseChildren(child);
+                if (childNodes.length > 0) {
+                    childNodes.forEach(cn => {
+                        children.push({ ...cn, ...marks });
+                    });
+                } else if (text.length > 0) {
+                    children.push({ text, ...marks });
+                }
+            }
+        });
+        return children;
+    };
     
-    // Efek untuk menyinkronkan konten dari props jika ada perubahan
-    useEffect(() => {
-        if (editor && editor.getHTML() !== content) {
-            editor.commands.setContent(content, false);
+    Array.from(root.childNodes).forEach(el => {
+        if (el.nodeType === Node.ELEMENT_NODE) {
+            const tagName = el.tagName.toLowerCase();
+            if (tagName === 'ul' || tagName === 'ol') {
+                const listItems = Array.from(el.childNodes)
+                    .filter(li => li.nodeType === Node.ELEMENT_NODE && li.tagName.toLowerCase() === 'li')
+                    .map(li => ({
+                        type: 'list-item',
+                        children: parseChildren(li)
+                    }));
+                if (listItems.length > 0) {
+                    result.push({
+                        type: tagName === 'ul' ? 'bulleted-list' : 'numbered-list',
+                        children: listItems
+                    });
+                }
+            } else {
+                const typeMap = {
+                    'h1': 'heading-one',
+                    'h2': 'heading-two',
+                    'blockquote': 'block-quote',
+                    'p': 'paragraph',
+                };
+                const type = typeMap[tagName] || 'paragraph';
+                const children = parseChildren(el);
+                if (children.length > 0) {
+                    result.push({ type, children });
+                } else {
+                    result.push({ type, children: [{ text: '' }] });
+                }
+            }
         }
-    }, [content, editor]);
+    });
 
-    // Tampilkan placeholder loading jika belum berada di sisi klien
-    if (!isClient) {
-         return (
-            <div className="p-4 border border-gray-300 rounded-lg min-h-[288px] bg-gray-50 animate-pulse flex items-center justify-center text-gray-500">
-                Memuat editor...
-            </div>
-        );
+    if (result.length === 0) {
+        return [{ type: 'paragraph', children: [{ text: '' }] }];
     }
 
+    return result;
+};
+
+// Fungsi untuk mengonversi JSON kembali ke HTML
+const parseToHtml = (slateValue) => {
+    if (!slateValue) return '';
+    try {
+        const parsed = typeof slateValue === 'string' ? JSON.parse(slateValue) : slateValue;
+        if (!Array.isArray(parsed)) return parsed.toString();
+
+        return parsed.map(node => {
+            if (node.type === 'bulleted-list' || node.type === 'numbered-list') {
+                const tag = node.type === 'bulleted-list' ? 'ul' : 'ol';
+                const listItems = node.children.map(li => `<li>${li.children.map(c => {
+                    let text = c.text;
+                    if (c.bold) text = `<strong>${text}</strong>`;
+                    if (c.italic) text = `<em>${text}</em>`;
+                    if (c.underline) text = `<u>${text}</u>`;
+                    return text;
+                }).join('')}</li>`).join('');
+                return `<${tag}>${listItems}</${tag}>`;
+            }
+
+            const childrenHtml = node.children.map(c => {
+                let text = c.text;
+                if (c.bold) text = `<strong>${text}</strong>`;
+                if (c.italic) text = `<em>${text}</em>`;
+                if (c.underline) text = `<u>${text}</u>`;
+                return text;
+            }).join('');
+            
+            const tagMap = {
+                'heading-one': 'h1',
+                'heading-two': 'h2',
+                'block-quote': 'blockquote',
+                'paragraph': 'p',
+            };
+            const tag = tagMap[node.type] || 'p';
+            return `<${tag}>${childrenHtml}</${tag}>`;
+        }).join('');
+    } catch (e) {
+        console.error('Failed to parse to HTML:', e);
+        return '';
+    }
+};
+
+const RichTextEditor = ({ value, onChange }) => {
+    const editorRef = useRef(null);
+    const isInternallyChanging = useRef(false);
+
+    useEffect(() => {
+        if (editorRef.current && !isInternallyChanging.current) {
+            editorRef.current.innerHTML = parseToHtml(value);
+        }
+        isInternallyChanging.current = false;
+    }, [value]);
+
+    const handleCommand = (command, val = null) => {
+        editorRef.current.focus();
+        isInternallyChanging.current = true;
+        
+        try {
+            if (command === 'formatBlock' && val) {
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    const parent = range.startContainer.parentElement;
+                    const isAlreadyFormatted = parent && parent.tagName && parent.tagName.toLowerCase() === val.toLowerCase();
+                    
+                    if (isAlreadyFormatted) {
+                        document.execCommand('formatBlock', false, 'p');
+                    } else {
+                        document.execCommand('formatBlock', false, val);
+                    }
+                }
+            } else if (command === 'insertUnorderedList' || command === 'insertOrderedList') {
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    const parent = range.startContainer.parentElement;
+                    const isAlreadyList = parent && (parent.tagName.toLowerCase() === 'ul' || parent.tagName.toLowerCase() === 'ol');
+                    
+                    if (isAlreadyList) {
+                        document.execCommand('outdent');
+                    } else {
+                        document.execCommand(command);
+                    }
+                }
+            } else {
+                document.execCommand(command, false, val);
+            }
+        } catch (e) {
+            console.error('execCommand failed:', e);
+        }
+        
+        onChange(editorRef.current.innerHTML);
+    };
+
+    const handleInput = () => {
+        isInternallyChanging.current = true;
+        onChange(editorRef.current.innerHTML);
+    };
+
     return (
-        <div className="border border-gray-300 rounded-lg">
-            <MenuBar editor={editor} />
-            <EditorContent editor={editor} />
+        <div>
+            <div className="flex items-center flex-wrap gap-2 p-2 bg-gray-100 border-b border-gray-300 rounded-t-lg">
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); handleCommand('bold'); }} className="p-2 rounded bg-gray-200 text-gray-700 hover:bg-blue-200"><Bold size={16} /></button>
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); handleCommand('italic'); }} className="p-2 rounded bg-gray-200 text-gray-700 hover:bg-blue-200"><Italic size={16} /></button>
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); handleCommand('underline'); }} className="p-2 rounded bg-gray-200 text-gray-700 hover:bg-blue-200"><Underline size={16} /></button>
+                <div className="w-px h-6 bg-gray-300 mx-1"></div>
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); handleCommand('formatBlock', 'H1'); }} className="p-2 rounded bg-gray-200 text-gray-700 hover:bg-blue-200"><Heading1 size={16} /></button>
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); handleCommand('formatBlock', 'H2'); }} className="p-2 rounded bg-gray-200 text-gray-700 hover:bg-blue-200"><Heading2 size={16} /></button>
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); handleCommand('insertUnorderedList'); }} className="p-2 rounded bg-gray-200 text-gray-700 hover:bg-blue-200"><List size={16} /></button>
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); handleCommand('insertOrderedList'); }} className="p-2 rounded bg-gray-200 text-gray-700 hover:bg-blue-200"><ListOrdered size={16} /></button>
+            </div>
+            <div
+                ref={editorRef}
+                contentEditable
+                onInput={handleInput}
+                className="prose max-w-none p-4 min-h-[200px] focus-within:ring-2 focus-within:ring-blue-500 rounded-b-lg"
+            />
         </div>
     );
 };
-
-// --- KOMPONEN MODAL ---
 
 const ConfirmationModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
     if (!isOpen) return null;
@@ -147,7 +248,7 @@ const ConfirmationModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
     );
 };
 
-const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
+const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving, isModalLoading }) => {
     const [judul, setJudul] = useState('');
     const [konten, setKonten] = useState('');
     const [gambarUrl, setGambarUrl] = useState('');
@@ -157,7 +258,7 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
     const fileInputRef = useRef(null);
 
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && !isModalLoading) {
             if (artikel) {
                 setJudul(artikel.judul);
                 setKonten(artikel.konten || '');
@@ -172,7 +273,7 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
             }
             setFormError('');
         }
-    }, [artikel, isOpen]);
+    }, [artikel, isOpen, isModalLoading]);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -196,13 +297,11 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setFormError('');
-        
-        const plainTextContent = konten.replace(/<[^>]+>/g, '').trim();
-        if (!judul.trim() || !plainTextContent) {
+        if (!judul.trim() || !konten.trim()) {
             setFormError('Judul dan Konten tidak boleh kosong.');
             return;
         }
-        await onSave({ judul, konten, gambarFile, gambarUrlLama: gambarUrl });
+        onSave({ judul, konten, gambarFile, gambarUrlLama: gambarUrl });
     };
 
     return (
@@ -210,64 +309,64 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving }) => {
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl transform transition-all duration-300 ease-out scale-95 animate-in fade-in-0 zoom-in-95 flex flex-col max-h-[90vh]">
                 <div className="flex-shrink-0 flex items-center justify-between p-6 border-b border-gray-200">
                     <h2 className="text-2xl font-bold text-gray-900">{artikel ? 'Edit Artikel' : 'Tambah Artikel Baru'}</h2>
-                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors">
-                         <X size={24} />
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors">
+                        <X size={24} />
                     </button>
                 </div>
                 
-                <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
-                    <div className="flex-grow p-6 space-y-6 overflow-y-auto">
-                        {formError && <Alert message={formError} />}
-                        <div>
-                            <label htmlFor="judul" className="block text-gray-700 text-sm font-medium mb-2">Judul Artikel</label>
-                            <input type="text" id="judul" value={judul} onChange={(e) => setJudul(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required />
-                        </div>
-                        
-                        <div>
-                            <label className="block text-gray-700 text-sm font-medium mb-2">Gambar Sampul (Thumbnail)</label>
-                            <div className="mt-2 flex items-center gap-4">
-                                <div className="w-32 h-32 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border">
-                                    {previewUrl ? (
-                                        <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <UploadCloud className="w-10 h-10 text-gray-400" />
-                                    )}
+                {isModalLoading ? (
+                    <Spinner text="Memuat konten artikel..." />
+                ) : (
+                    <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
+                        <div className="flex-grow p-6 space-y-6 overflow-y-auto">
+                            {formError && <Alert message={formError} />}
+                            <div>
+                                <label htmlFor="judul" className="block text-gray-700 text-sm font-medium mb-2">Judul Artikel</label>
+                                <input type="text" id="judul" value={judul} onChange={(e) => setJudul(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-gray-700 text-sm font-medium mb-2">Gambar Sampul (Thumbnail)</label>
+                                <div className="mt-2 flex items-center gap-4">
+                                    <div className="w-32 h-32 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border">
+                                        {previewUrl ? (
+                                            <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <UploadCloud className="w-10 h-10 text-gray-400" />
+                                        )}
+                                    </div>
+                                    <div className="flex-grow">
+                                        <input type="file" accept="image/*" onChange={handleFileChange} ref={fileInputRef} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+                                        <p className="text-xs text-gray-500 mt-2">PNG, JPG, JPEG hingga 5MB.</p>
+                                        {previewUrl && (
+                                            <button type="button" onClick={handleRemoveImage} className="mt-2 text-sm text-red-600 hover:text-red-800 flex items-center gap-1">
+                                                <X size={14} /> Hapus Gambar
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="flex-grow">
-                                    <input type="file" accept="image/*" onChange={handleFileChange} ref={fileInputRef} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
-                                    <p className="text-xs text-gray-500 mt-2">PNG, JPG, JPEG hingga 5MB.</p>
-                                    {previewUrl && (
-                                        <button type="button" onClick={handleRemoveImage} className="mt-2 text-sm text-red-600 hover:text-red-800 flex items-center gap-1">
-                                            <X size={14} /> Hapus Gambar
-                                        </button>
-                                    )}
+                            </div>
+
+                            <div>
+                                <label className="block text-gray-700 text-sm font-medium mb-2">Konten</label>
+                                <div className="border border-gray-300 rounded-lg">
+                                    <RichTextEditor value={konten} onChange={setKonten} />
                                 </div>
                             </div>
                         </div>
 
-                        <div>
-                            <label className="block text-gray-700 text-sm font-medium mb-2">Konten</label>
-                            <TiptapEditor
-                                key={artikel ? artikel.id : 'new-article'}
-                                content={konten}
-                                onChange={setKonten}
-                            />
+                        <div className="flex-shrink-0 flex justify-end gap-3 p-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
+                            <button type="button" onClick={onClose} disabled={isSaving} className="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors">Batal</button>
+                            <button type="submit" disabled={isSaving} className="px-5 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center disabled:opacity-50">
+                                {isSaving ? <><Loader2 className="animate-spin h-5 w-5 mr-2" /> Menyimpan...</> : 'Simpan Artikel'}
+                            </button>
                         </div>
-                    </div>
-
-                    <div className="flex-shrink-0 flex justify-end gap-3 p-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
-                        <button type="button" onClick={onClose} disabled={isSaving} className="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors">Batal</button>
-                        <button type="submit" disabled={isSaving} className="px-5 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center disabled:opacity-50">
-                            {isSaving ? <><Loader2 className="animate-spin h-5 w-5 mr-2" /> Menyimpan...</> : 'Simpan Artikel'}
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                )}
             </div>
         </div>
     );
 };
-
-// --- KOMPONEN TABEL DAN HALAMAN UTAMA ---
 
 const ArtikelTable = ({ data, onEdit, onDelete, isDeleting }) => {
     if (data.length === 0) {
@@ -306,7 +405,7 @@ const ArtikelTable = ({ data, onEdit, onDelete, isDeleting }) => {
                             <h3 className="font-bold text-md text-gray-900 leading-tight mb-1 line-clamp-3">{artikel.judul}</h3>
                             <p className="text-sm text-gray-500 mb-3">{formatArticleDate(artikel.created_at)}</p>
                             <div className="flex space-x-4 mt-auto">
-                                <button onClick={() => onEdit(artikel)} className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1" disabled={isDeleting}><Edit size={14} /> Edit</button>
+                                <button onClick={() => onEdit(artikel.slug)} className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1" disabled={isDeleting}><Edit size={14} /> Edit</button>
                                 <button onClick={() => onDelete(artikel.id)} className="text-red-600 hover:text-red-800 font-medium text-sm flex items-center gap-1" disabled={isDeleting}><Trash2 size={14} /> Hapus</button>
                             </div>
                         </div>
@@ -341,7 +440,7 @@ const ArtikelTable = ({ data, onEdit, onDelete, isDeleting }) => {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 align-top pt-6">{formatArticleDate(artikel.created_at)}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium align-top pt-6">
                                     <div className="flex items-center justify-center space-x-4">
-                                        <button onClick={() => onEdit(artikel)} className="text-blue-600 hover:text-blue-800 flex items-center gap-1.5" disabled={isDeleting}><Edit size={16} /> Edit</button>
+                                        <button onClick={() => onEdit(artikel.slug)} className="text-blue-600 hover:text-blue-800 flex items-center gap-1.5" disabled={isDeleting}><Edit size={16} /> Edit</button>
                                         <button onClick={() => onDelete(artikel.id)} className="text-red-600 hover:text-red-800 flex items-center gap-1.5" disabled={isDeleting}><Trash2 size={16} /> Hapus</button>
                                     </div>
                                 </td>
@@ -360,38 +459,24 @@ export default function ArtikelAdminPage() {
     const [editingArtikel, setEditingArtikel] = useState(null);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false); 
-    const [isDeleting, setIsDeleting] = useState(false); 
+    const [isSaving, setIsSaving] = useState(false);  
+    const [isDeleting, setIsDeleting] = useState(false);  
     const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
     const [artikelToDeleteId, setArtikelToDeleteId] = useState(null);
+    const [isModalLoading, setIsModalLoading] = useState(false);
+    const [modalKey, setModalKey] = useState(0);
 
     const fetchArticles = useCallback(async () => {
         setLoading(true);
         setError('');
         try {
             const res = await fetch(`${API_BASE_URL}/api/artikel`, { cache: 'no-store' });
-            if (!res.ok) throw new Error('Gagal memuat daftar artikel.');
-            
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || 'Gagal memuat daftar artikel.');
+            }
             const listData = await res.json();
-            
-            const articlesWithContent = await Promise.all(
-                listData.map(async (article) => {
-                    try {
-                        const detailRes = await fetch(`${API_BASE_URL}/api/artikel/${article.slug}`);
-                        if (!detailRes.ok) {
-                            console.error(`Gagal memuat konten untuk artikel: ${article.slug}`);
-                            return { ...article, konten: '' }; 
-                        }
-                        const detailData = await detailRes.json();
-                        return { ...article, konten: detailData.konten || '' };
-                    } catch (e) {
-                        console.error(`Error saat fetch konten untuk ${article.slug}:`, e);
-                        return { ...article, konten: '' };
-                    }
-                })
-            );
-
-            const sortedData = articlesWithContent.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            const sortedData = listData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             setArticles(sortedData);
         } catch (err) {
             setError(err.message);
@@ -409,7 +494,7 @@ export default function ArtikelAdminPage() {
         setError('');
         const token = localStorage.getItem('adminToken');
         if (!token) {
-            alert('Sesi Anda telah berakhir. Silakan login kembali.');
+            setError('Sesi Anda telah berakhir. Silakan login kembali.');
             setIsSaving(false);
             return;
         }
@@ -431,17 +516,22 @@ export default function ArtikelAdminPage() {
                 }
                 finalGambarUrl = uploadData.filePath;
             } catch (err) {
-                alert(`Error: ${err.message}`);
+                setError(`Error: ${err.message}`);
                 setIsSaving(false);
                 return;
             }
-        } else if (gambarUrlLama === '') {
+        } else if (gambarUrlLama === '' || gambarUrlLama === null) {
+            finalGambarUrl = null;
+        } else if (!gambarFile && !gambarUrlLama) {
             finalGambarUrl = null;
         }
+        
+        // Convert HTML content from rich editor to a simple Slate-like JSON structure
+        const slateContent = parseHtmlToSlate(konten);
 
         const dataToSave = {
             judul: judul,
-            konten: konten,
+            konten: JSON.stringify(slateContent), 
             gambar: finalGambarUrl, 
         };
 
@@ -464,10 +554,10 @@ export default function ArtikelAdminPage() {
                 const errorData = await res.json().catch(() => ({ message: 'Gagal menyimpan artikel.' }));
                 throw new Error(errorData.message || res.statusText);
             }
-            await fetchArticles(); 
+            fetchArticles(); 
             closeModal();
         } catch (err) {
-            alert(`Gagal menyimpan artikel: ${err.message}`);
+            setError(`Gagal menyimpan artikel: ${err.message}`);
         } finally {
             setIsSaving(false);
         }
@@ -488,7 +578,10 @@ export default function ArtikelAdminPage() {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (!res.ok) throw new Error('Gagal menghapus artikel.');
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || 'Gagal menghapus artikel.');
+            }
             setArticles(prevList => prevList.filter(artikel => artikel.id !== artikelToDeleteId));
         } catch (err) {
             setError(err.message);
@@ -498,11 +591,69 @@ export default function ArtikelAdminPage() {
         }
     };
 
-    const openModal = (artikel = null) => { setEditingArtikel(artikel); setIsModalOpen(true); };
-    const closeModal = () => { setEditingArtikel(null); setIsModalOpen(false); };
+    const handleOpenModal = useCallback(async (slug = null) => {
+        setModalKey(prevKey => prevKey + 1);
+        setIsModalOpen(true);
+        setEditingArtikel(null);
+        setIsModalLoading(true);
+
+        if (slug) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/artikel/${slug}`, { cache: 'no-store' });
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    throw new Error(errorData.message || 'Gagal memuat detail artikel.');
+                }
+                const detailData = await res.json();
+                setEditingArtikel(detailData);
+            } catch (err) {
+                setError(err.message);
+                setIsModalOpen(false);
+            } finally {
+                setIsModalLoading(false);
+            }
+        } else {
+            setIsModalLoading(false);
+        }
+    }, []);
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setEditingArtikel(null);
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans p-4 sm:p-6 lg:p-8">
+            <style>
+                {`
+                .prose h1 {
+                    font-size: 2.25rem; /* 36px */
+                    font-weight: 700; /* bold */
+                    margin-top: 2rem;
+                    margin-bottom: 1rem;
+                }
+                .prose h2 {
+                    font-size: 1.5rem; /* 24px */
+                    font-weight: 600; /* semibold */
+                    margin-top: 1.5rem;
+                    margin-bottom: 0.75rem;
+                }
+                .prose ul, .prose ol {
+                    margin-top: 1rem;
+                    margin-bottom: 1rem;
+                    padding-left: 1.5rem;
+                }
+                .prose ul {
+                    list-style-type: disc;
+                }
+                .prose ol {
+                    list-style-type: decimal;
+                }
+                .prose li {
+                    margin-bottom: 0.5rem;
+                }
+                `}
+            </style>
             <main className="max-w-7xl mx-auto">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
@@ -519,7 +670,7 @@ export default function ArtikelAdminPage() {
                             Refresh
                         </button>
                         <button 
-                            onClick={() => openModal()} 
+                            onClick={() => handleOpenModal()} 
                             disabled={loading || isSaving}
                             className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
                         >
@@ -536,7 +687,7 @@ export default function ArtikelAdminPage() {
                     ) : (
                         <ArtikelTable
                             data={articles}
-                            onEdit={openModal}
+                            onEdit={handleOpenModal}
                             onDelete={confirmDeleteHandler}
                             isDeleting={isDeleting}
                         />
@@ -545,11 +696,13 @@ export default function ArtikelAdminPage() {
             </main>
 
             <ArtikelModal
+                key={modalKey}
                 isOpen={isModalOpen}
                 onClose={closeModal}
                 onSave={handleSave}
                 artikel={editingArtikel}
                 isSaving={isSaving}
+                isModalLoading={isModalLoading}
             />
 
             <ConfirmationModal
