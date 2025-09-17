@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation'; 
+import { useRouter } from 'next/navigation';
 import {
     Edit, Trash2, Loader2, AlertCircle, RefreshCw,
     Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Quote, X,
@@ -194,13 +194,13 @@ const SlateToolbar = ({ editor }) => (
   </div>
 );
 
-const SlateRichEditor = ({ value, onChange }) => {
+const SlateRichEditor = ({ value, onChange, editorKey }) => {
   const renderElement = useCallback(props => <Element {...props} />, []);
   const renderLeaf = useCallback(props => <Leaf {...props} />, []);
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
 
   return (
-    <Slate editor={editor} initialValue={value} onValueChange={onChange}>
+    <Slate editor={editor} initialValue={value} onValueChange={onChange} key={editorKey}>
       <SlateToolbar editor={editor} />
       <div className="p-4 min-h-[200px] focus-within:ring-2 focus-within:ring-blue-500 rounded-b-lg">
         <Editable
@@ -265,15 +265,18 @@ const SolusiModal = ({ isOpen, onClose, onSave, solusi, isSaving }) => {
     const [kategori, setKategori] = useState('');
     const [kontenSolusi, setKontenSolusi] = useState(initialSlateValue);
     const [formError, setFormError] = useState('');
+    const [editorKey, setEditorKey] = useState(Date.now());
 
     useEffect(() => {
         if (isOpen) {
             if (solusi) {
                 setKategori(solusi.kategori);
                 setKontenSolusi(parseToSlate(solusi.solusi));
+                setEditorKey(solusi.id || Date.now());
             } else {
                 setKategori('');
                 setKontenSolusi(initialSlateValue);
+                setEditorKey(Date.now());
             }
             setFormError('');
         }
@@ -310,7 +313,7 @@ const SolusiModal = ({ isOpen, onClose, onSave, solusi, isSaving }) => {
                         <div>
                             <label className="block text-gray-700 text-sm font-medium mb-2">Detail Solusi</label>
                             <div className="border border-gray-300 rounded-lg">
-                                <SlateRichEditor value={kontenSolusi} onChange={setKontenSolusi} />
+                                <SlateRichEditor value={kontenSolusi} onChange={setKontenSolusi} editorKey={editorKey} />
                             </div>
                         </div>
                     </div>
@@ -422,7 +425,7 @@ export default function SolusiAdminPage() {
     const [isDeleting, setIsDeleting] = useState(false);
     const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
     const [solusiToDeleteId, setSolusiToDeleteId] = useState(null);
-    const router = useRouter(); 
+    const router = useRouter();
 
     const fetchSolusi = useCallback(async () => {
         setLoading(true);
@@ -431,7 +434,7 @@ export default function SolusiAdminPage() {
             const token = localStorage.getItem('adminToken');
             if (!token) {
                 router.push('/admin/login');
-                return; 
+                return;
             }
             const res = await fetch(`${API_BASE_URL}/api/solusi`, {
                 cache: 'no-store',
@@ -439,8 +442,8 @@ export default function SolusiAdminPage() {
             });
             if (!res.ok) {
                 if (res.status === 401 || res.status === 403) {
-                    router.push('/admin/login'); 
-                    return; 
+                    router.push('/admin/login');
+                    return;
                 }
                 throw new Error('Gagal memuat daftar solusi.');
             }
@@ -452,7 +455,7 @@ export default function SolusiAdminPage() {
         } finally {
             setLoading(false);
         }
-    }, [router]); 
+    }, [router]);
 
     useEffect(() => {
         fetchSolusi();
@@ -463,7 +466,7 @@ export default function SolusiAdminPage() {
         setError('');
         const token = localStorage.getItem('adminToken');
         if (!token) {
-            router.push('/admin/login'); 
+            router.push('/admin/login');
             setIsSaving(false);
             return;
         }
@@ -490,7 +493,7 @@ export default function SolusiAdminPage() {
 
             if (!res.ok) {
                 if (res.status === 401 || res.status === 403) {
-                    router.push('/admin/login'); 
+                    router.push('/admin/login');
                     return;
                 }
                 const errorData = await res.json().catch(() => ({ message: 'Gagal menyimpan solusi.' }));
@@ -514,7 +517,7 @@ export default function SolusiAdminPage() {
         setError('');
         const token = localStorage.getItem('adminToken');
         if (!token) {
-            router.push('/admin/login'); 
+            router.push('/admin/login');
             setIsDeleting(false);
             cancelDeleteHandler();
             return;
@@ -527,7 +530,7 @@ export default function SolusiAdminPage() {
             });
             if (!res.ok) {
                 if (res.status === 401 || res.status === 403) {
-                    router.push('/admin/login'); 
+                    router.push('/admin/login');
                     return;
                 }
                 throw new Error('Gagal menghapus solusi.');
