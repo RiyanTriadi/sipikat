@@ -141,7 +141,6 @@ export default async function HomePage() {
                   width={158}
                   height={48}
                   className="w-full h-auto"
-                  unoptimized
                 />
               </div>
             ))}
