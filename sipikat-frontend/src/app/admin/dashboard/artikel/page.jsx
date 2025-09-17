@@ -1,9 +1,16 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { PlusCircle, Edit, Trash2, Loader2, AlertCircle, RefreshCw, Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Quote, UploadCloud, X } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+    PlusCircle, Edit, Trash2, Loader2, AlertCircle, RefreshCw,
+    Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Quote, UploadCloud, X
+} from 'lucide-react';
+import { createEditor, Editor as SlateEditor, Transforms, Text, Element as SlateElement } from 'slate';
+import { Slate, Editable, withReact } from 'slate-react';
+import { withHistory } from 'slate-history';
+import isHotkey from 'is-hotkey';
 
-// Pastikan variabel lingkungan ini diakses dengan benar
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 const Alert = ({ message, type = 'error' }) => {
@@ -26,206 +33,156 @@ const Spinner = ({ text }) => (
     </div>
 );
 
-// Fungsi untuk mengonversi HTML ke format JSON
-const parseHtmlToSlate = (htmlString) => {
-    if (!htmlString || htmlString.trim() === '') {
-        return [{ type: 'paragraph', children: [{ text: '' }] }];
+// --- START: Slate.js Rich Text Editor Components & Functions ---
+
+const HOTKEYS = { 'mod+b': 'bold', 'mod+i': 'italic', 'mod+u': 'underline' };
+const LIST_TYPES = ['numbered-list', 'bulleted-list'];
+const TEXT_ALIGN_TYPES = ['left', 'center', 'right', 'justify'];
+
+const toggleMark = (editor, format) => {
+    const isActive = isMarkActive(editor, format);
+    if (isActive) {
+        SlateEditor.removeMark(editor, format);
+    } else {
+        SlateEditor.addMark(editor, format, true);
     }
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(`<div>${htmlString}</div>`, 'text/html');
-    const root = doc.body.firstChild;
+};
 
-    const result = [];
+const isMarkActive = (editor, format) => {
+    const marks = SlateEditor.marks(editor);
+    return marks ? marks[format] === true : false;
+};
 
-    const parseChildren = (node) => {
-        const children = [];
-        node.childNodes.forEach(child => {
-            if (child.nodeType === Node.TEXT_NODE) {
-                if (child.textContent.trim().length > 0) {
-                    children.push({ text: child.textContent });
-                }
-            } else if (child.nodeType === Node.ELEMENT_NODE) {
-                let text = child.textContent || '';
-                const marks = {};
-                if (child.tagName.toLowerCase() === 'strong' || child.tagName.toLowerCase() === 'b') marks.bold = true;
-                if (child.tagName.toLowerCase() === 'em' || child.tagName.toLowerCase() === 'i') marks.italic = true;
-                if (child.tagName.toLowerCase() === 'u') marks.underline = true;
-                
-                const childNodes = parseChildren(child);
-                if (childNodes.length > 0) {
-                    childNodes.forEach(cn => {
-                        children.push({ ...cn, ...marks });
-                    });
-                } else if (text.length > 0) {
-                    children.push({ text, ...marks });
-                }
-            }
-        });
-        return children;
-    };
-    
-    Array.from(root.childNodes).forEach(el => {
-        if (el.nodeType === Node.ELEMENT_NODE) {
-            const tagName = el.tagName.toLowerCase();
-            if (tagName === 'ul' || tagName === 'ol') {
-                const listItems = Array.from(el.childNodes)
-                    .filter(li => li.nodeType === Node.ELEMENT_NODE && li.tagName.toLowerCase() === 'li')
-                    .map(li => ({
-                        type: 'list-item',
-                        children: parseChildren(li)
-                    }));
-                if (listItems.length > 0) {
-                    result.push({
-                        type: tagName === 'ul' ? 'bulleted-list' : 'numbered-list',
-                        children: listItems
-                    });
-                }
-            } else {
-                const typeMap = {
-                    'h1': 'heading-one',
-                    'h2': 'heading-two',
-                    'blockquote': 'block-quote',
-                    'p': 'paragraph',
-                };
-                const type = typeMap[tagName] || 'paragraph';
-                const children = parseChildren(el);
-                if (children.length > 0) {
-                    result.push({ type, children });
-                } else {
-                    result.push({ type, children: [{ text: '' }] });
-                }
-            }
-        }
+const toggleBlock = (editor, format) => {
+    const isActive = isBlockActive(editor, format, TEXT_ALIGN_TYPES.includes(format) ? 'align' : 'type');
+    const isList = LIST_TYPES.includes(format);
+    Transforms.unwrapNodes(editor, {
+        match: n => !SlateEditor.isEditor(n) && SlateElement.isElement(n) && LIST_TYPES.includes(n.type) && !TEXT_ALIGN_TYPES.includes(format),
+        split: true,
     });
-
-    if (result.length === 0) {
-        return [{ type: 'paragraph', children: [{ text: '' }] }];
+    let newProperties;
+    if (TEXT_ALIGN_TYPES.includes(format)) {
+        newProperties = { align: isActive ? undefined : format };
+    } else {
+        newProperties = { type: isActive ? 'paragraph' : isList ? 'list-item' : format };
     }
-
-    return result;
-};
-
-// Fungsi untuk mengonversi JSON kembali ke HTML
-const parseToHtml = (slateValue) => {
-    if (!slateValue) return '';
-    try {
-        const parsed = typeof slateValue === 'string' ? JSON.parse(slateValue) : slateValue;
-        if (!Array.isArray(parsed)) return parsed.toString();
-
-        return parsed.map(node => {
-            if (node.type === 'bulleted-list' || node.type === 'numbered-list') {
-                const tag = node.type === 'bulleted-list' ? 'ul' : 'ol';
-                const listItems = node.children.map(li => `<li>${li.children.map(c => {
-                    let text = c.text;
-                    if (c.bold) text = `<strong>${text}</strong>`;
-                    if (c.italic) text = `<em>${text}</em>`;
-                    if (c.underline) text = `<u>${text}</u>`;
-                    return text;
-                }).join('')}</li>`).join('');
-                return `<${tag}>${listItems}</${tag}>`;
-            }
-
-            const childrenHtml = node.children.map(c => {
-                let text = c.text;
-                if (c.bold) text = `<strong>${text}</strong>`;
-                if (c.italic) text = `<em>${text}</em>`;
-                if (c.underline) text = `<u>${text}</u>`;
-                return text;
-            }).join('');
-            
-            const tagMap = {
-                'heading-one': 'h1',
-                'heading-two': 'h2',
-                'block-quote': 'blockquote',
-                'paragraph': 'p',
-            };
-            const tag = tagMap[node.type] || 'p';
-            return `<${tag}>${childrenHtml}</${tag}>`;
-        }).join('');
-    } catch (e) {
-        console.error('Failed to parse to HTML:', e);
-        return '';
+    Transforms.setNodes(editor, newProperties);
+    if (!isActive && isList) {
+        const block = { type: format, children: [] };
+        Transforms.wrapNodes(editor, block);
     }
 };
 
-const RichTextEditor = ({ value, onChange }) => {
-    const editorRef = useRef(null);
-    const isInternallyChanging = useRef(false);
+const isBlockActive = (editor, format, blockType = 'type') => {
+    const { selection } = editor;
+    if (!selection) return false;
+    const [match] = SlateEditor.nodes(editor, {
+        at: SlateEditor.unhangRange(editor, selection),
+        match: n => !SlateEditor.isEditor(n) && SlateElement.isElement(n) && n[blockType] === format,
+    });
+    return !!match;
+};
 
-    useEffect(() => {
-        if (editorRef.current && !isInternallyChanging.current) {
-            editorRef.current.innerHTML = parseToHtml(value);
-        }
-        isInternallyChanging.current = false;
-    }, [value]);
+const Element = ({ attributes, children, element }) => {
+    const style = { textAlign: element.align };
+    switch (element.type) {
+        case 'block-quote':
+            return <blockquote className="border-l-4 pl-4 italic text-gray-500" style={style} {...attributes}>{children}</blockquote>;
+        case 'bulleted-list':
+            return <ul className="list-disc pl-8" style={style} {...attributes}>{children}</ul>;
+        case 'heading-one':
+            return <h1 className="text-3xl font-bold" style={style} {...attributes}>{children}</h1>;
+        case 'heading-two':
+            return <h2 className="text-2xl font-bold" style={style} {...attributes}>{children}</h2>;
+        case 'list-item':
+            return <li style={style} {...attributes}>{children}</li>;
+        case 'numbered-list':
+            return <ol className="list-decimal pl-8" style={style} {...attributes}>{children}</ol>;
+        default:
+            return <p style={style} {...attributes}>{children}</p>;
+    }
+};
 
-    const handleCommand = (command, val = null) => {
-        editorRef.current.focus();
-        isInternallyChanging.current = true;
-        
-        try {
-            if (command === 'formatBlock' && val) {
-                const selection = window.getSelection();
-                if (selection.rangeCount > 0) {
-                    const range = selection.getRangeAt(0);
-                    const parent = range.startContainer.parentElement;
-                    const isAlreadyFormatted = parent && parent.tagName && parent.tagName.toLowerCase() === val.toLowerCase();
-                    
-                    if (isAlreadyFormatted) {
-                        document.execCommand('formatBlock', false, 'p');
-                    } else {
-                        document.execCommand('formatBlock', false, val);
-                    }
-                }
-            } else if (command === 'insertUnorderedList' || command === 'insertOrderedList') {
-                const selection = window.getSelection();
-                if (selection.rangeCount > 0) {
-                    const range = selection.getRangeAt(0);
-                    const parent = range.startContainer.parentElement;
-                    const isAlreadyList = parent && (parent.tagName.toLowerCase() === 'ul' || parent.tagName.toLowerCase() === 'ol');
-                    
-                    if (isAlreadyList) {
-                        document.execCommand('outdent');
-                    } else {
-                        document.execCommand(command);
-                    }
-                }
-            } else {
-                document.execCommand(command, false, val);
-            }
-        } catch (e) {
-            console.error('execCommand failed:', e);
-        }
-        
-        onChange(editorRef.current.innerHTML);
-    };
+const Leaf = ({ attributes, children, leaf }) => {
+    if (leaf.bold) children = <strong>{children}</strong>;
+    if (leaf.italic) children = <em>{children}</em>;
+    if (leaf.underline) children = <u>{children}</u>;
+    return <span {...attributes}>{children}</span>;
+};
 
-    const handleInput = () => {
-        isInternallyChanging.current = true;
-        onChange(editorRef.current.innerHTML);
-    };
+const MarkButton = ({ format, icon: Icon, editor }) => (
+    <button type="button" onMouseDown={event => { event.preventDefault(); toggleMark(editor, format); }} className={`p-2 rounded ${isMarkActive(editor, format) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-blue-200`}>
+        <Icon size={16} />
+    </button>
+);
+
+const BlockButton = ({ format, icon: Icon, editor }) => (
+    <button type="button" onMouseDown={event => { event.preventDefault(); toggleBlock(editor, format); }} className={`p-2 rounded ${isBlockActive(editor, format, TEXT_ALIGN_TYPES.includes(format) ? 'align' : 'type') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-blue-200`}>
+        <Icon size={16} />
+    </button>
+);
+
+const SlateToolbar = ({ editor }) => (
+    <div className="flex items-center flex-wrap gap-2 p-2 bg-gray-100 border-b border-gray-300 rounded-t-lg">
+        <MarkButton format="bold" icon={Bold} editor={editor} />
+        <MarkButton format="italic" icon={Italic} editor={editor} />
+        <MarkButton format="underline" icon={Underline} editor={editor} />
+        <div className="w-px h-6 bg-gray-300 mx-1"></div>
+        <BlockButton format="heading-one" icon={Heading1} editor={editor} />
+        <BlockButton format="heading-two" icon={Heading2} editor={editor} />
+        <BlockButton format="block-quote" icon={Quote} editor={editor} />
+        <BlockButton format="numbered-list" icon={ListOrdered} editor={editor} />
+        <BlockButton format="bulleted-list" icon={List} editor={editor} />
+    </div>
+);
+
+const SlateRichEditor = ({ value, onChange, editorKey }) => {
+    const renderElement = useCallback(props => <Element {...props} />, []);
+    const renderLeaf = useCallback(props => <Leaf {...props} />, []);
+    const editor = useMemo(() => withHistory(withReact(createEditor())), []);
 
     return (
-        <div>
-            <div className="flex items-center flex-wrap gap-2 p-2 bg-gray-100 border-b border-gray-300 rounded-t-lg">
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); handleCommand('bold'); }} className="p-2 rounded bg-gray-200 text-gray-700 hover:bg-blue-200"><Bold size={16} /></button>
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); handleCommand('italic'); }} className="p-2 rounded bg-gray-200 text-gray-700 hover:bg-blue-200"><Italic size={16} /></button>
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); handleCommand('underline'); }} className="p-2 rounded bg-gray-200 text-gray-700 hover:bg-blue-200"><Underline size={16} /></button>
-                <div className="w-px h-6 bg-gray-300 mx-1"></div>
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); handleCommand('formatBlock', 'H1'); }} className="p-2 rounded bg-gray-200 text-gray-700 hover:bg-blue-200"><Heading1 size={16} /></button>
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); handleCommand('formatBlock', 'H2'); }} className="p-2 rounded bg-gray-200 text-gray-700 hover:bg-blue-200"><Heading2 size={16} /></button>
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); handleCommand('insertUnorderedList'); }} className="p-2 rounded bg-gray-200 text-gray-700 hover:bg-blue-200"><List size={16} /></button>
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); handleCommand('insertOrderedList'); }} className="p-2 rounded bg-gray-200 text-gray-700 hover:bg-blue-200"><ListOrdered size={16} /></button>
+        <Slate editor={editor} initialValue={value} onValueChange={onChange} key={editorKey}>
+            <SlateToolbar editor={editor} />
+            <div className="p-4 min-h-[200px] focus-within:ring-2 focus-within:ring-blue-500 rounded-b-lg">
+                <Editable
+                    renderElement={renderElement}
+                    renderLeaf={renderLeaf}
+                    placeholder="Mulai tulis konten artikel di sini..."
+                    spellCheck
+                    autoFocus
+                    onKeyDown={event => {
+                        for (const hotkey in HOTKEYS) {
+                            if (isHotkey(hotkey, event)) {
+                                event.preventDefault();
+                                const mark = HOTKEYS[hotkey];
+                                toggleMark(editor, mark);
+                            }
+                        }
+                    }}
+                    className="prose max-w-none"
+                />
             </div>
-            <div
-                ref={editorRef}
-                contentEditable
-                onInput={handleInput}
-                className="prose max-w-none p-4 min-h-[200px] focus-within:ring-2 focus-within:ring-blue-500 rounded-b-lg"
-            />
-        </div>
+        </Slate>
     );
 };
+
+const initialSlateValue = [{ type: 'paragraph', children: [{ text: '' }] }];
+
+const parseToSlate = (dbString) => {
+    if (!dbString) return initialSlateValue;
+    try {
+        const parsed = JSON.parse(dbString);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+        }
+    } catch (e) {
+        // Fallback for plain text or malformed JSON
+        return [{ type: 'paragraph', children: [{ text: dbString.replace(/<[^>]+>/g, '') || '' }] }];
+    }
+    return initialSlateValue;
+};
+// --- END: Slate.js Components & Functions ---
 
 const ConfirmationModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
     if (!isOpen) return null;
@@ -250,26 +207,29 @@ const ConfirmationModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
 
 const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving, isModalLoading }) => {
     const [judul, setJudul] = useState('');
-    const [konten, setKonten] = useState('');
+    const [konten, setKonten] = useState(initialSlateValue);
     const [gambarUrl, setGambarUrl] = useState('');
     const [gambarFile, setGambarFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState('');
     const [formError, setFormError] = useState('');
     const fileInputRef = useRef(null);
+    const [editorKey, setEditorKey] = useState(Date.now());
 
     useEffect(() => {
         if (isOpen && !isModalLoading) {
             if (artikel) {
                 setJudul(artikel.judul);
-                setKonten(artikel.konten || '');
+                setKonten(parseToSlate(artikel.konten));
                 setGambarUrl(artikel.gambar || '');
                 setPreviewUrl(artikel.gambar ? `${API_BASE_URL}${artikel.gambar}` : '');
+                setEditorKey(artikel.id || Date.now()); // Reset editor
             } else {
                 setJudul('');
-                setKonten('');
+                setKonten(initialSlateValue);
                 setGambarUrl('');
                 setPreviewUrl('');
                 setGambarFile(null);
+                setEditorKey(Date.now()); // Reset editor for new entry
             }
             setFormError('');
         }
@@ -297,7 +257,8 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving, isModalLoadi
     const handleSubmit = async (e) => {
         e.preventDefault();
         setFormError('');
-        if (!judul.trim() || !konten.trim()) {
+        const isContentEmpty = konten.length === 1 && konten[0].children.length === 1 && konten[0].children[0].text === '';
+        if (!judul.trim() || isContentEmpty) {
             setFormError('Judul dan Konten tidak boleh kosong.');
             return;
         }
@@ -350,7 +311,7 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving, isModalLoadi
                             <div>
                                 <label className="block text-gray-700 text-sm font-medium mb-2">Konten</label>
                                 <div className="border border-gray-300 rounded-lg">
-                                    <RichTextEditor value={konten} onChange={setKonten} />
+                                    <SlateRichEditor value={konten} onChange={setKonten} editorKey={editorKey} />
                                 </div>
                             </div>
                         </div>
@@ -367,6 +328,7 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving, isModalLoadi
         </div>
     );
 };
+
 
 const ArtikelTable = ({ data, onEdit, onDelete, isDeleting }) => {
     if (data.length === 0) {
@@ -464,7 +426,7 @@ export default function ArtikelAdminPage() {
     const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
     const [artikelToDeleteId, setArtikelToDeleteId] = useState(null);
     const [isModalLoading, setIsModalLoading] = useState(false);
-    const [modalKey, setModalKey] = useState(0);
+    const router = useRouter();
 
     const fetchArticles = useCallback(async () => {
         setLoading(true);
@@ -494,7 +456,7 @@ export default function ArtikelAdminPage() {
         setError('');
         const token = localStorage.getItem('adminToken');
         if (!token) {
-            setError('Sesi Anda telah berakhir. Silakan login kembali.');
+            router.push('/admin/login');
             setIsSaving(false);
             return;
         }
@@ -516,7 +478,7 @@ export default function ArtikelAdminPage() {
                 }
                 finalGambarUrl = uploadData.filePath;
             } catch (err) {
-                setError(`Error: ${err.message}`);
+                alert(`Error: ${err.message}`);
                 setIsSaving(false);
                 return;
             }
@@ -526,12 +488,9 @@ export default function ArtikelAdminPage() {
             finalGambarUrl = null;
         }
         
-        // Convert HTML content from rich editor to a simple Slate-like JSON structure
-        const slateContent = parseHtmlToSlate(konten);
-
         const dataToSave = {
             judul: judul,
-            konten: JSON.stringify(slateContent), 
+            konten: JSON.stringify(konten),
             gambar: finalGambarUrl, 
         };
 
@@ -551,13 +510,17 @@ export default function ArtikelAdminPage() {
             });
 
             if (!res.ok) {
+                if (res.status === 401 || res.status === 403) {
+                    router.push('/admin/login');
+                    return;
+                }
                 const errorData = await res.json().catch(() => ({ message: 'Gagal menyimpan artikel.' }));
                 throw new Error(errorData.message || res.statusText);
             }
             fetchArticles(); 
             closeModal();
         } catch (err) {
-            setError(`Gagal menyimpan artikel: ${err.message}`);
+            alert(`Gagal menyimpan artikel: ${err.message}`);
         } finally {
             setIsSaving(false);
         }
@@ -571,7 +534,12 @@ export default function ArtikelAdminPage() {
         setIsDeleting(true);
         setError('');
         const token = localStorage.getItem('adminToken');
-        if (!token) { setError('Anda tidak memiliki izin.'); setIsDeleting(false); cancelDeleteHandler(); return; }
+        if (!token) { 
+            router.push('/admin/login');
+            setIsDeleting(false);
+            cancelDeleteHandler();
+            return; 
+        }
 
         try {
             const res = await fetch(`${API_BASE_URL}/api/artikel/${artikelToDeleteId}`, {
@@ -579,12 +547,16 @@ export default function ArtikelAdminPage() {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!res.ok) {
+                if (res.status === 401 || res.status === 403) {
+                    router.push('/admin/login');
+                    return;
+                }
                 const errorData = await res.json();
                 throw new Error(errorData.message || 'Gagal menghapus artikel.');
             }
             setArticles(prevList => prevList.filter(artikel => artikel.id !== artikelToDeleteId));
         } catch (err) {
-            setError(err.message);
+            alert(err.message);
         } finally {
             setIsDeleting(false);
             cancelDeleteHandler();
@@ -592,7 +564,6 @@ export default function ArtikelAdminPage() {
     };
 
     const handleOpenModal = useCallback(async (slug = null) => {
-        setModalKey(prevKey => prevKey + 1);
         setIsModalOpen(true);
         setEditingArtikel(null);
         setIsModalLoading(true);
@@ -607,7 +578,7 @@ export default function ArtikelAdminPage() {
                 const detailData = await res.json();
                 setEditingArtikel(detailData);
             } catch (err) {
-                setError(err.message);
+                alert(err.message);
                 setIsModalOpen(false);
             } finally {
                 setIsModalLoading(false);
@@ -624,36 +595,6 @@ export default function ArtikelAdminPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans p-4 sm:p-6 lg:p-8">
-            <style>
-                {`
-                .prose h1 {
-                    font-size: 2.25rem; /* 36px */
-                    font-weight: 700; /* bold */
-                    margin-top: 2rem;
-                    margin-bottom: 1rem;
-                }
-                .prose h2 {
-                    font-size: 1.5rem; /* 24px */
-                    font-weight: 600; /* semibold */
-                    margin-top: 1.5rem;
-                    margin-bottom: 0.75rem;
-                }
-                .prose ul, .prose ol {
-                    margin-top: 1rem;
-                    margin-bottom: 1rem;
-                    padding-left: 1.5rem;
-                }
-                .prose ul {
-                    list-style-type: disc;
-                }
-                .prose ol {
-                    list-style-type: decimal;
-                }
-                .prose li {
-                    margin-bottom: 0.5rem;
-                }
-                `}
-            </style>
             <main className="max-w-7xl mx-auto">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
@@ -696,7 +637,6 @@ export default function ArtikelAdminPage() {
             </main>
 
             <ArtikelModal
-                key={modalKey}
                 isOpen={isModalOpen}
                 onClose={closeModal}
                 onSave={handleSave}
