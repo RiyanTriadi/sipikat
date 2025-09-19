@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, ClipboardList, Send, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import React from 'react'; 
+import React from 'react';
 
 const confidenceLevels = [
     { label: "Tidak Pernah", value: 0 },
@@ -50,12 +50,10 @@ export default function DiagnosaPage() {
     const [step, setStep] = useState(1);
     const [user, setUser] = useState({ nama: '', jenis_kelamin: '', usia: '', alamat: '' });
     const [gejala, setGejala] = useState([]);
-    const [addresses, setAddresses] = useState([]); 
     const [selectedGejala, setSelectedGejala] = useState({});
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [gejalaLoading, setGejalaLoading] = useState(true);
-    const [addressLoading, setAddressLoading] = useState(true); 
     const router = useRouter();
 
     useEffect(() => {
@@ -75,25 +73,7 @@ export default function DiagnosaPage() {
                 setGejalaLoading(false);
             }
         };
-
-        const fetchAddresses = async () => {
-            setAddressLoading(true);
-            try {
-                const res = await fetch('https://mobile-api.edu-sipikat.com/api/v1/addresses');
-                if (!res.ok) throw new Error('Gagal mengambil data alamat.');
-                const data = await res.json();
-                if (data && data.data) {
-                    setAddresses(data.data);
-                }
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setAddressLoading(false);
-            }
-        };
-
         fetchGejala();
-        fetchAddresses();
     }, []);
 
     const handleUserChange = (e) => setUser({ ...user, [e.target.name]: e.target.value });
@@ -194,16 +174,15 @@ export default function DiagnosaPage() {
                                     </div>
                                     <div>
                                         <label htmlFor="alamat" className={labelClasses}>Alamat:</label>
-                                        <select id="alamat" name="alamat" value={user.alamat} onChange={handleUserChange} className={inputClasses} disabled={addressLoading}>
-                                            <option value="">Pilih Alamat</option>
-                                            {addressLoading ? (
-                                                <option disabled>Memuat alamat...</option>
-                                            ) : (
-                                                addresses.map((address) => (
-                                                    <option key={address.id} value={address.name}>{address.name}</option>
-                                                ))
-                                            )}
-                                        </select>
+                                        <input
+                                            type="text"
+                                            id="alamat"
+                                            name="alamat"
+                                            value={user.alamat}
+                                            onChange={handleUserChange}
+                                            className={inputClasses}
+                                            placeholder="Masukkan alamat lengkap"
+                                        />
                                     </div>
                                 </div>
                             </motion.section>
