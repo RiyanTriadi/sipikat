@@ -62,7 +62,7 @@ export default function TentangPage() {
                         Tentang SIPIKAT
                     </h1>
                     <p className="mt-4 text-lg text-gray-50 md:text-xl">
-                        SIPAKAT (Sistem Pakar Identifikasi Kecanduan Gadget) adalah platform yang dirancang untuk membantu Anda mengidentifikasi tingkat kemungkinan kecanduan gadget melalui kuesioner berbasis metode Certainty Factor. Aplikasi ini menyediakan hasil persentase dan solusi yang relevan sebagai alat bantu edukasi untuk meningkatkan kesadaran akan kebiasaan digital Anda. Penting untuk diingat bahwa hasil dari SIPAKAT bersifat indikatif dan bukan merupakan diagnosis medis profesional, sehingga tidak dapat menggantikan konsultasi dengan ahli kesehatan.
+                        SIPIKAT (Sistem Pakar Identifikasi Kecanduan Gadget) adalah platform yang dirancang untuk membantu Anda mengidentifikasi tingkat kemungkinan kecanduan gadget melalui kuesioner berbasis metode Certainty Factor. Aplikasi ini menyediakan hasil persentase dan solusi yang relevan sebagai alat bantu edukasi untuk meningkatkan kesadaran akan kebiasaan digital Anda. Penting untuk diingat bahwa hasil dari SIPIKAT bersifat indikatif dan bukan merupakan diagnosis medis profesional, sehingga tidak dapat menggantikan konsultasi dengan ahli kesehatan.
                     </p>
                 </div>
             </section>

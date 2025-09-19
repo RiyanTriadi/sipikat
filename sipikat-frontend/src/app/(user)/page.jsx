@@ -7,7 +7,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 async function getLatestArticles() {
   try {
     const res = await fetch(`${API_BASE_URL}/api/artikel`, {
-      next: { revalidate: 60 }, // Revalidate every 60 seconds
+      next: { revalidate: 60 },
     });
 
     if (!res.ok) {
@@ -27,7 +27,6 @@ async function getLatestArticles() {
   }
 }
 
-// Data untuk logo partner dibuat dalam bentuk array agar mudah dikelola
 const partnerLogos = [
   { src: '/diktisaintek-logo.png', alt: 'Logo Diktisaintek' },
   { src: '/unma logo.png', alt: "Logo Universitas Mathla'ul Anwar" },
@@ -41,7 +40,6 @@ export default async function HomePage() {
 
   return (
     <main className="bg-gray-50 font-sans antialiased">
-      {/* Hero Section */}
       <section className="relative w-full h-[60vh] min-h-[400px] flex items-center justify-center text-white overflow-hidden">
         <div
           className="absolute top-0 left-0 w-full h-full bg-cover bg-center"
@@ -61,7 +59,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Download Section - Card Style */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
@@ -85,26 +82,26 @@ export default async function HomePage() {
               </div>
             </div>
             <div className="flex-grow text-center md:text-left">
-              <h3 className="text-2xl font-bold text-gray-900">SIPIKAT v1.0.0</h3>
+              <h3 className="text-2xl font-bold text-gray-900">SIPIKAT Mobile</h3>
               <p className="mt-1 text-sm text-gray-500">
-                Aplikasi ini hanya tersedia untuk perangkat Android.
+                Aplikasi SIPIKAT juga tersedia untuk perangkat Android.
               </p>
             </div>
             <div className="flex-shrink-0">
               <a
-                href="/downloads/sipikat v1.0.0.apk"
-                download
+                href="https://play.google.com/store/apps/details?id=com.tegalwangi.sipikat"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 transform group"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                Unduh Sekarang
+                Unduh di Play Store
               </a>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Latest Articles Section */}
       {latestArticles.length > 0 && (
         <section className="py-16 sm:py-24 bg-gray-100">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -126,7 +123,6 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Partner Logos Section */}
       <section className="py-16 bg-white border-t border-gray-200">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-center text-xl font-semibold text-gray-600 mb-10">
