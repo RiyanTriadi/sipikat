@@ -2,70 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, User, List, Lightbulb, RefreshCw, Download } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ArrowLeft, User, List, Lightbulb, RefreshCw, Download, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { parseAndRenderContent } from '@/app/(user)/artikel/[slug]/page';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable'; 
+import autoTable from 'jspdf-autotable';
 
-const RadialProgress = ({ percentage, styles }) => {
-    const radius = 80;
-    const stroke = 15;
-    const normalizedRadius = radius - stroke * 2;
-    const circumference = normalizedRadius * 2 * Math.PI;
-    const strokeDashoffset = circumference - (percentage / 100) * circumference;
-
-    return (
-        <div className="relative flex items-center justify-center">
-            <svg height={radius * 2} width={radius * 2} className="transform -rotate-90">
-                <circle
-                    stroke="#e5e7eb"
-                    fill="transparent"
-                    strokeWidth={stroke}
-                    r={normalizedRadius}
-                    cx={radius}
-                    cy={radius}
-                />
-                <motion.circle
-                    stroke={styles.progress}
-                    fill="transparent"
-                    strokeWidth={stroke}
-                    strokeDasharray={circumference + ' ' + circumference}
-                    style={{ strokeDashoffset }}
-                    strokeLinecap="round"
-                    r={normalizedRadius}
-                    cx={radius}
-                    cy={radius}
-                    initial={{ strokeDashoffset: circumference }}
-                    animate={{ strokeDashoffset }}
-                    transition={{ duration: 1.5, ease: "circOut" }}
-                />
-            </svg>
-            <div className="absolute flex flex-col items-center justify-center">
-                <span className={`text-4xl font-bold ${styles.text}`}>
-                    {percentage}%
-                </span>
-                <span className="text-sm text-black">Tingkat kecanduan</span>
-            </div>
-        </div>
-    );
-};
-
-const InfoCard = ({ icon, title, children }) => (
-    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-full">
-        <div className="flex items-center mb-4">
-            {icon}
-            <h3 className="text-lg font-semibold text-gray-800 ml-3">{title}</h3>
-        </div>
-        <div className="text-gray-600 space-y-2">
-            {children}
-        </div>
-    </div>
-);
 
 export default function HasilPage() {
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [detailsVisible, setDetailsVisible] = useState(false);
 
     useEffect(() => {
         const storedResult = localStorage.getItem('diagnosisResult');
@@ -78,163 +25,203 @@ export default function HasilPage() {
     const getCategoryStyles = (kategori) => {
         const lowerKategori = kategori ? kategori.toLowerCase() : '';
         if (lowerKategori.includes('kecanduan') || lowerKategori.includes('tinggi')) {
-            return { bg: 'bg-red-50', text: 'text-red-800', border: 'border-red-400', progress: '#ef4444' };
+            return { 
+                bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-300', 
+                progress: '#ef4444', rgb: [239, 68, 68],
+                description: "Hasil ini menunjukkan adanya indikasi kuat kecanduan gadget. Penting untuk segera mengambil langkah-langkah perbaikan."
+            };
         }
         if (lowerKategori.includes('waspada') || lowerKategori.includes('sedang')) {
-            return { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-400', progress: '#eab308' };
+            return { 
+                bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-400', 
+                progress: '#eab308', rgb: [234, 179, 8],
+                description: "Anda menunjukkan beberapa gejala yang perlu diwaspadai. Mengatur pola penggunaan gadget adalah langkah yang bijak."
+            };
         }
-        return { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-400', progress: '#16a34a' };
+        return { 
+            bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-400', 
+            progress: '#16a34a', rgb: [22, 163, 74],
+            description: "Selamat! Tingkat penggunaan gadget Anda masih dalam kategori normal. Pertahankan kebiasaan baik ini."
+        };
     };
-    
-    const renderSlateContent = (doc, slateJSON, startY) => {
+
+    const renderSlateContent = (doc, slateJSON, startY, addHeaderFooter) => {
         let y = startY;
-        const nodes = JSON.parse(slateJSON);
+        if (!slateJSON) return y;
+
+        let nodes;
+        try {
+            nodes = JSON.parse(slateJSON);
+        } catch (error) {
+            console.error("Gagal mem-parsing JSON solusi:", error);
+            return y;
+        }
     
         const normalFontSize = 10;
-        const textMargin = 10;
+        const textMargin = 15;
         const pageWrapWidth = doc.internal.pageSize.getWidth() - (textMargin * 2);
-        const lineHeight = 5;
+        const lineHeight = 5.5;
     
         nodes.forEach(node => {
-            if (y > 280) {
-                doc.addPage();
-                y = 10;
-            }
+            const checkPageBreak = (neededHeight) => {
+                if (y + neededHeight > 270) {
+                    doc.addPage();
+                    addHeaderFooter();
+                    y = 40;
+                }
+            };
     
             if (node.type === 'paragraph') {
                 let line = '';
-                node.children.forEach(child => {
-                     if (child.text) {
-                         line += child.text;
-                     }
-                });
+                (node.children || []).forEach(child => { if (child.text) line += child.text; });
                 const textLines = doc.splitTextToSize(line.trim(), pageWrapWidth);
+                checkPageBreak(textLines.length * lineHeight);
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(normalFontSize);
+                doc.setTextColor(80, 80, 80);
                 doc.text(textLines, textMargin, y);
-                y += textLines.length * lineHeight;
+                y += textLines.length * lineHeight + (lineHeight / 2);
             } 
-            
             else if (node.type === 'numbered-list') {
                 let itemCounter = 1;
-                node.children.forEach(listItem => {
-                     if (y > 280) {
-                         doc.addPage();
-                         y = 10;
-                     }
+                (node.children || []).forEach(listItem => {
                     let line = '';
-                    listItem.children.forEach(textPart => {
-                        line += textPart.text || '';
-                    });
-    
+                    (listItem.children || []).forEach(textPart => { line += textPart.text || ''; });
                     const fullLine = `${itemCounter}. ${line.trim()}`;
-                    const textLines = doc.splitTextToSize(fullLine, pageWrapWidth - 5);
+                    const textLines = doc.splitTextToSize(fullLine, pageWrapWidth - 7);
+                    checkPageBreak(textLines.length * lineHeight);
                     doc.setFont('helvetica', 'normal');
                     doc.setFontSize(normalFontSize);
-                    doc.text(textLines, textMargin + 5, y);
+                    doc.setTextColor(80, 80, 80);
+                    doc.text(textLines, textMargin + 7, y);
                     y += textLines.length * lineHeight;
                     itemCounter++;
                 });
-                 y += lineHeight / 2;
+                y += lineHeight;
             }
         });
-    
         return y;
     };
 
     const handleDownload = () => {
         const doc = new jsPDF();
-        let y = 10;
+        const styles = getCategoryStyles(result.kategori);
+        
+        const primaryColor = [37, 99, 235]; 
+        const categoryColor = styles.rgb; 
+        
+        const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+        const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
+        
+        const addHeaderFooter = () => {
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(18);
+                doc.setTextColor(50, 50, 50);
+                doc.text("Laporan Hasil Diagnosa SIPIKAT", pageWidth / 2, 20, { align: 'center' });
+                
+                doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                doc.setLineWidth(0.5);
+                doc.line(15, 25, pageWidth - 15, 25);
 
-        // Title
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8);
+                doc.setTextColor(150, 150, 150);
+                const footerText = `Halaman ${i} dari ${pageCount}`;
+                doc.text(footerText, pageWidth / 2, pageHeight - 10, { align: 'center' });
+                doc.text(`Dokumen ini dibuat secara otomatis oleh SIPIKAT.`, 15, pageHeight - 10);
+            }
+        };
+
+        let y = 35; 
+
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(16);
-        doc.text("Hasil Diagnosa SIPIKAT", 105, y, { align: 'center' });
-        y += 7;
-        doc.text("(Sistem Pakar Identifikasi Tingkat Kecanduan Gadget)", 105, y, { align: 'center' });
-        y += 10;
+        doc.setFontSize(14);
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.text("1. Informasi Pasien & Hasil Diagnosa", 15, y);
+        y += 8;
 
-        // Date
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(10);
-        doc.text(`Tanggal: ${new Date().toLocaleDateString()}`, 200, y, { align: 'right' });
-        y += 10;
-
-        // Diagnosis Results Section
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text("Hasil Diagnosa", 10, y);
-        y += 7;
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Kategori: ${result.kategori}`, 10, y);    
-        y += 5;
-        doc.text(`Tingkat Kecanduan: ${parseFloat((result.total_cf * 100).toFixed(2))}%`, 10, y);
-        y += 10;
-
-        // Solusi & Rekomendasi Section 
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(12);
-        doc.text("Solusi & Rekomendasi", 10, y);
-        y += 7;
-        y = renderSlateContent(doc, result.solusi, y); 
-        y += 5;
-
-        // Detail Pasien Section 
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(12);
-        doc.text("Detail Pasien", 10, y);
-        y += 7;
-        const patientData = [
-            ['Nama', result.user.nama],
-            ['Usia', `${result.user.usia} tahun`],
-            ['Jenis Kelamin', result.user.jenis_kelamin],
-            ['Alamat', result.user.alamat]
+        const combinedData = [
+            { title: 'Nama Lengkap', value: result.user.nama },
+            { title: 'Usia', value: `${result.user.usia} tahun` },
+            { title: 'Jenis Kelamin', value: result.user.jenis_kelamin },
+            { title: 'Alamat', value: result.user.alamat },
+            { title: 'Tanggal Diagnosa', value: new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric'}) },
+            { title: 'Tingkat Kecanduan', value: `${parseFloat((result.total_cf * 100).toFixed(2))}%` },
+            { title: 'Hasil Diagnosa', value: result.kategori.toUpperCase() },
         ];
+
         autoTable(doc, {
             startY: y,
-            body: patientData,
-            theme: 'grid',
+            body: combinedData.map(item => [item.title, ':', item.value]),
+            theme: 'plain',
+            styles: { fontSize: 10, cellPadding: 1.5 },
             columnStyles: {
-                0: { cellWidth: 40 },
-                1: { cellWidth: 'auto' }
+                0: { fontStyle: 'bold', cellWidth: 45 },
+                1: { cellWidth: 5 },
+                2: { cellWidth: 'auto' }
+            },
+            didParseCell: (data) => {
+                if (data.row.raw[0] === 'Hasil Diagnosa') {
+                    const valueCell = data.row.cells[2];
+                    if (valueCell) {
+                        valueCell.styles.textColor = categoryColor;
+                        valueCell.styles.fontStyle = 'bold';
+                        valueCell.styles.fontSize = 12;
+                    }
+                }
+                if (data.row.raw[0] === 'Tingkat Kecanduan') {
+                    const valueCell = data.row.cells[2];
+                    if (valueCell) {
+                        valueCell.styles.fontStyle = 'bold';
+                    }
+                }
             }
         });
-        y = doc.lastAutoTable.finalY + 10;
+        y = doc.lastAutoTable.finalY + 12;
 
-        // Gejala yang Dialami Section
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(12);
-        doc.text("Gejala yang Dialami", 10, y);
-        y += 7;
-        const symptomsData = result.gejala_terpilih.map((g, index) => [
-            index + 1,
-            g.gejala,
-            `${(g.cf_user * 100).toFixed(0)}%`
-        ]);
+        doc.setFontSize(14);
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.text("2. Gejala yang Dialami", 15, y);
+        y += 8;
+
+        const symptomsData = result.gejala_terpilih.map(g => [g.gejala, `${(g.cf_user * 100).toFixed(0)}%`]);
         autoTable(doc, {
             startY: y,
-            head: [['No.', 'Gejala', 'Persentase']],
+            head: [['Deskripsi Gejala', 'Tingkat Keyakinan']],
             body: symptomsData,
-            theme: 'grid',
+            theme: 'striped',
             headStyles: { 
-                fillColor: [255, 255, 255], 
-                textColor: [0, 0, 0],      
-                lineWidth: 0.1,      
+                fillColor: [55, 65, 81],
+                textColor: [255, 255, 255],
+                fontStyle: 'bold'
             },
             columnStyles: {
-                0: { cellWidth: 10 },
-                1: { cellWidth: 'auto' },
-                2: { cellWidth: 30 }
+                0: { cellWidth: 'auto' },
+                1: { cellWidth: 40, halign: 'center' }
             }
         });
-
-        const pageCount = doc.internal.getNumberOfPages();
-        for (let i = 1; i <= pageCount; i++) {
-            doc.setPage(i);
-            doc.text(`Page ${i} of ${pageCount}`, 105, 290, { align: 'center' });
+        y = doc.lastAutoTable.finalY + 12;
+        
+        if (y > 200) {
+            doc.addPage();
+            y = 40;
         }
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.text("3. Solusi dan Rekomendasi", 15, y);
+        y += 10;
+        
+        y = renderSlateContent(doc, result.solusi, y, () => addHeaderFooter()); 
+        
+        addHeaderFooter();
 
-        doc.save("hasil_diagnosa.pdf");
+        doc.save(`Hasil Diagnosa - ${result.user.nama.replace(/\s/g, '_')}.pdf`);
     };
 
     if (loading) {
@@ -244,14 +231,14 @@ export default function HasilPage() {
     if (!result) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-                <div className="text-center bg-white p-10 rounded-xl shadow-xl border">
-                    <h1 className="text-2xl font-bold text-gray-800 mb-4">Hasil Tidak Ditemukan</h1>
-                    <p className="mb-8 text-gray-600">Sepertinya Anda belum melakukan diagnosa atau sesi telah berakhir.</p>
-                    <Link href="/diagnosa" className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-transform transform hover:scale-105">
-                        <ArrowLeft className="mr-2 h-5 w-5" />
-                        Kembali ke Halaman Diagnosa
-                    </Link>
-                </div>
+                 <div className="text-center bg-white p-10 rounded-xl shadow-xl border">
+                     <h1 className="text-2xl font-bold text-gray-800 mb-4">Hasil Tidak Ditemukan</h1>
+                     <p className="mb-8 text-gray-600">Sepertinya Anda belum melakukan diagnosa atau sesi telah berakhir.</p>
+                     <Link href="/diagnosa" className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-transform transform hover:scale-105">
+                         <ArrowLeft className="mr-2 h-5 w-5" />
+                         Kembali ke Halaman Diagnosa
+                     </Link>
+                 </div>
             </div>
         );
     }
@@ -260,68 +247,107 @@ export default function HasilPage() {
     const styles = getCategoryStyles(result.kategori);
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gray-50 py-10 sm:py-16 px-4 sm:px-6 lg:px-8">
             <motion.div
-                className="max-w-4xl mx-auto"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+              className="max-w-3xl mx-auto space-y-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
             >
-                <div className="bg-white p-8 sm:p-10 rounded-xl shadow-lg border border-gray-200">
-                    <h1 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-4">Hasil Diagnosa Anda</h1>
-                    <p className="text-center text-gray-500 mb-10">Berikut adalah hasil analisis sistem berdasarkan gejala yang Anda berikan.</p>
-
-                    <div className="grid md:grid-cols-2 gap-8 items-center mb-10">
-                        <div className="flex flex-col items-center justify-center p-6 rounded-xl bg-gray-50 border">
-                            <RadialProgress percentage={percentage} styles={styles} />
-                            <div className={`mt-6 text-center ${styles.bg} ${styles.text} px-4 py-2 rounded-full font-semibold text-sm`}>
-                                Kategori: {result.kategori}
-                            </div>
-                        </div>
-
-                        <InfoCard icon={<Lightbulb className={`h-6 w-6 ${styles.text}`} />} title="Solusi & Rekomendasi">
-                            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: parseAndRenderContent(result.solusi) }} />
-                        </InfoCard>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-8">
-                        <InfoCard icon={<User className="h-6 w-6 text-blue-600" />} title="Detail Pasien">
-                            <p><strong>Nama:</strong> {result.user.nama}</p>
-                            <p><strong>Usia:</strong> {result.user.usia} tahun</p>
-                            <p><strong>Jenis Kelamin:</strong> {result.user.jenis_kelamin}</p>
-                            <p><strong>Alamat:</strong> {result.user.alamat}</p>
-                        </InfoCard>
-
-                        <InfoCard icon={<List className="h-6 w-6 text-blue-600" />} title="Gejala yang Dialami">
-                            <ul className="list-disc list-inside space-y-1">
-                                {result.gejala_terpilih.map(g => (
-                                    <li key={g.id}>
-                                        {g.gejala} <span className="text-gray-500 text-sm">- ({(g.cf_user * 100).toFixed(0)}% yakin)</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </InfoCard>
-                    </div>
-
-                    <div className="mt-12 pt-8 border-t border-gray-200">
-                        <div className="flex flex-col sm:flex-row sm:justify-center gap-4">
-                            <button
-                                onClick={handleDownload}
-                                className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition-transform transform hover:scale-105"
-                            >
-                                <Download className="mr-2 h-5 w-5" />
-                                Download Hasil
-                            </button>
-                            <Link 
-                                href="/diagnosa" 
-                                className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-transform transform hover:scale-105"
-                            >
-                                <RefreshCw className="mr-2 h-5 w-5" />
-                                Lakukan Diagnosa Ulang
-                            </Link>
-                        </div>
-                    </div>
+                <div className="text-center">
+                    <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">
+                        Hasil Diagnosa Anda
+                    </h1>
+                    <p className="mt-3 max-w-2xl mx-auto text-lg text-gray-600">
+                        Berikut adalah ringkasan analisis berdasarkan gejala yang Anda berikan.
+                    </p>
                 </div>
+
+                <section className={`p-8 rounded-2xl shadow-lg border text-center ${styles.bg} ${styles.border}`}>
+                    <h1 className={`text-3xl font-bold ${styles.text}`}>Hasil: {result.kategori}</h1>
+                    <p className={`mt-2 text-6xl font-extrabold ${styles.text}`}>{percentage}%</p>
+                    <p className={`mt-4 max-w-xl mx-auto ${styles.text}`}>
+                        {styles.description}
+                    </p>
+                </section>
+
+                <section className="bg-white p-8 rounded-2xl shadow-md border border-gray-200">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-blue-100 p-3 rounded-full">
+                           <Lightbulb className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-800">Langkah Selanjutnya & Rekomendasi</h2>
+                    </div>
+                    <div className="mt-6 prose prose-lg max-w-none text-gray-700" dangerouslySetInnerHTML={{ __html: parseAndRenderContent(result.solusi) }} />
+                </section>
+
+                <section className="bg-white rounded-2xl shadow-md border border-gray-200">
+                    <button 
+                        onClick={() => setDetailsVisible(!detailsVisible)}
+                        className="w-full flex justify-between items-center p-6 text-left"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="bg-gray-100 p-3 rounded-full">
+                               <List className="h-6 w-6 text-gray-600" />
+                            </div>
+                            <h2 className="text-xl font-bold text-gray-800">Lihat Rincian Diagnosa</h2>
+                        </div>
+                        <ChevronDown className={`h-6 w-6 text-gray-500 transition-transform ${detailsVisible ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    <AnimatePresence>
+                        {detailsVisible && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="overflow-hidden"
+                            >
+                                <div className="border-t border-gray-200 p-8 space-y-6">
+                                    <div>
+                                        <h3 className="font-semibold text-lg text-gray-700 mb-2">Data Pasien</h3>
+                                        <div className="text-gray-600 space-y-1">
+                                            <p><strong>Nama:</strong> {result.user.nama}</p>
+                                            <p><strong>Usia:</strong> {result.user.usia} tahun</p>
+                                            <p><strong>Jenis Kelamin:</strong> {result.user.jenis_kelamin}</p>
+                                            <p><strong>Alamat:</strong> {result.user.alamat}</p>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-lg text-gray-700 mb-2">Gejala yang Dialami</h3>
+                                        <ul className="list-disc list-inside space-y-1 text-gray-600">
+                                            {result.gejala_terpilih.map(g => (
+                                                <li key={g.id}>
+                                                    {g.gejala} <span className="text-gray-500 text-sm">- ({(g.cf_user * 100).toFixed(0)}% yakin)</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </section>
+                
+                <section className="pt-4">
+                     <div className="flex flex-col sm:flex-row sm:justify-center gap-4">
+                         <button
+                             onClick={handleDownload}
+                             className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105"
+                         >
+                             <Download className="mr-2 h-5 w-5" />
+                             Unduh Laporan PDF
+                         </button>
+                         <Link 
+                             href="/diagnosa" 
+                             className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 bg-gray-100 text-gray-700 font-semibold rounded-lg shadow-md hover:bg-gray-200 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-transform transform hover:scale-105"
+                         >
+                             <RefreshCw className="mr-2 h-5 w-5" />
+                             Lakukan Diagnosa Ulang
+                         </Link>
+                     </div>
+                </section>
             </motion.div>
         </div>
     );
