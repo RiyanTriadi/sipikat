@@ -28,11 +28,11 @@ async function getLatestArticles() {
 }
 
 const partnerLogos = [
-  { src: '/diktisaintek-logo.png', alt: 'Logo Diktisaintek' },
-  { src: '/unma logo.png', alt: "Logo Universitas Mathla'ul Anwar" },
-  { src: '/pandeglang logo.png', alt: 'Logo Kabupaten Pandeglang' },
-  { src: '/pmm-logo.png', alt: 'Logo PMM Tegalwangi' },
-  { src: '/kkn-logo.png', alt: 'Logo KKN 4 Tegalwangi UNMA' },
+  { src: '/diktisaintek-logo.webp', alt: 'Logo Diktisaintek' },
+  { src: '/unma logo.webp', alt: "Logo Universitas Mathla'ul Anwar" },
+  { src: '/pandeglang logo.webp', alt: 'Logo Kabupaten Pandeglang' },
+  { src: '/pmm-logo.webp', alt: 'Logo PMM Tegalwangi' },
+  { src: '/kkn-logo.webp', alt: 'Logo KKN 4 Tegalwangi UNMA' },
 ];
 
 export default async function HomePage() {
@@ -74,7 +74,7 @@ export default async function HomePage() {
               <div className="w-24 h-24 rounded-2xl bg-blue-500 flex items-center justify-center shadow-lg">
                 <Image
                   className="rounded-2xl"
-                  src="/sipikat-logo.png"
+                  src="/sipikat-logo.webp"
                   width={500}
                   height={500}
                   alt="Logo aplikasi SIPIKAT"
