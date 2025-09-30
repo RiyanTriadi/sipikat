@@ -38,206 +38,207 @@ const LIST_TYPES = ['numbered-list', 'bulleted-list'];
 const TEXT_ALIGN_TYPES = ['left', 'center', 'right', 'justify'];
 
 const toggleMark = (editor, format) => {
-  const isActive = isMarkActive(editor, format);
-  if (isActive) {
-    SlateEditor.removeMark(editor, format);
-  } else {
-    SlateEditor.addMark(editor, format, true);
-  }
+    const isActive = isMarkActive(editor, format);
+    if (isActive) {
+        SlateEditor.removeMark(editor, format);
+    } else {
+        SlateEditor.addMark(editor, format, true);
+    }
 };
 
 const isMarkActive = (editor, format) => {
-  const marks = SlateEditor.marks(editor);
-  return marks ? marks[format] === true : false;
+    const marks = SlateEditor.marks(editor);
+    return marks ? marks[format] === true : false;
 };
 
 const toggleBlock = (editor, format) => {
-  const isActive = isBlockActive(editor, format, TEXT_ALIGN_TYPES.includes(format) ? 'align' : 'type');
-  const isList = LIST_TYPES.includes(format);
+    const isActive = isBlockActive(editor, format, TEXT_ALIGN_TYPES.includes(format) ? 'align' : 'type');
+    const isList = LIST_TYPES.includes(format);
 
-  Transforms.unwrapNodes(editor, {
-    match: n =>
-      !SlateEditor.isEditor(n) &&
-      SlateElement.isElement(n) &&
-      LIST_TYPES.includes(n.type) &&
-      !TEXT_ALIGN_TYPES.includes(format),
-    split: true,
-  });
+    Transforms.unwrapNodes(editor, {
+        match: n =>
+            !SlateEditor.isEditor(n) &&
+            SlateElement.isElement(n) &&
+            LIST_TYPES.includes(n.type) &&
+            !TEXT_ALIGN_TYPES.includes(format),
+        split: true,
+    });
 
-  let newProperties;
-  if (TEXT_ALIGN_TYPES.includes(format)) {
-    newProperties = { align: isActive ? undefined : format };
-  } else {
-    newProperties = { type: isActive ? 'paragraph' : isList ? 'list-item' : format };
-  }
-  Transforms.setNodes(editor, newProperties);
+    let newProperties;
+    if (TEXT_ALIGN_TYPES.includes(format)) {
+        newProperties = { align: isActive ? undefined : format };
+    } else {
+        newProperties = { type: isActive ? 'paragraph' : isList ? 'list-item' : format };
+    }
+    Transforms.setNodes(editor, newProperties);
 
-  if (!isActive && isList) {
-    const block = { type: format, children: [] };
-    Transforms.wrapNodes(editor, block);
-  }
+    if (!isActive && isList) {
+        const block = { type: format, children: [] };
+        Transforms.wrapNodes(editor, block);
+    }
 };
 
 const isBlockActive = (editor, format, blockType = 'type') => {
-  const { selection } = editor;
-  if (!selection) return false;
+    const { selection } = editor;
+    if (!selection) return false;
 
-  const [match] = SlateEditor.nodes(editor, {
-    at: SlateEditor.unhangRange(editor, selection),
-    match: n =>
-      !SlateEditor.isEditor(n) &&
-      SlateElement.isElement(n) &&
-      n[blockType] === format,
-  });
+    const [match] = SlateEditor.nodes(editor, {
+        at: SlateEditor.unhangRange(editor, selection),
+        match: n =>
+            !SlateEditor.isEditor(n) &&
+            SlateElement.isElement(n) &&
+            n[blockType] === format,
+    });
 
-  return !!match;
+    return !!match;
 };
 
 const Element = ({ attributes, children, element }) => {
-  const style = { textAlign: element.align };
-  switch (element.type) {
-    case 'block-quote':
-      return (
-        <blockquote className="border-l-4 pl-4 italic text-gray-500" style={style} {...attributes}>
-          {children}
-        </blockquote>
-      );
-    case 'bulleted-list':
-      return (
-        <ul className="list-disc pl-8" style={style} {...attributes}>
-          {children}
-        </ul>
-      );
-    case 'heading-one':
-      return (
-        <h1 className="text-3xl font-bold" style={style} {...attributes}>
-          {children}
-        </h1>
-      );
-    case 'heading-two':
-      return (
-        <h2 className="text-2xl font-bold" style={style} {...attributes}>
-          {children}
-        </h2>
-      );
-    case 'list-item':
-      return (
-        <li style={style} {...attributes}>
-          {children}
-        </li>
-      );
-    case 'numbered-list':
-      return (
-        <ol className="list-decimal pl-8" style={style} {...attributes}>
-          {children}
-        </ol>
-      );
-    default:
-      return (
-        <p style={style} {...attributes}>
-          {children}
-        </p>
-      );
-  }
+    const style = { textAlign: element.align };
+    switch (element.type) {
+        case 'block-quote':
+            return (
+                <blockquote className="border-l-4 pl-4 italic text-gray-500" style={style} {...attributes}>
+                    {children}
+                </blockquote>
+            );
+        case 'bulleted-list':
+            return (
+                <ul className="list-disc pl-8" style={style} {...attributes}>
+                    {children}
+                </ul>
+            );
+        case 'heading-one':
+            return (
+                <h1 className="text-3xl font-bold" style={style} {...attributes}>
+                    {children}
+                </h1>
+            );
+        case 'heading-two':
+            return (
+                <h2 className="text-2xl font-bold" style={style} {...attributes}>
+                    {children}
+                </h2>
+            );
+        case 'list-item':
+            return (
+                <li style={style} {...attributes}>
+                    {children}
+                </li>
+            );
+        case 'numbered-list':
+            return (
+                <ol className="list-decimal pl-8" style={style} {...attributes}>
+                    {children}
+                </ol>
+            );
+        default:
+            return (
+                <p style={style} {...attributes}>
+                    {children}
+                </p>
+            );
+    }
 };
 
 const Leaf = ({ attributes, children, leaf }) => {
-  if (leaf.bold) {
-    children = <strong>{children}</strong>;
-  }
-  if (leaf.italic) {
-    children = <em>{children}</em>;
-  }
-  if (leaf.underline) {
-    children = <u>{children}</u>;
-  }
-  return <span {...attributes}>{children}</span>;
+    if (leaf.bold) {
+        children = <strong>{children}</strong>;
+    }
+    if (leaf.italic) {
+        children = <em>{children}</em>;
+    }
+    if (leaf.underline) {
+        children = <u>{children}</u>;
+    }
+    return <span {...attributes}>{children}</span>;
 };
 
 const MarkButton = ({ format, icon: Icon, editor }) => (
-  <button
-    type="button"
-    onMouseDown={event => {
-      event.preventDefault();
-      toggleMark(editor, format);
-    }}
-    className={`p-2 rounded ${isMarkActive(editor, format) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-blue-200`}
-  >
-    <Icon size={16} />
-  </button>
+    <button
+        type="button"
+        onMouseDown={event => {
+            event.preventDefault();
+            toggleMark(editor, format);
+        }}
+        className={`p-2 rounded ${isMarkActive(editor, format) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-blue-200`}
+    >
+        <Icon size={16} />
+    </button>
 );
 
 const BlockButton = ({ format, icon: Icon, editor }) => (
-  <button
-    type="button"
-    onMouseDown={event => {
-      event.preventDefault();
-      toggleBlock(editor, format);
-    }}
-    className={`p-2 rounded ${isBlockActive(editor, format, TEXT_ALIGN_TYPES.includes(format) ? 'align' : 'type') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-blue-200`}
-  >
-    <Icon size={16} />
-  </button>
+    <button
+        type="button"
+        onMouseDown={event => {
+            event.preventDefault();
+            toggleBlock(editor, format);
+        }}
+        className={`p-2 rounded ${isBlockActive(editor, format, TEXT_ALIGN_TYPES.includes(format) ? 'align' : 'type') ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-blue-200`}
+    >
+        <Icon size={16} />
+    </button>
 );
 
 const SlateToolbar = ({ editor }) => (
-  <div className="flex items-center flex-wrap gap-2 p-2 bg-gray-100 border-b border-gray-300 rounded-t-lg">
-    <MarkButton format="bold" icon={Bold} editor={editor} />
-    <MarkButton format="italic" icon={Italic} editor={editor} />
-    <MarkButton format="underline" icon={Underline} editor={editor} />
-    <div className="w-px h-6 bg-gray-300 mx-1"></div>
-    <BlockButton format="heading-one" icon={Heading1} editor={editor} />
-    <BlockButton format="heading-two" icon={Heading2} editor={editor} />
-    <BlockButton format="block-quote" icon={Quote} editor={editor} />
-    <BlockButton format="numbered-list" icon={ListOrdered} editor={editor} />
-    <BlockButton format="bulleted-list" icon={List} editor={editor} />
-  </div>
+    <div className="flex items-center flex-wrap gap-2 p-2 bg-gray-100 border-b border-gray-300 rounded-t-lg">
+        <MarkButton format="bold" icon={Bold} editor={editor} />
+        <MarkButton format="italic" icon={Italic} editor={editor} />
+        <MarkButton format="underline" icon={Underline} editor={editor} />
+        <div className="w-px h-6 bg-gray-300 mx-1"></div>
+        <BlockButton format="heading-one" icon={Heading1} editor={editor} />
+        <BlockButton format="heading-two" icon={Heading2} editor={editor} />
+        <BlockButton format="block-quote" icon={Quote} editor={editor} />
+        <BlockButton format="numbered-list" icon={ListOrdered} editor={editor} />
+        <BlockButton format="bulleted-list" icon={List} editor={editor} />
+    </div>
 );
 
 const SlateRichEditor = ({ value, onChange, editorKey }) => {
-  const renderElement = useCallback(props => <Element {...props} />, []);
-  const renderLeaf = useCallback(props => <Leaf {...props} />, []);
-  const editor = useMemo(() => withHistory(withReact(createEditor())), []);
+    const renderElement = useCallback(props => <Element {...props} />, []);
+    const renderLeaf = useCallback(props => <Leaf {...props} />, []);
+    const editor = useMemo(() => withHistory(withReact(createEditor())), []);
 
-  return (
-    <Slate editor={editor} initialValue={value} onValueChange={onChange} key={editorKey}>
-      <SlateToolbar editor={editor} />
-      <div className="p-4 min-h-[200px] focus-within:ring-2 focus-within:ring-blue-500 rounded-b-lg">
-        <Editable
-          renderElement={renderElement}
-          renderLeaf={renderLeaf}
-          placeholder="Mulai tulis solusi di sini..."
-          spellCheck
-          autoFocus
-          onKeyDown={event => {
-            for (const hotkey in HOTKEYS) {
-              if (isHotkey(hotkey, event)) {
-                event.preventDefault();
-                const mark = HOTKEYS[hotkey];
-                toggleMark(editor, mark);
-              }
-            }
-          }}
-          className="prose max-w-none"
-        />
-      </div>
-    </Slate>
-  );
+    return (
+        <Slate editor={editor} initialValue={value} onValueChange={onChange} key={editorKey}>
+            <SlateToolbar editor={editor} />
+            <div className="p-4 min-h-[200px] focus-within:ring-2 focus-within:ring-blue-500 rounded-b-lg">
+                <Editable
+                    renderElement={renderElement}
+                    renderLeaf={renderLeaf}
+                    placeholder="Mulai tulis solusi di sini..."
+                    spellCheck
+                    autoFocus
+                    onKeyDown={event => {
+                        for (const hotkey in HOTKEYS) {
+                            if (isHotkey(hotkey, event)) {
+                                event.preventDefault();
+                                const mark = HOTKEYS[hotkey];
+                                toggleMark(editor, mark);
+                            }
+                        }
+                    }}
+                    // === PERUBAHAN DI SINI ===
+                    className="prose max-w-none focus:outline-none"
+                />
+            </div>
+        </Slate>
+    );
 };
 
 const initialSlateValue = [{ type: 'paragraph', children: [{ text: '' }] }];
 
 const parseToSlate = (dbString) => {
-  if (!dbString) return initialSlateValue;
-  try {
-    const parsed = JSON.parse(dbString);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed;
+    if (!dbString) return initialSlateValue;
+    try {
+        const parsed = JSON.parse(dbString);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+        }
+    } catch (e) {
+        return [{ type: 'paragraph', children: [{ text: dbString.replace(/<[^>]+>/g, '') || '' }] }];
     }
-  } catch (e) {
-    return [{ type: 'paragraph', children: [{ text: dbString.replace(/<[^>]+>/g, '') || '' }] }];
-  }
-  return initialSlateValue;
+    return initialSlateValue;
 };
 
 const ConfirmationModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
@@ -298,8 +299,11 @@ const SolusiModal = ({ isOpen, onClose, onSave, solusi, isSaving }) => {
     return (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl transform transition-all duration-300 ease-out scale-95 animate-in fade-in-0 zoom-in-95 flex flex-col max-h-[90vh]">
-                <div className="flex-shrink-0 p-6 border-b border-gray-200">
+                <div className="flex-shrink-0 flex justify-between items-center p-6 border-b border-gray-200">
                     <h2 className="text-2xl font-bold text-gray-900">{solusi ? 'Edit Solusi' : 'Tambah Solusi Baru'}</h2>
+                    <button onClick={onClose} className="p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                        <X size={24} />
+                    </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">

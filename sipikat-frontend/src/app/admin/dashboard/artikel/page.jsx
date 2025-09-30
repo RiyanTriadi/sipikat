@@ -33,8 +33,6 @@ const Spinner = ({ text }) => (
     </div>
 );
 
-// --- START: Slate.js Rich Text Editor Components & Functions ---
-
 const HOTKEYS = { 'mod+b': 'bold', 'mod+i': 'italic', 'mod+u': 'underline' };
 const LIST_TYPES = ['numbered-list', 'bulleted-list'];
 const TEXT_ALIGN_TYPES = ['left', 'center', 'right', 'justify'];
@@ -160,7 +158,8 @@ const SlateRichEditor = ({ value, onChange, editorKey }) => {
                             }
                         }
                     }}
-                    className="prose max-w-none"
+                    // === PERUBAHAN DI SINI ===
+                    className="prose max-w-none focus:outline-none"
                 />
             </div>
         </Slate>
@@ -177,12 +176,10 @@ const parseToSlate = (dbString) => {
             return parsed;
         }
     } catch (e) {
-        // Fallback for plain text or malformed JSON
         return [{ type: 'paragraph', children: [{ text: dbString.replace(/<[^>]+>/g, '') || '' }] }];
     }
     return initialSlateValue;
 };
-// --- END: Slate.js Components & Functions ---
 
 const ConfirmationModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
     if (!isOpen) return null;
@@ -222,14 +219,14 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving, isModalLoadi
                 setKonten(parseToSlate(artikel.konten));
                 setGambarUrl(artikel.gambar || '');
                 setPreviewUrl(artikel.gambar ? `${API_BASE_URL}${artikel.gambar}` : '');
-                setEditorKey(artikel.id || Date.now()); // Reset editor
+                setEditorKey(artikel.id || Date.now());
             } else {
                 setJudul('');
                 setKonten(initialSlateValue);
                 setGambarUrl('');
                 setPreviewUrl('');
                 setGambarFile(null);
-                setEditorKey(Date.now()); // Reset editor for new entry
+                setEditorKey(Date.now());
             }
             setFormError('');
         }
@@ -350,7 +347,6 @@ const ArtikelTable = ({ data, onEdit, onDelete, isDeleting }) => {
 
     return (
         <>
-            {/* Mobile View */}
             <div className="space-y-4 md:hidden">
                 {data.map((artikel) => (
                     <div key={artikel.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow flex gap-4 items-start">
@@ -375,7 +371,6 @@ const ArtikelTable = ({ data, onEdit, onDelete, isDeleting }) => {
                 ))}
             </div>
 
-            {/* Desktop View */}
             <div className="hidden md:block border border-gray-200 rounded-lg overflow-x-auto bg-white">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
