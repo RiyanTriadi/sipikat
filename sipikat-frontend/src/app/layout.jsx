@@ -14,7 +14,7 @@ export const metadata = {
     description: 'Sistem pakar untuk membantu Anda mengidentifikasi dan memahami tingkat kecanduan gadget secara personal.',
     images: [
       {
-        url: '/sipikat-logo.png', 
+        url: '/sipikat-logo.webp', 
         width: 1200,
         height: 630, 
         alt: 'Logo SIPIKAT', 
