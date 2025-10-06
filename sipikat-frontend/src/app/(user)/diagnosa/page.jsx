@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { User, ClipboardList, Send, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import React from 'react';
@@ -54,7 +53,6 @@ export default function DiagnosaPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [gejalaLoading, setGejalaLoading] = useState(true);
-    const router = useRouter();
 
     useEffect(() => {
         const fetchGejala = async () => {
@@ -65,7 +63,7 @@ export default function DiagnosaPage() {
                 const data = await res.json();
                 setGejala(data);
                 const initialSelected = {};
-                data.forEach(g => { initialSelected[g.id] = 0; });
+                data.forEach(g => { initialSelected[g.id] = 0; }); // g.id is now a string 'g1', 'g2', etc.
                 setSelectedGejala(initialSelected);
             } catch (err) {
                 setError(err.message);
@@ -94,12 +92,13 @@ export default function DiagnosaPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         const selectedSymptoms = Object.entries(selectedGejala)
             .filter(([, cf_user]) => cf_user > 0)
-            .map(([id, cf_user]) => ({ id: parseInt(id), cf_user: parseFloat(cf_user) }));
+            .map(([id, cf_user]) => ({ id: id, cf_user: parseFloat(cf_user) }));
 
         if (selectedSymptoms.length === 0) {
-            setError('Harap pilih minimal satu gejala dengan tingkat keyakinan selain "Tidak".');
+            setError('Harap pilih minimal satu gejala dengan tingkat keyakinan selain "Tidak Pernah".');
             return;
         }
 
@@ -117,7 +116,9 @@ export default function DiagnosaPage() {
             }
             const result = await res.json();
             localStorage.setItem('diagnosisResult', JSON.stringify(result));
-            router.push('/diagnosa/hasil');
+            // --- PERBAIKAN ---
+            // Mengganti router.push dengan navigasi standar browser
+            window.location.href = '/diagnosa/hasil';
         } catch (err) {
             setError(err.message);
         } finally {
@@ -260,3 +261,4 @@ export default function DiagnosaPage() {
         </div>
     );
 }
+

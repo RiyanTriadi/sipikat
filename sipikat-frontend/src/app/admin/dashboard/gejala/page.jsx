@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { Loader2, Trash2, AlertCircle, RefreshCw, Plus, X, Edit } from 'lucide-react';
+import { Loader2, Trash2, AlertCircle, RefreshCw, Plus, Edit } from 'lucide-react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -92,7 +91,7 @@ const GejalaModal = ({ isOpen, onClose, onSave, gejala, isSaving }) => {
         <div className="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 ease-out scale-95 animate-in fade-in-0 zoom-in-95 flex flex-col max-h-[90vh]">
                 <div className="flex-shrink-0 p-6 border-b border-gray-200">
-                    <h2 className="text-2xl font-bold text-gray-900">{gejala ? 'Edit Gejala' : 'Tambah Gejala Baru'}</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">{gejala ? `Edit Gejala (ID: ${gejala.id})` : 'Tambah Gejala Baru'}</h2>
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
@@ -136,7 +135,7 @@ const GejalaTable = ({ data, onEdit, onConfirmDelete, isActionDisabled }) => {
             <div className="space-y-4 md:hidden">
                 {data.map((item) => (
                     <div key={item.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-                        <p className="text-gray-800 font-medium mb-3 flex-grow">{item.gejala}</p>
+                        <p className="text-gray-800 font-medium mb-3 flex-grow"><span className="font-bold text-gray-500 mr-2">{item.id}:</span>{item.gejala}</p>
                         <div className="flex justify-between items-center text-sm mb-4 pt-3 border-t border-gray-100">
                             <span className="font-medium text-gray-500">Nilai Bobot (MB):</span>
                             <span className="font-bold text-blue-700 bg-blue-100 px-2 py-1 rounded-md">{formatMbValue(item.mb)}</span>
@@ -153,6 +152,7 @@ const GejalaTable = ({ data, onEdit, onConfirmDelete, isActionDisabled }) => {
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider w-[10%]">ID</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider w-2/3">Teks Gejala</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Nilai MB</th>
                             <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Aksi</th>
@@ -161,6 +161,7 @@ const GejalaTable = ({ data, onEdit, onConfirmDelete, isActionDisabled }) => {
                     <tbody className="bg-white divide-y divide-gray-200">
                         {data.map((gejala) => (
                             <tr key={gejala.id} className="hover:bg-gray-50 transition-colors">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-500 align-top pt-6">{gejala.id}</td>
                                 <td className="px-6 py-4 text-sm text-gray-700 align-top pt-6">{gejala.gejala}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-700 align-top pt-6">{formatMbValue(gejala.mb)}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium align-top pt-6">
@@ -188,49 +189,42 @@ export default function GejalaPage() {
     const [editingGejala, setEditingGejala] = useState(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [gejalaToDelete, setGejalaToDelete] = useState(null);
-    const router = useRouter();
 
     const fetchGejala = useCallback(async () => {
         setLoading(true);
         setError('');
         const token = localStorage.getItem('adminToken');
         if (!token) {
-            router.push('/admin/login');
+            window.location.href = '/admin/login';
             return;
         }
 
         try {
-            const listRes = await fetch(`${API_BASE_URL}/gejala`);
-            if (!listRes.ok) {
-                throw new Error('Gagal memuat daftar gejala dasar.');
+            const res = await fetch(`${API_BASE_URL}/gejala/admin`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (res.status === 401 || res.status === 403) {
+                throw new Error('Authentication failed');
             }
-            const gejalaListBasic = await listRes.json();
-
-            const detailPromises = gejalaListBasic.map(gejala =>
-                fetch(`${API_BASE_URL}/gejala/${gejala.id}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }).then(res => {
-                    if (res.status === 401 || res.status === 403) throw new Error('Authentication failed');
-                    if (!res.ok) return null;
-                    return res.json();
-                })
-            );
+            if (!res.ok) {
+                throw new Error('Gagal memuat daftar gejala.');
+            }
             
-            const detailedGejalaList = (await Promise.all(detailPromises)).filter(Boolean);
-
-            setGejalaList(detailedGejalaList.sort((a, b) => a.id - b.id));
+            const data = await res.json();
+            setGejalaList(data);
 
         } catch (err) {
             if (err.message === 'Authentication failed') {
                 localStorage.removeItem('adminToken');
-                router.push('/admin/login');
+                window.location.href = '/admin/login';
             } else {
                 setError(err.message);
             }
         } finally {
             setLoading(false);
         }
-    }, [router]);
+    }, []);
 
     useEffect(() => {
         fetchGejala();
@@ -251,7 +245,7 @@ export default function GejalaPage() {
         setIsSaving(true);
         setError('');
         const token = localStorage.getItem('adminToken');
-        if (!token) { router.push('/admin/login'); return; }
+        if (!token) { window.location.href = '/admin/login'; return; }
 
         const method = editingGejala ? 'PUT' : 'POST';
         const url = editingGejala ? `${API_BASE_URL}/gejala/${editingGejala.id}` : `${API_BASE_URL}/gejala`;
@@ -263,7 +257,7 @@ export default function GejalaPage() {
                 body: JSON.stringify(formData)
             });
 
-            if (res.status === 401 || res.status === 403) { localStorage.removeItem('adminToken'); router.push('/admin/login'); return; }
+            if (res.status === 401 || res.status === 403) { localStorage.removeItem('adminToken'); window.location.href = '/admin/login'; return; }
             if (!res.ok) { const errData = await res.json().catch(() => ({})); throw new Error(errData.message || 'Gagal menyimpan data.'); }
             
             closeModalHandler();
@@ -291,7 +285,7 @@ export default function GejalaPage() {
         setIsDeleting(true);
         setError('');
         const token = localStorage.getItem('adminToken');
-        if (!token) { router.push('/admin/login'); return; }
+        if (!token) { window.location.href = '/admin/login'; return; }
 
         try {
             const res = await fetch(`${API_BASE_URL}/gejala/${gejalaToDelete}`, {
@@ -299,10 +293,10 @@ export default function GejalaPage() {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
-            if (res.status === 401 || res.status === 403) { localStorage.removeItem('adminToken'); router.push('/admin/login'); return; }
+            if (res.status === 401 || res.status === 403) { localStorage.removeItem('adminToken'); window.location.href = '/admin/login'; return; }
             if (!res.ok) { const errData = await res.json().catch(() => ({})); throw new Error(errData.message || 'Gagal menghapus data.'); }
             
-            setGejalaList(prevList => prevList.filter(g => g.id !== gejalaToDelete));
+            await fetchGejala();
         } catch (err) {
             setError(err.message);
         } finally {
@@ -363,3 +357,4 @@ export default function GejalaPage() {
         </div>
     );
 }
+
