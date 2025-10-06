@@ -8,6 +8,7 @@ const calculateCF = (selectedSymptomsWithCF, allSymptomsData, solutionsFromDb) =
     };
   }
 
+  // ID sekarang berupa string ('g1', 'g2'), Map di JavaScript dapat menanganinya dengan baik.
   const expertCFMap = new Map(allSymptomsData.map(symptom => [symptom.id, symptom.mb]));
 
   const calculatedSymptomsCF = selectedSymptomsWithCF.map(userSymptom => {
