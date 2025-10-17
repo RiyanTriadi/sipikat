@@ -36,13 +36,7 @@ exports.diagnoseUser = async (req, res) => {
 
         const created_at = new Date();
 
-        const [result] = await pool.execute(
-            'INSERT INTO tb_diagnosa (nama, jenis_kelamin, usia, alamat, total_cf, kategori, solusi, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [nama, jenis_kelamin, usia, alamat, total_cf, kategori, solusi, created_at]
-        );
-
-        const diagnosaId = result.insertId;
-
+        // Enrich selected symptoms with full gejala data
         const gejalaTerpilihDenganNama = selectedSymptoms.map(symptom => {
             const fullGejala = allGejala.find(g => g.id === symptom.id);
             return {
@@ -51,6 +45,16 @@ exports.diagnoseUser = async (req, res) => {
                 cf_user: symptom.cf_user
             };
         });
+
+        // Convert to JSON string for storage
+        const gejalaJSON = JSON.stringify(gejalaTerpilihDenganNama);
+
+        const [result] = await pool.execute(
+            'INSERT INTO tb_diagnosa (nama, jenis_kelamin, usia, alamat, gejala_terpilih, total_cf, kategori, solusi, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [nama, jenis_kelamin, usia, alamat, gejalaJSON, total_cf, kategori, solusi, created_at]
+        );
+
+        const diagnosaId = result.insertId;
 
         res.status(201).json({
             message: 'Diagnosa berhasil disimpan',
@@ -79,7 +83,14 @@ exports.diagnoseUser = async (req, res) => {
 exports.getAllDiagnosa = async (req, res) => {
     try {
         const [rows] = await pool.execute('SELECT * FROM tb_diagnosa ORDER BY created_at DESC');
-        res.json(rows);
+        
+        // Parse gejala_terpilih JSON string back to object
+        const parsedRows = rows.map(row => ({
+            ...row,
+            gejala_terpilih: row.gejala_terpilih ? JSON.parse(row.gejala_terpilih) : []
+        }));
+        
+        res.json(parsedRows);
     } catch (err) {
         console.error('Error in getAllDiagnosa:', err.message);
         res.status(500).json({
@@ -96,7 +107,14 @@ exports.getDiagnosaById = async (req, res) => {
                 message: 'Diagnosis record not found'
             });
         }
-        res.json(rows[0]);
+        
+        // Parse gejala_terpilih JSON string back to object
+        const diagnosa = {
+            ...rows[0],
+            gejala_terpilih: rows[0].gejala_terpilih ? JSON.parse(rows[0].gejala_terpilih) : []
+        };
+        
+        res.json(diagnosa);
     } catch (err) {
         console.error('Error in getDiagnosaById:', err.message);
         res.status(500).json({
