@@ -57,15 +57,15 @@ const ConfirmationModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
 };
 
 const GejalaModal = ({ isOpen, onClose, onSave, gejala, isSaving }) => {
-    const [formData, setFormData] = useState({ gejala: '', mb: '0.10' });
+    const [formData, setFormData] = useState({ id: '', gejala: '', mb: '0.10' });
     const [formError, setFormError] = useState('');
 
     useEffect(() => {
         if (isOpen) {
             if (gejala) {
-                setFormData({ gejala: gejala.gejala, mb: formatMbValue(gejala.mb) });
+                setFormData({ id: gejala.id, gejala: gejala.gejala, mb: formatMbValue(gejala.mb) });
             } else {
-                setFormData({ gejala: '', mb: '0.10' });
+                setFormData({ id: '', gejala: '', mb: '0.10' });
             }
             setFormError('');
         }
@@ -75,15 +75,32 @@ const GejalaModal = ({ isOpen, onClose, onSave, gejala, isSaving }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        // Untuk input ID, ubah ke uppercase
+        if (name === 'id') {
+            setFormData(prev => ({ ...prev, [name]: value.toUpperCase() }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
+    };
+
+    const validateId = (id) => {
+        const idPattern = /^G\d+$/;
+        return idPattern.test(id);
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!formData.gejala.trim() || formData.mb === '') {
-            setFormError('Teks Gejala dan Nilai MB tidak boleh kosong.');
+        
+        if (!formData.id.trim() || !formData.gejala.trim() || formData.mb === '') {
+            setFormError('Semua field harus diisi.');
             return;
         }
+
+        if (!validateId(formData.id)) {
+            setFormError('Format ID tidak valid. ID harus dimulai dengan huruf G diikuti angka (contoh: G1, G10, G100).');
+            return;
+        }
+
         onSave({ ...formData, mb: parseFloat(formData.mb) });
     };
 
@@ -91,26 +108,81 @@ const GejalaModal = ({ isOpen, onClose, onSave, gejala, isSaving }) => {
         <div className="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 ease-out scale-95 animate-in fade-in-0 zoom-in-95 flex flex-col max-h-[90vh]">
                 <div className="flex-shrink-0 p-6 border-b border-gray-200">
-                    <h2 className="text-2xl font-bold text-gray-900">{gejala ? `Edit Gejala (ID: ${gejala.id})` : 'Tambah Gejala Baru'}</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">{gejala ? `Edit Gejala` : 'Tambah Gejala Baru'}</h2>
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
                     <div className="flex-grow p-6 space-y-6 overflow-y-auto">
                         {formError && <Alert message={formError} />}
+                        
                         <div>
-                            <label htmlFor="gejala" className="block text-sm font-medium text-gray-700 mb-2">Teks Gejala</label>
-                            <textarea id="gejala" name="gejala" value={formData.gejala} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-shadow placeholder-gray-400" required rows="4" placeholder="Contoh: Mengalami demam tinggi lebih dari 3 hari"></textarea>
+                            <label htmlFor="id" className="block text-sm font-medium text-gray-700 mb-2">
+                                ID Gejala <span className="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="id" 
+                                name="id" 
+                                value={formData.id} 
+                                onChange={handleChange} 
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-shadow placeholder-gray-400 uppercase" 
+                                required 
+                                placeholder="Contoh: G1, G2, G10"
+                                maxLength="10"
+                            />
+                            <p className="text-xs text-gray-500 mt-2">Format: G diikuti angka (contoh: G1, G2, G10). Huruf akan otomatis diubah ke kapital.</p>
                         </div>
+
                         <div>
-                            <label htmlFor="mb" className="block text-sm font-medium text-gray-700 mb-2">Nilai MB (Bobot Pakar)</label>
-                            <input type="number" id="mb" name="mb" value={formData.mb} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-shadow" required step="0.01" min="0" max="1" />
+                            <label htmlFor="gejala" className="block text-sm font-medium text-gray-700 mb-2">
+                                Teks Gejala <span className="text-red-500">*</span>
+                            </label>
+                            <textarea 
+                                id="gejala" 
+                                name="gejala" 
+                                value={formData.gejala} 
+                                onChange={handleChange} 
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-shadow placeholder-gray-400" 
+                                required 
+                                rows="4" 
+                                placeholder="Contoh: Mengalami demam tinggi lebih dari 3 hari"
+                            ></textarea>
+                        </div>
+
+                        <div>
+                            <label htmlFor="mb" className="block text-sm font-medium text-gray-700 mb-2">
+                                Nilai MB (Bobot Pakar) <span className="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="number" 
+                                id="mb" 
+                                name="mb" 
+                                value={formData.mb} 
+                                onChange={handleChange} 
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-shadow" 
+                                required 
+                                step="0.01" 
+                                min="0" 
+                                max="1" 
+                            />
                             <p className="text-xs text-gray-500 mt-2">Masukkan nilai antara 0.00 dan 1.00.</p>
                         </div>
                     </div>
 
                     <div className="flex-shrink-0 flex justify-end gap-3 p-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
-                        <button type="button" onClick={onClose} disabled={isSaving} className="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors">Batal</button>
-                        <button type="submit" disabled={isSaving} className="px-5 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center disabled:opacity-50">
+                        <button 
+                            type="button" 
+                            onClick={onClose} 
+                            disabled={isSaving} 
+                            className="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                        >
+                            Batal
+                        </button>
+                        <button 
+                            type="submit" 
+                            disabled={isSaving} 
+                            className="px-5 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center disabled:opacity-50"
+                        >
                             {isSaving ? (<><Loader2 className="animate-spin h-5 w-5 mr-2" /> Menyimpan...</>) : 'Simpan Gejala'}
                         </button>
                     </div>
@@ -257,8 +329,16 @@ export default function GejalaPage() {
                 body: JSON.stringify(formData)
             });
 
-            if (res.status === 401 || res.status === 403) { localStorage.removeItem('adminToken'); window.location.href = '/admin/login'; return; }
-            if (!res.ok) { const errData = await res.json().catch(() => ({})); throw new Error(errData.message || 'Gagal menyimpan data.'); }
+            if (res.status === 401 || res.status === 403) { 
+                localStorage.removeItem('adminToken'); 
+                window.location.href = '/admin/login'; 
+                return; 
+            }
+            
+            if (!res.ok) { 
+                const errData = await res.json().catch(() => ({})); 
+                throw new Error(errData.message || 'Gagal menyimpan data.'); 
+            }
             
             closeModalHandler();
             await fetchGejala();
@@ -293,8 +373,16 @@ export default function GejalaPage() {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
-            if (res.status === 401 || res.status === 403) { localStorage.removeItem('adminToken'); window.location.href = '/admin/login'; return; }
-            if (!res.ok) { const errData = await res.json().catch(() => ({})); throw new Error(errData.message || 'Gagal menghapus data.'); }
+            if (res.status === 401 || res.status === 403) { 
+                localStorage.removeItem('adminToken'); 
+                window.location.href = '/admin/login'; 
+                return; 
+            }
+            
+            if (!res.ok) { 
+                const errData = await res.json().catch(() => ({})); 
+                throw new Error(errData.message || 'Gagal menghapus data.'); 
+            }
             
             await fetchGejala();
         } catch (err) {
@@ -357,4 +445,3 @@ export default function GejalaPage() {
         </div>
     );
 }
-
