@@ -42,13 +42,20 @@ exports.getGejalaById = async (req, res) => {
 };
 
 exports.addGejala = async (req, res) => {
-    const {
-        gejala,
-        mb
-    } = req.body;
-    if (!gejala || mb === undefined) {
+    const { id, gejala, mb } = req.body;
+    
+    // Validasi input
+    if (!id || !gejala || mb === undefined) {
         return res.status(400).json({
-            message: 'Mohon masukkan semua field (gejala, mb)'
+            message: 'Mohon masukkan semua field (id, gejala, mb)'
+        });
+    }
+
+    // Validasi format ID (harus dimulai dengan G dan diikuti angka)
+    const idPattern = /^G\d+$/;
+    if (!idPattern.test(id)) {
+        return res.status(400).json({
+            message: 'Format ID tidak valid. ID harus dimulai dengan huruf G diikuti angka (contoh: G1, G10)'
         });
     }
 
@@ -56,33 +63,41 @@ exports.addGejala = async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        const [lastGejala] = await connection.execute("SELECT id FROM tb_gejala ORDER BY CAST(SUBSTRING(id, 2) AS UNSIGNED) DESC LIMIT 1 FOR UPDATE");
-        
-        let newId;
-        if (lastGejala.length > 0) {
-            const lastIdNum = parseInt(lastGejala[0].id.substring(1), 10);
-            // --- PERBAIKAN ---
-            // Memastikan huruf 'G' kapital digunakan saat membuat ID baru.
-            newId = 'G' + (lastIdNum + 1);
-        } else {
-            // Memastikan huruf 'G' kapital digunakan untuk gejala pertama.
-            newId = 'G1';
+        // Cek apakah ID sudah digunakan
+        const [existingGejala] = await connection.execute(
+            'SELECT id FROM tb_gejala WHERE id = ?',
+            [id]
+        );
+
+        if (existingGejala.length > 0) {
+            await connection.rollback();
+            return res.status(409).json({
+                message: `ID ${id} sudah digunakan. Silakan gunakan ID lain.`
+            });
         }
 
         await connection.execute(
             'INSERT INTO tb_gejala (id, gejala, mb) VALUES (?, ?, ?)',
-            [newId, gejala, mb]
+            [id, gejala, mb]
         );
 
         await connection.commit();
 
         res.status(201).json({
             message: 'Gejala berhasil ditambahkan',
-            id: newId
+            id: id
         });
     } catch (err) {
         await connection.rollback();
         console.error(err.message);
+        
+        // Handle duplicate entry error
+        if (err.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({
+                message: `ID ${id} sudah digunakan. Silakan gunakan ID lain.`
+            });
+        }
+        
         res.status(500).json({
             message: 'Server Error'
         });
@@ -92,33 +107,89 @@ exports.addGejala = async (req, res) => {
 };
 
 exports.updateGejala = async (req, res) => {
-    const {
-        gejala,
-        mb
-    } = req.body;
-    if (gejala === undefined || mb === undefined) {
+    const oldId = req.params.id;
+    const { id: newId, gejala, mb } = req.body;
+    
+    if (!newId || gejala === undefined || mb === undefined) {
         return res.status(400).json({
-            message: 'Mohon berikan field gejala dan mb untuk diupdate.'
+            message: 'Mohon berikan field id, gejala dan mb untuk diupdate.'
         });
     }
+
+    // Validasi format ID
+    const idPattern = /^G\d+$/;
+    if (!idPattern.test(newId)) {
+        return res.status(400).json({
+            message: 'Format ID tidak valid. ID harus dimulai dengan huruf G diikuti angka (contoh: G1, G10)'
+        });
+    }
+
+    const connection = await pool.getConnection();
     try {
-        const [result] = await pool.execute(
-            'UPDATE tb_gejala SET gejala = ?, mb = ? WHERE id = ?',
-            [gejala, mb, req.params.id]
+        await connection.beginTransaction();
+
+        // Cek apakah gejala dengan oldId ada
+        const [existingGejala] = await connection.execute(
+            'SELECT id FROM tb_gejala WHERE id = ?',
+            [oldId]
         );
-        if (result.affectedRows === 0) {
+
+        if (existingGejala.length === 0) {
+            await connection.rollback();
             return res.status(404).json({
                 message: 'Gejala not found'
             });
         }
+
+        // Jika ID berubah, cek apakah ID baru sudah digunakan
+        if (oldId !== newId) {
+            const [duplicateCheck] = await connection.execute(
+                'SELECT id FROM tb_gejala WHERE id = ?',
+                [newId]
+            );
+
+            if (duplicateCheck.length > 0) {
+                await connection.rollback();
+                return res.status(409).json({
+                    message: `ID ${newId} sudah digunakan. Silakan gunakan ID lain.`
+                });
+            }
+
+            // Update dengan ID baru
+            await connection.execute(
+                'UPDATE tb_gejala SET id = ?, gejala = ?, mb = ? WHERE id = ?',
+                [newId, gejala, mb, oldId]
+            );
+        } else {
+            // Update tanpa mengubah ID
+            await connection.execute(
+                'UPDATE tb_gejala SET gejala = ?, mb = ? WHERE id = ?',
+                [gejala, mb, oldId]
+            );
+        }
+
+        await connection.commit();
+
         res.json({
-            message: 'Gejala berhasil diupdate'
+            message: 'Gejala berhasil diupdate',
+            id: newId
         });
     } catch (err) {
+        await connection.rollback();
         console.error(err.message);
+        
+        // Handle duplicate entry error
+        if (err.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({
+                message: `ID ${newId} sudah digunakan. Silakan gunakan ID lain.`
+            });
+        }
+        
         res.status(500).json({
             message: 'Server Error'
         });
+    } finally {
+        connection.release();
     }
 };
 
@@ -140,4 +211,3 @@ exports.deleteGejala = async (req, res) => {
         });
     }
 };
-
