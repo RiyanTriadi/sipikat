@@ -28,16 +28,39 @@ exports.diagnoseUser = async (req, res) => {
         const [allGejala] = await pool.execute('SELECT id, gejala, mb FROM tb_gejala');
         const [allSolusi] = await pool.execute('SELECT kategori, solusi FROM tb_solusi');
 
+        // === NORMALIZATION: Ensure ID format is 'G1', 'G2', etc. ===
+        const normalizedSymptoms = selectedSymptoms.map(symptom => {
+            let normalizedId = symptom.id;
+            
+            // If ID is numeric (1, 2, 3), convert to 'G1', 'G2', 'G3'
+            if (typeof symptom.id === 'number') {
+                normalizedId = 'G' + symptom.id;
+            } 
+            // If ID is string but lowercase ('g1', 'g2'), convert to uppercase
+            else if (typeof symptom.id === 'string') {
+                normalizedId = symptom.id.toUpperCase();
+                // If doesn't start with 'G', add it
+                if (!normalizedId.startsWith('G')) {
+                    normalizedId = 'G' + normalizedId;
+                }
+            }
+            
+            return {
+                ...symptom,
+                id: normalizedId
+            };
+        });
+
         const {
             total_cf,
             kategori,
             solusi
-        } = calculateCF(selectedSymptoms, allGejala, allSolusi);
+        } = calculateCF(normalizedSymptoms, allGejala, allSolusi);
 
         const created_at = new Date();
 
         // Enrich selected symptoms with full gejala data
-        const gejalaTerpilihDenganNama = selectedSymptoms.map(symptom => {
+        const gejalaTerpilihDenganNama = normalizedSymptoms.map(symptom => {
             const fullGejala = allGejala.find(g => g.id === symptom.id);
             return {
                 id: symptom.id,

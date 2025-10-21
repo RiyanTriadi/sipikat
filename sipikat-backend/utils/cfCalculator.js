@@ -8,11 +8,20 @@ const calculateCF = (selectedSymptomsWithCF, allSymptomsData, solutionsFromDb) =
     };
   }
 
-  // ID sekarang berupa string ('g1', 'g2'), Map di JavaScript dapat menanganinya dengan baik.
+  // === UPDATED: Support for String IDs ('G1', 'G2', 'G3') ===
+  // Map now uses string IDs as keys
   const expertCFMap = new Map(allSymptomsData.map(symptom => [symptom.id, symptom.mb]));
 
+  // Calculate CF for each selected symptom
   const calculatedSymptomsCF = selectedSymptomsWithCF.map(userSymptom => {
+    // Get expert CF value using string ID
     const cf_pakar = expertCFMap.get(userSymptom.id) || 0;
+    
+    // Log for debugging (optional - can be removed in production)
+    if (cf_pakar === 0) {
+      console.warn(`Warning: Gejala dengan ID '${userSymptom.id}' tidak ditemukan dalam database.`);
+    }
+    
     return userSymptom.cf_user * cf_pakar;
   });
 
@@ -25,6 +34,7 @@ const calculateCF = (selectedSymptomsWithCF, allSymptomsData, solutionsFromDb) =
     };
   }
 
+  // Combine CF values using Certainty Factor formula
   let cf_combine = calculatedSymptomsCF[0];
 
   for (let i = 1; i < calculatedSymptomsCF.length; i++) {
@@ -34,6 +44,7 @@ const calculateCF = (selectedSymptomsWithCF, allSymptomsData, solutionsFromDb) =
 
   const totalCF = cf_combine;
 
+  // Determine category based on CF value
   let kategori = '';
   let solusi = '';
 
@@ -45,10 +56,15 @@ const calculateCF = (selectedSymptomsWithCF, allSymptomsData, solutionsFromDb) =
     kategori = 'Normal';
   }
 
+  // Find solution based on category
   const foundSolution = solutionsFromDb.find(sol => sol.kategori === kategori);
   solusi = foundSolution ? foundSolution.solusi : 'Solusi tidak ditemukan.';
 
-  return { total_cf: totalCF.toFixed(4), kategori, solusi };
+  return { 
+    total_cf: parseFloat(totalCF.toFixed(4)), 
+    kategori, 
+    solusi 
+  };
 };
 
 module.exports = calculateCF;
