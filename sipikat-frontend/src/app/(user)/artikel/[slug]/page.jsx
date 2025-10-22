@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import ImageWithFallback from '../../../../components/user/ImageWithFallback';
+import Image from 'next/image';
 import { ArrowLeft } from 'lucide-react';
 import { Text } from 'slate';
 
@@ -8,7 +8,10 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 async function getArticle(slug) {
     try {
         const res = await fetch(`${API_BASE_URL}/api/artikel/${slug}`, {
-            cache: 'no-store'
+            next: { 
+                revalidate: 3600, // Cache selama 1 jam
+                tags: ['article', `article-${slug}`]
+            }
         });
         if (!res.ok) {
             return null;
@@ -40,19 +43,37 @@ export const serializeSlateToHtml = (nodes) => {
         const children = serializeSlateToHtml(node.children);
 
         switch (node.type) {
-            case 'heading-one': return `<h1 class="text-3xl font-bold my-4">${children}</h1>`;
-            case 'heading-two': return `<h2 class="text-2xl font-bold my-3">${children}</h2>`;
-            case 'block-quote': return `<blockquote class="border-l-4 border-gray-300 pl-4 italic my-4">${children}</blockquote>`;
-            case 'numbered-list': return `<ol class="list-decimal list-inside my-4 space-y-2">${children}</ol>`;
-            case 'bulleted-list': return `<ul class="list-disc list-inside my-4 space-y-2">${children}</ul>`;
-            case 'list-item': return `<li>${children}</li>`;
+            case 'heading-one': 
+                return `<h1 class="text-3xl font-bold my-4">${children}</h1>`;
+            case 'heading-two': 
+                return `<h2 class="text-2xl font-bold my-3">${children}</h2>`;
+            case 'block-quote': 
+                return `<blockquote class="border-l-4 border-gray-300 pl-4 italic my-4">${children}</blockquote>`;
+            case 'numbered-list': 
+                return `<ol class="list-decimal list-inside my-4 space-y-2">${children}</ol>`;
+            case 'bulleted-list': 
+                return `<ul class="list-disc list-inside my-4 space-y-2">${children}</ul>`;
+            case 'list-item': 
+                return `<li>${children}</li>`;
             case 'image':
                 if (node.url) {
                     const imageUrl = `${API_BASE_URL}${node.url}`;
-                    return `<img src="${imageUrl}" alt="${escapeHtml(node.alt || '')}" class="w-full h-auto max-h-[500px] object-cover rounded-lg my-8 shadow-md border border-gray-200" />`;
+                    // Optimasi: gunakan loading lazy dan srcset
+                    return `
+                        <div class="my-8">
+                            <img 
+                                src="${imageUrl}" 
+                                alt="${escapeHtml(node.alt || '')}" 
+                                class="w-full h-auto max-h-[500px] object-cover rounded-lg shadow-md border border-gray-200" 
+                                loading="lazy"
+                                decoding="async"
+                            />
+                        </div>
+                    `;
                 }
                 return '';
-            default: return `<p class="my-4">${children}</p>`;
+            default: 
+                return `<p class="my-4">${children}</p>`;
         }
     }).join('');
 };
@@ -66,6 +87,28 @@ export const parseAndRenderContent = (contentString) => {
         return contentString;
     }
 };
+
+// Komponen Optimized Image untuk artikel
+function OptimizedArticleImage({ src, alt, priority = false }) {
+    // Build full URL untuk image
+    const imageUrl = src.startsWith('http') ? src : `${API_BASE_URL}${src}`;
+    
+    return (
+        <div className="relative w-full mb-8 rounded-lg overflow-hidden shadow-md border border-gray-200">
+            <Image
+                src={imageUrl}
+                alt={alt}
+                width={1200}
+                height={600}
+                priority={priority}
+                quality={80}
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+                className="w-full h-auto max-h-[500px] object-cover"
+                unoptimized={process.env.NODE_ENV === 'development'}
+            />
+        </div>
+    );
+}
 
 export default async function ArtikelDetailPage({ params }) {
     const { slug } = await params;
@@ -99,11 +142,11 @@ export default async function ArtikelDetailPage({ params }) {
                     </p>
 
                     {article.gambar && (
-                           <ImageWithFallback
-                                src={`${API_BASE_URL}${article.gambar}`}
-                                alt={`Gambar untuk ${article.judul}`}
-                                className="w-full h-auto max-h-[500px] object-cover rounded-lg mb-8 shadow-md border border-gray-200"
-                           />
+                        <OptimizedArticleImage
+                            src={article.gambar}
+                            alt={`Gambar untuk ${article.judul}`}
+                            priority={true}
+                        />
                     )}
 
                     <div
@@ -111,7 +154,7 @@ export default async function ArtikelDetailPage({ params }) {
                         dangerouslySetInnerHTML={{ __html: renderedContent }}
                     />
                     <div className="mt-8">
-                        <Link href="/artikel" className="flex justify-end  items-center text-blue-600 hover:text-blue-800 font-semibold group transition-colors">
+                        <Link href="/artikel" className="flex justify-end items-center text-blue-600 hover:text-blue-800 font-semibold group transition-colors">
                             Kembali ke semua artikel
                         </Link>
                     </div>
@@ -119,4 +162,46 @@ export default async function ArtikelDetailPage({ params }) {
             </div>
         </div>
     );
+}
+
+// Generate static params untuk pre-rendering (opsional)
+export async function generateStaticParams() {
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/artikel`, {
+            next: { revalidate: 3600 }
+        });
+        
+        if (!res.ok) return [];
+        
+        const articles = await res.json();
+        
+        return articles.map((article) => ({
+            slug: article.slug,
+        }));
+    } catch (error) {
+        console.error('Error generating static params:', error);
+        return [];
+    }
+}
+
+// Metadata untuk SEO
+export async function generateMetadata({ params }) {
+    const { slug } = await params;
+    const article = await getArticle(slug);
+    
+    if (!article) {
+        return {
+            title: 'Artikel Tidak Ditemukan',
+        };
+    }
+    
+    return {
+        title: article.judul,
+        description: article.judul,
+        openGraph: {
+            title: article.judul,
+            description: article.judul,
+            images: article.gambar ? [`${API_BASE_URL}${article.gambar}`] : [],
+        },
+    };
 }

@@ -7,12 +7,14 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 async function getLatestArticles() {
   try {
     const res = await fetch(`${API_BASE_URL}/api/artikel`, {
-      next: { revalidate: 60 },
+      next: { 
+        revalidate: 300, // Cache selama 5 menit untuk homepage
+        tags: ['latest-articles']
+      },
     });
 
     if (!res.ok) {
-      const newLocal = "Gagal mengambil data artikel dari server.";
-      console.error(newLocal);
+      console.error("Gagal mengambil data artikel dari server.");
       return [];
     }
 
@@ -28,11 +30,11 @@ async function getLatestArticles() {
 }
 
 const partnerLogos = [
-  { src: '/diktisaintek-logo.webp', alt: 'Logo Diktisaintek' },
-  { src: '/unma logo.webp', alt: "Logo Universitas Mathla'ul Anwar" },
-  { src: '/pandeglang logo.webp', alt: 'Logo Kabupaten Pandeglang' },
-  { src: '/pmm-logo.webp', alt: 'Logo PMM Tegalwangi' },
-  { src: '/kkn-logo.webp', alt: 'Logo KKN 4 Tegalwangi UNMA' },
+  { src: '/diktisaintek-logo.webp', alt: 'Logo Diktisaintek', width: 158, height: 48 },
+  { src: '/unma logo.webp', alt: "Logo Universitas Mathla'ul Anwar", width: 158, height: 48 },
+  { src: '/pandeglang logo.webp', alt: 'Logo Kabupaten Pandeglang', width: 158, height: 48 },
+  { src: '/pmm-logo.webp', alt: 'Logo PMM Tegalwangi', width: 158, height: 48 },
+  { src: '/kkn-logo.webp', alt: 'Logo KKN 4 Tegalwangi UNMA', width: 158, height: 48 },
 ];
 
 export default async function HomePage() {
@@ -40,11 +42,20 @@ export default async function HomePage() {
 
   return (
     <main className="bg-gray-50 font-sans antialiased">
+      {/* Hero Section */}
       <section className="relative w-full h-[60vh] min-h-[400px] flex items-center justify-center text-white overflow-hidden">
-        <div
-          className="absolute top-0 left-0 w-full h-full bg-cover bg-center"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')" }}
-        ></div>
+        <div className="absolute top-0 left-0 w-full h-full">
+          <Image
+            src="https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?q=80&w=1932&auto=format&fit=crop"
+            alt="Hero background"
+            fill
+            priority
+            quality={85}
+            sizes="100vw"
+            className="object-cover"
+            unoptimized={process.env.NODE_ENV === 'development'}
+          />
+        </div>
         <div className="absolute top-0 left-0 w-full h-full bg-black opacity-50"></div>
         <div className="relative z-10 text-center px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight drop-shadow-lg">
@@ -59,6 +70,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* App Download Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
@@ -71,13 +83,14 @@ export default async function HomePage() {
           </div>
           <div className="max-w-2xl mx-auto bg-blue-100 border border-gray-200 rounded-2xl p-6 md:p-10 shadow-xl flex flex-col md:flex-row items-center space-y-6 md:space-y-0 md:space-x-8 transition-all duration-300 transform hover:scale-[1.02]">
             <div className="flex-shrink-0">
-              <div className="w-24 h-24 rounded-2xl bg-blue-500 flex items-center justify-center shadow-lg">
+              <div className="w-24 h-24 rounded-2xl bg-blue-500 flex items-center justify-center shadow-lg overflow-hidden relative">
                 <Image
-                  className="rounded-2xl"
                   src="/sipikat-logo.webp"
-                  width={500}
-                  height={500}
+                  width={96}
+                  height={96}
                   alt="Logo aplikasi SIPIKAT"
+                  className="rounded-2xl"
+                  quality={90}
                 />
               </div>
             </div>
@@ -102,6 +115,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Latest Articles Section */}
       {latestArticles.length > 0 && (
         <section className="py-16 sm:py-24 bg-gray-100">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -110,8 +124,12 @@ export default async function HomePage() {
               <p className="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">Baca artikel pilihan untuk menambah pengetahuan Anda tentang kesehatan digital.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              {latestArticles.map((article) => (
-                <ArticleCard key={article.id} article={article} />
+              {latestArticles.map((article, index) => (
+                <ArticleCard 
+                  key={article.id} 
+                  article={article}
+                  priority={index === 0}
+                />
               ))}
             </div>
             <div className="text-center mt-12">
@@ -123,6 +141,7 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* Partners Section */}
       <section className="py-16 bg-white border-t border-gray-200">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-center text-xl font-semibold text-gray-600 mb-10">
@@ -130,13 +149,15 @@ export default async function HomePage() {
           </h2>
           <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-8">
             {partnerLogos.map((logo, index) => (
-              <div key={index} className="w-20 sm:w-32 md:w-[158px]">
+              <div key={index} className="w-20 sm:w-32 md:w-[158px] relative h-12">
                 <Image
                   src={logo.src}
                   alt={logo.alt}
-                  width={158}
-                  height={48}
-                  className="w-full h-auto"
+                  width={logo.width}
+                  height={logo.height}
+                  className="w-full h-auto object-contain"
+                  loading="lazy"
+                  quality={85}
                 />
               </div>
             ))}
