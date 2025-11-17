@@ -1,39 +1,51 @@
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
+const cookieParser = require('cookie-parser'); // IMPORTANT: Add this
 require('dotenv').config();
-
-const authRoutes = require('./routes/auth');
-const gejalaRoutes = require('./routes/gejala');
-const diagnosaRoutes = require('./routes/diagnosa');
-const artikelRoutes = require('./routes/artikel');
-const userRoutes = require('./routes/user');
-const aktivitasRoutes = require('./routes/aktivitas');
-const uploadRoutes = require('./routes/upload');
-const solusiRoutes = require('./routes/solusi');
-const pageRoutes = require('./routes/page');
 
 const app = express();
 
-app.use(cors());
+// CORS Configuration - Allow credentials
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true, // CRITICAL: Allow cookies to be sent
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type']
+}));
+
+// Add cookie parser middleware
+app.use(cookieParser());
+
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static files
+app.use('/uploads', express.static('public/uploads'));
 
+// Import routes
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/user');
+const gejalaRoutes = require('./routes/gejala');
+const artikelRoutes = require('./routes/artikel');
+const diagnosaRoutes = require('./routes/diagnosa');
+const solusiRoutes = require('./routes/solusi');
+const aktivitasRoutes = require('./routes/aktivitas');
+const uploadRoutes = require('./routes/upload');
+const pageRoutes = require('./routes/page');
+
+// Use routes
 app.use('/api/auth', authRoutes);
-app.use('/api/gejala', gejalaRoutes);
-app.use('/api/diagnosa', diagnosaRoutes);
-app.use('/api/artikel', artikelRoutes);
 app.use('/api/admin/users', userRoutes);
+app.use('/api/gejala', gejalaRoutes);
+app.use('/api/artikel', artikelRoutes);
+app.use('/api/diagnosa', diagnosaRoutes);
+app.use('/api/solusi', solusiRoutes);
 app.use('/api/aktivitas', aktivitasRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/solusi', solusiRoutes);
 app.use('/api/pages', pageRoutes);
-
-app.get('/', (req, res) => {
-  res.send('Expert System Backend API is running!');
-});
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
