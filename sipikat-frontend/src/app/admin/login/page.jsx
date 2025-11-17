@@ -2,14 +2,15 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff } from 'lucide-react'; // 1. Impor ikon yang dibutuhkan
+import { Eye, EyeOff } from 'lucide-react';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    
     const [showPassword, setShowPassword] = useState(false); 
     
     const router = useRouter();
@@ -24,9 +25,10 @@ export default function LoginPage() {
                 throw new Error('Email dan password harus diisi.');
             }
 
-            const res = await fetch('http://localhost:5000/api/auth/admin/login', {
+            const res = await fetch(`${API_BASE_URL}/api/auth/admin/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include', // CRITICAL: Include cookies in request
                 body: JSON.stringify({ email, password }),
             });
 
@@ -35,8 +37,10 @@ export default function LoginPage() {
                 throw new Error(errData.message || 'Login gagal! Periksa kembali email dan password Anda.');
             }
 
-            const { token } = await res.json();
-            localStorage.setItem('adminToken', token); 
+            const data = await res.json();
+            
+            // No need to store token - it's in HttpOnly cookie
+            // Just redirect on success
             router.push('/admin/dashboard'); 
 
         } catch (err) {
@@ -92,11 +96,7 @@ export default function LoginPage() {
                                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
                                 aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
                             >
-                                {showPassword ? (
-                                    <EyeOff className="h-5 w-5" />
-                                ) : (
-                                    <Eye className="h-5 w-5" />
-                                )}
+                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                             </button>
                         </div>
                     </div>
@@ -111,7 +111,7 @@ export default function LoginPage() {
                         <button 
                             type="submit" 
                             disabled={loading} 
-                            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition duration-300 ease-in-out transform "
+                            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition duration-300 ease-in-out transform"
                         >
                             {loading ? (
                                 <>
