@@ -9,7 +9,7 @@ async function getArticle(slug) {
     try {
         const res = await fetch(`${API_BASE_URL}/api/artikel/${slug}`, {
             next: { 
-                revalidate: 3600, // Cache selama 1 jam
+                revalidate: 3600,
                 tags: ['article', `article-${slug}`]
             }
         });
@@ -58,7 +58,6 @@ export const serializeSlateToHtml = (nodes) => {
             case 'image':
                 if (node.url) {
                     const imageUrl = `${API_BASE_URL}${node.url}`;
-                    // Optimasi: gunakan loading lazy dan srcset
                     return `
                         <div class="my-8">
                             <img 
@@ -88,9 +87,7 @@ export const parseAndRenderContent = (contentString) => {
     }
 };
 
-// Komponen Optimized Image untuk artikel
 function OptimizedArticleImage({ src, alt, priority = false }) {
-    // Build full URL untuk image
     const imageUrl = src.startsWith('http') ? src : `${API_BASE_URL}${src}`;
     
     return (
@@ -164,7 +161,6 @@ export default async function ArtikelDetailPage({ params }) {
     );
 }
 
-// Generate static params untuk pre-rendering (opsional)
 export async function generateStaticParams() {
     try {
         const res = await fetch(`${API_BASE_URL}/api/artikel`, {
@@ -182,26 +178,4 @@ export async function generateStaticParams() {
         console.error('Error generating static params:', error);
         return [];
     }
-}
-
-// Metadata untuk SEO
-export async function generateMetadata({ params }) {
-    const { slug } = await params;
-    const article = await getArticle(slug);
-    
-    if (!article) {
-        return {
-            title: 'Artikel Tidak Ditemukan',
-        };
-    }
-    
-    return {
-        title: article.judul,
-        description: article.judul,
-        openGraph: {
-            title: article.judul,
-            description: article.judul,
-            images: article.gambar ? [`${API_BASE_URL}${article.gambar}`] : [],
-        },
-    };
 }
