@@ -218,7 +218,6 @@ const SlateRichEditor = ({ value, onChange, editorKey }) => {
                             }
                         }
                     }}
-                    // === PERUBAHAN DI SINI ===
                     className="prose max-w-none focus:outline-none"
                 />
             </div>
@@ -435,14 +434,9 @@ export default function SolusiAdminPage() {
         setLoading(true);
         setError('');
         try {
-            const token = localStorage.getItem('adminToken');
-            if (!token) {
-                router.push('/admin/login');
-                return;
-            }
             const res = await fetch(`${API_BASE_URL}/api/solusi`, {
                 cache: 'no-store',
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include'
             });
             if (!res.ok) {
                 if (res.status === 401 || res.status === 403) {
@@ -468,12 +462,6 @@ export default function SolusiAdminPage() {
     const handleSave = async ({ kategori, solusi }) => {
         setIsSaving(true);
         setError('');
-        const token = localStorage.getItem('adminToken');
-        if (!token) {
-            router.push('/admin/login');
-            setIsSaving(false);
-            return;
-        }
 
         const dataToSave = {
             kategori: kategori,
@@ -489,9 +477,9 @@ export default function SolusiAdminPage() {
             const res = await fetch(url, {
                 method,
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Content-Type': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify(dataToSave)
             });
 
@@ -519,18 +507,11 @@ export default function SolusiAdminPage() {
         if (!solusiToDeleteId) return;
         setIsDeleting(true);
         setError('');
-        const token = localStorage.getItem('adminToken');
-        if (!token) {
-            router.push('/admin/login');
-            setIsDeleting(false);
-            cancelDeleteHandler();
-            return;
-        }
 
         try {
             const res = await fetch(`${API_BASE_URL}/api/solusi/${solusiToDeleteId}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include'
             });
             if (!res.ok) {
                 if (res.status === 401 || res.status === 403) {

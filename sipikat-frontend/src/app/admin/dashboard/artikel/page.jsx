@@ -158,7 +158,6 @@ const SlateRichEditor = ({ value, onChange, editorKey }) => {
                             }
                         }
                     }}
-                    // === PERUBAHAN DI SINI ===
                     className="prose max-w-none focus:outline-none"
                 />
             </div>
@@ -427,7 +426,10 @@ export default function ArtikelAdminPage() {
         setLoading(true);
         setError('');
         try {
-            const res = await fetch(`${API_BASE_URL}/api/artikel`, { cache: 'no-store' });
+            const res = await fetch(`${API_BASE_URL}/api/artikel`, { 
+                cache: 'no-store',
+                credentials: 'include'
+            });
             if (!res.ok) {
                 const errorData = await res.json();
                 throw new Error(errorData.message || 'Gagal memuat daftar artikel.');
@@ -449,12 +451,6 @@ export default function ArtikelAdminPage() {
     const handleSave = async ({ judul, konten, gambarFile, gambarUrlLama }) => {
         setIsSaving(true);
         setError('');
-        const token = localStorage.getItem('adminToken');
-        if (!token) {
-            router.push('/admin/login');
-            setIsSaving(false);
-            return;
-        }
 
         let finalGambarUrl = gambarUrlLama;
 
@@ -464,7 +460,7 @@ export default function ArtikelAdminPage() {
             try {
                 const uploadRes = await fetch(`${API_BASE_URL}/api/upload/thumbnail`, {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
+                    credentials: 'include',
                     body: formData,
                 });
                 const uploadData = await uploadRes.json();
@@ -498,9 +494,9 @@ export default function ArtikelAdminPage() {
             const res = await fetch(url, {
                 method,
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Content-Type': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify(dataToSave) 
             });
 
@@ -528,18 +524,11 @@ export default function ArtikelAdminPage() {
         if (!artikelToDeleteId) return;
         setIsDeleting(true);
         setError('');
-        const token = localStorage.getItem('adminToken');
-        if (!token) { 
-            router.push('/admin/login');
-            setIsDeleting(false);
-            cancelDeleteHandler();
-            return; 
-        }
 
         try {
             const res = await fetch(`${API_BASE_URL}/api/artikel/${artikelToDeleteId}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include'
             });
             if (!res.ok) {
                 if (res.status === 401 || res.status === 403) {
@@ -565,7 +554,10 @@ export default function ArtikelAdminPage() {
 
         if (slug) {
             try {
-                const res = await fetch(`${API_BASE_URL}/api/artikel/${slug}`, { cache: 'no-store' });
+                const res = await fetch(`${API_BASE_URL}/api/artikel/${slug}`, { 
+                    cache: 'no-store',
+                    credentials: 'include'
+                });
                 if (!res.ok) {
                     const errorData = await res.json();
                     throw new Error(errorData.message || 'Gagal memuat detail artikel.');

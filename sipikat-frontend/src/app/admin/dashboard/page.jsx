@@ -90,30 +90,20 @@ export default function DashboardPage() {
             setLoading(true);
             setActivityLoading(true);
             setError('');
-            const token = localStorage.getItem('adminToken');
-
-            if (!token) {
-                setError('Anda tidak terautentikasi. Silakan login kembali.');
-                setLoading(false);
-                setActivityLoading(false);
-                router.push('/admin/login');
-                return;
-            }
 
             try {
                 const fetchPromises = [
-                    fetch(`${API_BASE_URL}/gejala`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                    fetch(`${API_BASE_URL}/artikel`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                    fetch(`${API_BASE_URL}/diagnosa`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                    fetch(`${API_BASE_URL}/admin/users`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                    fetch(`${API_BASE_URL}/aktivitas/terbaru`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch(`${API_BASE_URL}/gejala`, { credentials: 'include' }),
+                    fetch(`${API_BASE_URL}/artikel`, { credentials: 'include' }),
+                    fetch(`${API_BASE_URL}/diagnosa`, { credentials: 'include' }),
+                    fetch(`${API_BASE_URL}/admin/users`, { credentials: 'include' }),
+                    fetch(`${API_BASE_URL}/aktivitas/terbaru`, { credentials: 'include' }),
                 ];
 
                 const responses = await Promise.all(fetchPromises);
                 
                 const results = await Promise.all(responses.map(async (res, index) => {
                     if (res.status === 401 || res.status === 403) {
-                        localStorage.removeItem('adminToken');
                         throw new Error('Sesi Anda telah berakhir atau tidak valid. Silakan login kembali.');
                     }
                     if (!res.ok) {

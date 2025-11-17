@@ -75,7 +75,6 @@ const GejalaModal = ({ isOpen, onClose, onSave, gejala, isSaving }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        // Untuk input ID, ubah ke uppercase
         if (name === 'id') {
             setFormData(prev => ({ ...prev, [name]: value.toUpperCase() }));
         } else {
@@ -265,15 +264,10 @@ export default function GejalaPage() {
     const fetchGejala = useCallback(async () => {
         setLoading(true);
         setError('');
-        const token = localStorage.getItem('adminToken');
-        if (!token) {
-            window.location.href = '/admin/login';
-            return;
-        }
 
         try {
             const res = await fetch(`${API_BASE_URL}/gejala/admin`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include'
             });
 
             if (res.status === 401 || res.status === 403) {
@@ -288,7 +282,6 @@ export default function GejalaPage() {
 
         } catch (err) {
             if (err.message === 'Authentication failed') {
-                localStorage.removeItem('adminToken');
                 window.location.href = '/admin/login';
             } else {
                 setError(err.message);
@@ -316,21 +309,19 @@ export default function GejalaPage() {
     const handleSave = async (formData) => {
         setIsSaving(true);
         setError('');
-        const token = localStorage.getItem('adminToken');
-        if (!token) { window.location.href = '/admin/login'; return; }
-
+        
         const method = editingGejala ? 'PUT' : 'POST';
         const url = editingGejala ? `${API_BASE_URL}/gejala/${editingGejala.id}` : `${API_BASE_URL}/gejala`;
 
         try {
             const res = await fetch(url, {
                 method,
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify(formData)
             });
 
             if (res.status === 401 || res.status === 403) { 
-                localStorage.removeItem('adminToken'); 
                 window.location.href = '/admin/login'; 
                 return; 
             }
@@ -364,17 +355,14 @@ export default function GejalaPage() {
 
         setIsDeleting(true);
         setError('');
-        const token = localStorage.getItem('adminToken');
-        if (!token) { window.location.href = '/admin/login'; return; }
 
         try {
             const res = await fetch(`${API_BASE_URL}/gejala/${gejalaToDelete}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include'
             });
 
             if (res.status === 401 || res.status === 403) { 
-                localStorage.removeItem('adminToken'); 
                 window.location.href = '/admin/login'; 
                 return; 
             }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, Trash2, AlertCircle, RefreshCw, Eye, X, User, Calendar, MapPin, Activity, Stethoscope, Lightbulb } from 'lucide-react';
+import { Loader2, Trash2, AlertCircle, RefreshCw, Eye, X } from 'lucide-react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -162,7 +162,6 @@ const DetailModal = ({ isOpen, onClose, diagnosa }) => {
     return (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl transform transition-all duration-300 ease-out scale-95 animate-in fade-in-0 zoom-in-95 flex flex-col max-h-[90vh]">
-                {/* Header */}
                 <div className="flex-shrink-0 flex justify-between items-center p-6 border-b border-gray-200">
                     <div>
                         <h2 className="text-2xl font-bold text-gray-900">Detail Diagnosa</h2>
@@ -177,9 +176,7 @@ const DetailModal = ({ isOpen, onClose, diagnosa }) => {
                     </button>
                 </div>
 
-                {/* Content */}
                 <div className="flex-grow p-6 space-y-6 overflow-y-auto">
-                    {/* Patient Data Section */}
                     <div>
                         <h3 className="text-lg font-bold text-gray-800 mb-4">Data Pasien</h3>
                         <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
@@ -208,7 +205,6 @@ const DetailModal = ({ isOpen, onClose, diagnosa }) => {
                         </div>
                     </div>
 
-                    {/* Diagnosis Result Section */}
                     <div>
                         <h3 className="text-lg font-bold text-gray-800 mb-4">Hasil Diagnosa</h3>
                         <div className="bg-gray-50 rounded-lg p-5 border border-gray-200 space-y-4">
@@ -235,7 +231,6 @@ const DetailModal = ({ isOpen, onClose, diagnosa }) => {
                         </div>
                     </div>
 
-                    {/* Symptoms Section */}
                     <div>
                         <h3 className="text-lg font-bold text-gray-800 mb-4">Gejala yang Dialami</h3>
                         <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
@@ -273,7 +268,6 @@ const DetailModal = ({ isOpen, onClose, diagnosa }) => {
                         </div>
                     </div>
 
-                    {/* Solutions Section */}
                     <div>
                         <h3 className="text-lg font-bold text-gray-800 mb-4">Rekomendasi & Solusi</h3>
                         <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
@@ -285,7 +279,6 @@ const DetailModal = ({ isOpen, onClose, diagnosa }) => {
                     </div>
                 </div>
 
-                {/* Footer */}
                 <div className="flex-shrink-0 flex justify-end gap-3 p-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
                     <button
                         onClick={onClose}
@@ -327,7 +320,6 @@ const HistoryTable = ({ data, onConfirmDelete, onViewDetail, isDeleting }) => {
 
     return (
         <>
-            {/* Mobile View */}
             <div className="space-y-4 md:hidden">
                 {data.map((item) => (
                     <div key={item.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col">
@@ -377,7 +369,6 @@ const HistoryTable = ({ data, onConfirmDelete, onViewDetail, isDeleting }) => {
                 ))}
             </div>
 
-            {/* Desktop View */}
             <div className="hidden md:block border border-gray-200 rounded-lg overflow-x-auto bg-white">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
@@ -444,20 +435,13 @@ export default function DiagnosaHistoryPage() {
     const fetchDiagnosa = useCallback(async () => {
         setLoading(true);
         setError('');
-        const token = localStorage.getItem('adminToken');
-
-        if (!token) {
-            router.push('/admin/login');
-            return;
-        }
 
         try {
             const res = await fetch(`${API_BASE_URL}/diagnosa`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include'
             });
 
             if (res.status === 401 || res.status === 403) {
-                localStorage.removeItem('adminToken');
                 router.push('/admin/login');
                 return;
             }
@@ -495,16 +479,14 @@ export default function DiagnosaHistoryPage() {
 
         setIsDeleting(true);
         setError('');
-        const token = localStorage.getItem('adminToken');
 
         try {
             const res = await fetch(`${API_BASE_URL}/diagnosa/${diagnosaToDelete}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include'
             });
 
             if (res.status === 401 || res.status === 403) {
-                localStorage.removeItem('adminToken');
                 router.push('/admin/login');
                 return;
             }

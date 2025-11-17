@@ -1,4 +1,4 @@
-const API_BASE_URL = process.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 // Check if user is authenticated by calling backend
 export const checkAuth = async () => {

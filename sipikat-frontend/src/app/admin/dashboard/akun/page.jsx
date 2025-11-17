@@ -215,25 +215,22 @@ export default function AkunPage() {
     const fetchUsers = useCallback(async () => {
         setLoading(true);
         setError('');
-        const token = localStorage.getItem('adminToken');
-        if (!token) {
-            router.push('/admin/login');
-            return;
-        }
 
         try {
             const res = await fetch(`${API_BASE_URL}/admin/users`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include'
             });
+            
             if (res.status === 401 || res.status === 403) {
-                localStorage.removeItem('adminToken');
                 router.push('/admin/login');
                 return;
             }
+            
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({ message: 'Gagal memuat data akun.' }));
                 throw new Error(errData.message || res.statusText);
             }
+            
             const data = await res.json();
             setUsers(data);
         } catch (err) {
@@ -250,7 +247,7 @@ export default function AkunPage() {
     const handleSave = async (formData) => {
         setIsSaving(true);
         setError('');
-        const token = localStorage.getItem('adminToken');
+        
         const method = editingUser ? 'PUT' : 'POST';
         const url = editingUser
             ? `${API_BASE_URL}/admin/users/${editingUser.id}`
@@ -260,16 +257,18 @@ export default function AkunPage() {
             const res = await fetch(url, {
                 method,
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Content-Type': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify(formData)
             });
+            
             if (!res.ok) {
                 const errData = await res.json();
                 alert(`Gagal menyimpan: ${errData.message || 'Terjadi kesalahan'}`);
                 throw new Error(errData.message || 'Gagal menyimpan akun');
             }
+            
             await fetchUsers();
             closeModal();
         } catch (err) {
@@ -284,17 +283,18 @@ export default function AkunPage() {
 
         setIsDeleting(true);
         setError('');
-        const token = localStorage.getItem('adminToken');
 
         try {
             const res = await fetch(`${API_BASE_URL}/admin/users/${userToDelete}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include'
             });
-             if (!res.ok) {
+            
+            if (!res.ok) {
                 const errData = await res.json().catch(() => ({ message: 'Gagal menghapus akun.' }));
                 throw new Error(errData.message || res.statusText);
             }
+            
             setUsers(prevUsers => prevUsers.filter(u => u.id !== userToDelete));
         } catch (err) {
             setError(err.message);
