@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const solusiController = require('../controllers/solusiController');
-const authenticateToken = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth'); // Fixed: destructure
 
+// All routes require authentication
 router.get('/', authenticateToken, solusiController.getAllSolusi);
 router.post('/', authenticateToken, solusiController.createSolusi);
 router.put('/:id', authenticateToken, solusiController.updateSolusi);

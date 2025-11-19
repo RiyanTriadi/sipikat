@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const authenticateToken = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth'); // Fixed: destructure
 
 const router = express.Router();
 
