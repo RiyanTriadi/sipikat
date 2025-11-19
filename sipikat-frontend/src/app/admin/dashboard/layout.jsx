@@ -1,14 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/admin/Sidebar';
-import { checkAuth } from '@/lib/auth';
+import { checkAuth, refreshAccessToken } from '@/lib/auth';
 
 export default function DashboardLayout({ children }) {
     const router = useRouter();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const refreshIntervalRef = useRef(null);
 
     useEffect(() => {
         const verifyAuth = async () => {
@@ -19,6 +20,7 @@ export default function DashboardLayout({ children }) {
                     router.push('/admin/login');
                 } else {
                     setIsAuthenticated(true);
+                    setupTokenRefresh();
                 }
             } catch (error) {
                 console.error('Auth verification failed:', error);
@@ -29,7 +31,50 @@ export default function DashboardLayout({ children }) {
         };
 
         verifyAuth();
+
+        // Cleanup on unmount
+        return () => {
+            if (refreshIntervalRef.current) {
+                clearInterval(refreshIntervalRef.current);
+            }
+        };
     }, [router]);
+
+    /**
+     * Setup automatic token refresh
+     * Refresh token 1 minute before expiry (14 minutes for 15-minute tokens)
+     */
+    const setupTokenRefresh = () => {
+        // Clear any existing interval
+        if (refreshIntervalRef.current) {
+            clearInterval(refreshIntervalRef.current);
+        }
+
+        // Refresh every 14 minutes (1 minute before 15-minute expiry)
+        const refreshInterval = 14 * 60 * 1000;
+
+        refreshIntervalRef.current = setInterval(async () => {
+            console.log('Refreshing access token...');
+            const result = await refreshAccessToken();
+            
+            if (!result.success) {
+                console.error('Token refresh failed, redirecting to login');
+                clearInterval(refreshIntervalRef.current);
+                router.push('/admin/login');
+            } else {
+                console.log('Access token refreshed successfully');
+            }
+        }, refreshInterval);
+
+        // Also refresh immediately if token is close to expiry
+        // This handles cases where user opens app with old token
+        setTimeout(async () => {
+            const result = await refreshAccessToken();
+            if (!result.success) {
+                router.push('/admin/login');
+            }
+        }, 1000);
+    };
 
     // Show loading state while checking authentication
     if (isLoading) {
