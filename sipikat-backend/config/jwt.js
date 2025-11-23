@@ -53,7 +53,7 @@ const validateSecrets = () => {
     throw new Error('JWT_SECRET and JWT_REFRESH_SECRET must be different');
   }
 
-  console.log('✅ JWT configuration validated successfully');
+  console.log('JWT configuration validated successfully');
 };
 
 // Run validation

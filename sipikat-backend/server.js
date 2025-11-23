@@ -100,12 +100,12 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔒 Security headers: enabled`);
-  console.log(`🍪 Cookies: httpOnly, sameSite=strict`);
-  console.log(`⏱️  Access token expiry: ${process.env.JWT_ACCESS_EXPIRY || '15m'}`);
-  console.log(`🔄 Refresh token expiry: ${process.env.JWT_REFRESH_EXPIRY || '7d'}`);
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Security headers: enabled`);
+  console.log(`Cookies: httpOnly, sameSite=strict`);
+  console.log(`Access token expiry: ${process.env.JWT_ACCESS_EXPIRY || '15m'}`);
+  console.log(`Refresh token expiry: ${process.env.JWT_REFRESH_EXPIRY || '7d'}`);
 });
 
 // Graceful shutdown
