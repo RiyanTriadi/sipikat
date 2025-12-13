@@ -2,53 +2,57 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
 
-// Trust proxy (important for rate limiting behind reverse proxy)
+// 1. Trust Proxy (Penting jika nanti deploy di belakang Nginx/Vercel)
 app.set('trust proxy', 1);
 
-// Security Headers Middleware
+// 2. Security Headers Middleware (Dikonfigurasi untuk Images)
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
+      // FIXED: Tambahkan 'http:' agar gambar muncul saat development (localhost)
+      imgSrc: ["'self'", "data:", "https:", "http:"], 
     },
   },
   hsts: {
-    maxAge: 31536000, // 1 year
+    maxAge: 31536000, 
     includeSubDomains: true,
     preload: true
   },
   frameguard: { action: 'deny' },
   noSniff: true,
-  xssFilter: true
+  xssFilter: true,
+  // FIXED: Izinkan resource (gambar) diakses lintas origin (Frontend port 3000 -> Backend port 5000)
+  crossOriginResourcePolicy: { policy: "cross-origin" }, 
 }));
 
-// CORS Configuration - Allow credentials
+// 3. CORS Configuration
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true, // CRITICAL: Allow cookies to be sent
+  credentials: true, 
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Set-Cookie']
 }));
 
-// Cookie Parser Middleware
+// 4. Parsers
 app.use(cookieParser());
-
-// Body Parser Middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Serve static files
-app.use('/uploads', express.static('public/uploads'));
+// 5. Serve Static Files (FIXED PATH)
+// Kita serve folder 'public/uploads', BUKAN 'public/uploads/thumbnails'.
+// Agar URL '/uploads/thumbnails/nama.jpg' cocok dengan struktur folder fisik.
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
-// Import routes
+// 6. Import Routes
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const gejalaRoutes = require('./routes/gejala');
@@ -59,7 +63,7 @@ const aktivitasRoutes = require('./routes/aktivitas');
 const uploadRoutes = require('./routes/upload');
 const pageRoutes = require('./routes/page');
 
-// Health check endpoint
+// Health check
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
@@ -81,16 +85,12 @@ app.use('/api/pages', pageRoutes);
 
 // 404 Handler
 app.use((req, res) => {
-  res.status(404).json({ 
-    message: 'Endpoint tidak ditemukan',
-    path: req.path 
-  });
+  res.status(404).json({ message: 'Endpoint tidak ditemukan', path: req.path });
 });
 
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
-  
   res.status(err.status || 500).json({
     message: err.message || 'Terjadi kesalahan server',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
@@ -99,13 +99,9 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Security headers: enabled`);
-  console.log(`Cookies: httpOnly, sameSite=strict`);
-  console.log(`Access token expiry: ${process.env.JWT_ACCESS_EXPIRY || '15m'}`);
-  console.log(`Refresh token expiry: ${process.env.JWT_REFRESH_EXPIRY || '7d'}`);
+  console.log(`Static files served from: ${path.join(__dirname, 'public/uploads')}`);
 });
 
 // Graceful shutdown
