@@ -1,8 +1,10 @@
 import ArticleCard from '@/components/user/ArticleCard';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
 async function getArticles() {
     try {
-        const res = await fetch('http://localhost:5000/api/artikel');
+        const res = await fetch(`${API_BASE_URL}/api/artikel`);
         if (!res.ok) {
             const errorData = await res.json().catch(() => ({})); 
             throw new Error(errorData.message || 'Gagal mengambil data artikel dari server.');

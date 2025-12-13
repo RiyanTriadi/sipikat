@@ -50,9 +50,6 @@ export default function ArticleCard({ article, priority = false }) {
                         <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-700 transition duration-200 line-clamp-2">
                             {article.judul}
                         </h2>
-                        <p className="text-gray-600 text-sm sm:text-base line-clamp-3 mb-4">
-                            {article.konten?.replace(/<[^>]+>/g, '').substring(0, 100)}...
-                        </p>
                     </div>
                     <div className="flex items-center text-xs sm:text-sm text-gray-500 mt-auto">
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
