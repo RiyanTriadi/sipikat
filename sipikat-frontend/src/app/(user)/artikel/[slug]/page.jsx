@@ -5,6 +5,14 @@ import { Text } from 'slate';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
+const getValidImageUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    const cleanBaseUrl = API_BASE_URL.replace(/\/$/, '');
+    return `${cleanBaseUrl}${cleanPath}`;
+};
+
 async function getArticle(slug) {
     try {
         const res = await fetch(`${API_BASE_URL}/api/artikel/${slug}`, {
@@ -57,7 +65,8 @@ export const serializeSlateToHtml = (nodes) => {
                 return `<li>${children}</li>`;
             case 'image':
                 if (node.url) {
-                    const imageUrl = `${API_BASE_URL}${node.url}`;
+                    // FIX: Menggunakan helper function agar URL gambar di dalam konten valid
+                    const imageUrl = getValidImageUrl(node.url);
                     return `
                         <div class="my-8">
                             <img 
@@ -88,8 +97,11 @@ export const parseAndRenderContent = (contentString) => {
 };
 
 function OptimizedArticleImage({ src, alt, priority = false }) {
-    const imageUrl = src.startsWith('http') ? src : `${API_BASE_URL}${src}`;
+    const imageUrl = getValidImageUrl(src);
     
+    // Jika URL null/kosong, jangan render apa-apa atau render placeholder (opsional)
+    if (!imageUrl) return null;
+
     return (
         <div className="relative w-full mb-8 rounded-lg overflow-hidden shadow-md border border-gray-200">
             <Image
@@ -118,7 +130,7 @@ export default async function ArtikelDetailPage({ params }) {
                     <h1 className="text-3xl font-bold text-gray-900 mb-4">Artikel Tidak Ditemukan</h1>
                     <p className="text-gray-600 mt-4 mb-8">Maaf, artikel yang Anda cari tidak ada atau telah dihapus.</p>
                     <Link href="/artikel" className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition">
-                        Daftar Artikel
+                        <ArrowLeft className="mr-2 h-5 w-5" /> Daftar Artikel
                     </Link>
                 </div>
             </div>
@@ -130,6 +142,7 @@ export default async function ArtikelDetailPage({ params }) {
     return (
         <div className="bg-gray-50 py-12 sm:py-16">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+
                 <article className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8 md:p-12 w-full border border-gray-200">
                     <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4 leading-tight">
                         {article.judul}
@@ -150,9 +163,10 @@ export default async function ArtikelDetailPage({ params }) {
                         className="prose lg:prose-lg max-w-none text-gray-800 leading-relaxed"
                         dangerouslySetInnerHTML={{ __html: renderedContent }}
                     />
-                    <div className="mt-8">
+                    
+                    <div className="mt-8 pt-8 border-t border-gray-200">
                         <Link href="/artikel" className="flex justify-end items-center text-blue-600 hover:text-blue-800 font-semibold group transition-colors">
-                            Kembali ke semua artikel
+                            Kembali ke semua artikel 
                         </Link>
                     </div>
                 </article>
