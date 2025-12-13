@@ -86,7 +86,7 @@ export default async function HomePage() {
           </p>
           <Link
             href="/diagnosa"
-            className="mt-8 inline-flex items-center justify-center px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 transform"
+            className="mt-8 inline-flex items-center justify-center px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-lg hover:bg-blue-700  transition-all duration-300 transform hover:scale-[1.02]"
           >
             Lakukan Tes Sekarang
           </Link>
