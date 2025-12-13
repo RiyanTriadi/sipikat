@@ -25,23 +25,22 @@
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.525.0",
-    "next": "15.3.5",
+    "next": "^16.0.10",
     "postcss": "^8.5.6",
     "quill": "^2.0.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "react-to-print": "^3.1.1",
     "slate": "^0.117.2",
     "slate-history": "^0.113.1",
-    "slate-react": "^0.117.4",
-    "xlsx": "^0.18.5"
+    "slate-react": "^0.117.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4.1.11",
     "autoprefixer": "^10.4.21",
     "eslint": "^9",
-    "eslint-config-next": "15.3.5",
+    "eslint-config-next": "^16.0.10",
     "tailwindcss": "^4.1.11"
   }
 }
