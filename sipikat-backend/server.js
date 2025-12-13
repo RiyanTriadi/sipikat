@@ -39,21 +39,25 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }, 
 }));
 
-// 2. CORS Configuration (CRITICAL)
+// 2. CORS Configuration 
 const allowedOrigins = [
   'http://localhost:3000',
+  'http://localhost:5000',
   process.env.FRONTEND_URL, 
   'https://edu-sipikat.com', 
-  'https://www.edu-sipikat.com' 
+  'https://www.edu-sipikat.com',
+  // Tambahkan subdomain lain jika ada
 ].filter(Boolean); 
+
+console.log('✅ Allowed CORS Origins:', allowedOrigins);
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin 
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      const msg = `CORS policy: Origin ${origin} is not allowed. Allowed origins: ${allowedOrigins.join(', ')}`;
+      console.error(msg);
       return callback(new Error(msg), false);
     }
     return callback(null, true);
@@ -64,13 +68,23 @@ app.use(cors({
   exposedHeaders: ['Set-Cookie']
 }));
 
+// Explicit OPTIONS handler for preflight
+app.options('*', cors());
+
 // 3. Parsers & Static Files
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Serve static file dengan absolute path yang aman
-app.use('/uploads', express.static(uploadDir));
+// Serve static files dengan CORS headers yang benar
+app.use('/uploads', (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.header('Cache-Control', 'public, max-age=31536000');
+  next();
+}, express.static(uploadDir));
 
 // 4. Import Routes
 const authRoutes = require('./routes/auth');
@@ -85,9 +99,13 @@ const pageRoutes = require('./routes/page');
 
 // 5. App Routes
 
-// Root Route (untuk cek nyawa server)
+// Root Route
 app.get('/', (req, res) => {
-  res.send('Backend SiPikat is Running Successfully! 🚀');
+  res.json({
+    message: 'Backend SiPikat is Running Successfully! 🚀',
+    version: '1.0.0',
+    environment: process.env.NODE_ENV || 'development'
+  });
 });
 
 // Health check
@@ -135,9 +153,10 @@ const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
   console.log(`=================================`);
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📂 Static files: ${uploadDir}`);
-  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Static files: ${uploadDir}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`CORS Origins: ${allowedOrigins.join(', ')}`);
   console.log(`=================================`);
 });
 
@@ -148,3 +167,5 @@ process.on('SIGTERM', () => {
     console.log('HTTP server closed');
   });
 });
+
+module.exports = app;
