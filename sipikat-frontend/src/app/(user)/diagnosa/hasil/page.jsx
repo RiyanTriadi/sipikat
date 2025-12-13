@@ -334,14 +334,14 @@ export default function HasilPage() {
                      <div className="flex flex-col sm:flex-row sm:justify-center gap-4">
                          <button
                              onClick={handleDownload}
-                             className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105"
+                             className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 cursor-pointer transition-transform transform hover:scale-105"
                          >
                              <Download className="mr-2 h-5 w-5" />
                              Unduh Laporan PDF
                          </button>
                          <Link 
                              href="/diagnosa" 
-                             className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 bg-gray-100 text-gray-700 font-semibold rounded-lg shadow-md hover:bg-gray-200 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-transform transform hover:scale-105"
+                             className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 bg-gray-100 text-gray-700 font-semibold rounded-lg shadow-md hover:bg-gray-200 border border-gray-300  transition-transform transform hover:scale-105"
                          >
                              <RefreshCw className="mr-2 h-5 w-5" />
                              Lakukan Diagnosa Ulang
