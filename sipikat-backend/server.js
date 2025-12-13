@@ -3,22 +3,29 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const path = require('path');
+const fs = require('fs'); 
 require('dotenv').config();
 
 const app = express();
 
-// 1. Trust Proxy (Penting jika nanti deploy di belakang Nginx/Vercel)
-app.set('trust proxy', 1);
+// 0. Initial Setup & Validation
+const uploadDir = path.resolve(__dirname, 'public/uploads');
+if (!fs.existsSync(uploadDir)){
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log(`[System] Folder uploads dibuat di: ${uploadDir}`);
+}
 
-// 2. Security Headers Middleware (Dikonfigurasi untuk Images)
+// 1. Security Middlewares
+app.set('trust proxy', 1); 
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'"],
-      // FIXED: Tambahkan 'http:' agar gambar muncul saat development (localhost)
       imgSrc: ["'self'", "data:", "https:", "http:"], 
+      connectSrc: ["'self'", "https:", "http:"], 
     },
   },
   hsts: {
@@ -29,30 +36,43 @@ app.use(helmet({
   frameguard: { action: 'deny' },
   noSniff: true,
   xssFilter: true,
-  // FIXED: Izinkan resource (gambar) diakses lintas origin (Frontend port 3000 -> Backend port 5000)
   crossOriginResourcePolicy: { policy: "cross-origin" }, 
 }));
 
-// 3. CORS Configuration
+// 2. CORS Configuration (CRITICAL)
+const allowedOrigins = [
+  'http://localhost:3000',
+  process.env.FRONTEND_URL, 
+  'https://edu-sipikat.com', 
+  'https://www.edu-sipikat.com' 
+].filter(Boolean); 
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // Allow requests with no origin 
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   credentials: true, 
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   exposedHeaders: ['Set-Cookie']
 }));
 
-// 4. Parsers
+// 3. Parsers & Static Files
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// 5. Serve Static Files (FIXED PATH)
-// Kita serve folder 'public/uploads', BUKAN 'public/uploads/thumbnails'.
-// Agar URL '/uploads/thumbnails/nama.jpg' cocok dengan struktur folder fisik.
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+// Serve static file dengan absolute path yang aman
+app.use('/uploads', express.static(uploadDir));
 
-// 6. Import Routes
+// 4. Import Routes
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const gejalaRoutes = require('./routes/gejala');
@@ -63,16 +83,24 @@ const aktivitasRoutes = require('./routes/aktivitas');
 const uploadRoutes = require('./routes/upload');
 const pageRoutes = require('./routes/page');
 
+// 5. App Routes
+
+// Root Route (untuk cek nyawa server)
+app.get('/', (req, res) => {
+  res.send('Backend SiPikat is Running Successfully! 🚀');
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
-// API Routes
+// API Endpoints
 app.use('/api/auth', authRoutes);
 app.use('/api/admin/users', userRoutes);
 app.use('/api/gejala', gejalaRoutes);
@@ -83,25 +111,34 @@ app.use('/api/aktivitas', aktivitasRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/pages', pageRoutes);
 
+// 6. Error Handling
 // 404 Handler
 app.use((req, res) => {
-  res.status(404).json({ message: 'Endpoint tidak ditemukan', path: req.path });
+  res.status(404).json({ 
+    success: false,
+    message: `Endpoint ${req.originalUrl} tidak ditemukan di server ini.` 
+  });
 });
 
 // Global Error Handler
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
+  console.error('[Error Log]:', err);
   res.status(err.status || 500).json({
-    message: err.message || 'Terjadi kesalahan server',
+    success: false,
+    message: err.message || 'Terjadi kesalahan internal server',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 });
 
+// 7. Server Initialization
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Static files served from: ${path.join(__dirname, 'public/uploads')}`);
+  console.log(`=================================`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📂 Static files: ${uploadDir}`);
+  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`=================================`);
 });
 
 // Graceful shutdown
