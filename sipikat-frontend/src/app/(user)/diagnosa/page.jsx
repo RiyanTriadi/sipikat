@@ -5,6 +5,8 @@ import { User, ClipboardList, Send, Loader2, AlertCircle, ArrowLeft } from 'luci
 import { motion, AnimatePresence } from 'framer-motion';
 import React from 'react';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
 const confidenceLevels = [
     { label: "Tidak Pernah", value: 0 },
     { label: "Kadang-kadang", value: 0.33 },
@@ -58,12 +60,13 @@ export default function DiagnosaPage() {
         const fetchGejala = async () => {
             setGejalaLoading(true);
             try {
-                const res = await fetch('http://localhost:5000/api/gejala');
+                // ✅ FIXED: Gunakan API_BASE_URL
+                const res = await fetch(`${API_BASE_URL}/api/gejala`);
                 if (!res.ok) throw new Error('Gagal mengambil data gejala dari server.');
                 const data = await res.json();
                 setGejala(data);
                 const initialSelected = {};
-                data.forEach(g => { initialSelected[g.id] = 0; }); // g.id is now a string 'g1', 'g2', etc.
+                data.forEach(g => { initialSelected[g.id] = 0; });
                 setSelectedGejala(initialSelected);
             } catch (err) {
                 setError(err.message);
@@ -105,7 +108,8 @@ export default function DiagnosaPage() {
         setLoading(true);
         setError('');
         try {
-            const res = await fetch('http://localhost:5000/api/diagnosa', {
+            // ✅ FIXED: Gunakan API_BASE_URL
+            const res = await fetch(`${API_BASE_URL}/api/diagnosa`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ...user, selectedSymptoms }),
@@ -116,8 +120,6 @@ export default function DiagnosaPage() {
             }
             const result = await res.json();
             localStorage.setItem('diagnosisResult', JSON.stringify(result));
-            // --- PERBAIKAN ---
-            // Mengganti router.push dengan navigasi standar browser
             window.location.href = '/diagnosa/hasil';
         } catch (err) {
             setError(err.message);
@@ -261,4 +263,3 @@ export default function DiagnosaPage() {
         </div>
     );
 }
-
