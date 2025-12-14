@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const artikelController = require('../controllers/artikelController');
-const { authenticateToken } = require('../middleware/auth'); // Fixed: destructure
+const { authenticateToken } = require('../middleware/auth');
 
 // Public routes
 router.get('/', artikelController.getAllArticles); 

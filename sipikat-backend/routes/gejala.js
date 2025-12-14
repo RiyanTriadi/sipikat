@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const gejalaController = require('../controllers/gejalaController');
-const { authenticateToken } = require('../middleware/auth'); // Fixed: destructure
+const { authenticateToken } = require('../middleware/auth'); 
 
-// Public route - get all gejala (without MB values)
+// Public route - get all gejala 
 router.get('/', gejalaController.getAllGejala); 
 
 // Admin routes - require authentication

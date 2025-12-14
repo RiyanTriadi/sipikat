@@ -6,7 +6,6 @@ const fs = require('fs');
 const { authenticateToken } = require('../middleware/auth');
 
 // Setup Folder Tujuan
-// Mundur satu level dari 'routes' ke root project, lalu masuk ke public/uploads/thumbnails
 const uploadDir = path.join(__dirname, '..', 'public', 'uploads', 'thumbnails');
 
 // Defensive Programming: Buat folder jika belum ada
@@ -51,8 +50,6 @@ router.post('/thumbnail', authenticateToken, upload.single('thumbnail'), (req, r
         }
         
         // Construct Public URL
-        // Karena di server.js kita serve '/uploads', maka path dimulai dari /uploads
-        // Hati-hati: Jangan gunakan path.join di sini untuk URL karena Windows pakai backslash (\)
         const filePath = `/uploads/thumbnails/${req.file.filename}`;
 
         res.status(201).json({ 

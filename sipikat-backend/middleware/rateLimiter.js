@@ -9,8 +9,8 @@ const loginLimiter = rateLimit({
     message: 'Terlalu banyak percobaan login. Silakan coba lagi dalam 15 menit.',
     retryAfter: '15 minutes'
   },
-  standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
-  legacyHeaders: false, // Disable `X-RateLimit-*` headers
+  standardHeaders: true, 
+  legacyHeaders: false, 
   
   // Custom handler to log failed attempts
   handler: async (req, res) => {

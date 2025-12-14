@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getRecentActivities } = require('../controllers/aktivitasController');
-const { authenticateToken } = require('../middleware/auth'); // Fixed: destructure
+const { authenticateToken } = require('../middleware/auth'); 
 
 // Require authentication for viewing recent activities
 router.get('/terbaru', authenticateToken, getRecentActivities);

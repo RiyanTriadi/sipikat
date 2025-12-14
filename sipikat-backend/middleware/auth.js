@@ -2,10 +2,6 @@ const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 const jwtConfig = require('../config/jwt');
 
-/**
- * Middleware to authenticate JWT token from cookies
- * Checks for both token validity and blacklist status
- */
 const authenticateToken = async (req, res, next) => {
   try {
     // Extract access token from cookie
@@ -43,7 +39,7 @@ const authenticateToken = async (req, res, next) => {
           });
         }
 
-        // Other JWT errors (invalid signature, malformed, etc.)
+        // Other JWT errors 
         return res.status(403).json({ 
           message: 'Token tidak valid.',
           authenticated: false 

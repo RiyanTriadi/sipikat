@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const diagnosaController = require('../controllers/diagnosaController');
-const { authenticateToken } = require('../middleware/auth'); // Fixed: destructure
+const { authenticateToken } = require('../middleware/auth'); 
 
 // Public route - user can submit diagnosis
 router.post('/', diagnosaController.diagnoseUser); 
