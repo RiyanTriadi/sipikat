@@ -35,7 +35,7 @@ app.use(helmet({
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true, 
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Set-Cookie']
 }));
@@ -58,6 +58,24 @@ const solusiRoutes = require('./routes/solusi');
 const aktivitasRoutes = require('./routes/aktivitas');
 const uploadRoutes = require('./routes/upload');
 const pageRoutes = require('./routes/page');
+
+// ROOT ENDPOINT 
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    success: true,
+    message: 'SIPIKAT API Server',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: [
+      '/health',
+      '/api/auth',
+      '/api/gejala',
+      '/api/artikel',
+      '/api/diagnosa',
+      '/api/solusi'
+    ]
+  });
+});
 
 // Health check
 app.get('/health', (req, res) => {
@@ -95,8 +113,9 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Static files served from: ${path.join(__dirname, 'public/uploads')}`);
 });
 
