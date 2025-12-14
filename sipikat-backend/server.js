@@ -7,7 +7,7 @@ require('dotenv').config();
 
 const app = express();
 
-// 1. Trust Proxy 
+// 1. Trust Proxy
 app.set('trust proxy', 1);
 
 // 2. Security Headers Middleware 
@@ -32,11 +32,26 @@ app.use(helmet({
 }));
 
 // 3. CORS Configuration
+const allowedOrigins = [
+  'http://localhost:3000',      
+  'https://edu-sipikat.com',  
+  'https://www.edu-sipikat.com',
+  process.env.FRONTEND_URL      
+];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   credentials: true, 
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   exposedHeaders: ['Set-Cookie']
 }));
 
@@ -66,13 +81,12 @@ app.get('/', (req, res) => {
     message: 'SIPIKAT API Server',
     version: '1.0.0',
     status: 'running',
+    environment: process.env.NODE_ENV,
     endpoints: [
       '/health',
       '/api/auth',
       '/api/gejala',
-      '/api/artikel',
-      '/api/diagnosa',
-      '/api/solusi'
+      '/api/diagnosa'
     ]
   });
 });
@@ -104,7 +118,7 @@ app.use((req, res) => {
 
 // Global Error Handler
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
+  console.error('ERROR LOG:', err);
   res.status(err.status || 500).json({
     message: err.message || 'Terjadi kesalahan server',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
@@ -115,8 +129,7 @@ const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Static files served from: ${path.join(__dirname, 'public/uploads')}`);
+  console.log(`Allowed Origins: ${allowedOrigins.join(', ')}`);
 });
 
 // Graceful shutdown
