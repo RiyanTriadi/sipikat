@@ -45,184 +45,280 @@ export default function HasilPage() {
         };
     };
 
-    const renderSlateContent = (doc, slateJSON, startY, addHeaderFooter) => {
-        let y = startY;
-        if (!slateJSON) return y;
+    const renderSlateContent = (doc, slateJSON, startY) => {
+    let y = startY;
+    if (!slateJSON) return y;
 
-        let nodes;
-        try {
-            nodes = JSON.parse(slateJSON);
-        } catch (error) {
-            console.error("Gagal mem-parsing JSON solusi:", error);
-            return y;
-        }
-    
-        const normalFontSize = 10;
-        const textMargin = 15;
-        const pageWrapWidth = doc.internal.pageSize.getWidth() - (textMargin * 2);
-        const lineHeight = 5.5;
-    
-        nodes.forEach(node => {
-            const checkPageBreak = (neededHeight) => {
-                if (y + neededHeight > 270) {
-                    doc.addPage();
-                    addHeaderFooter();
-                    y = 40;
-                }
-            };
-    
-            if (node.type === 'paragraph') {
-                let line = '';
-                (node.children || []).forEach(child => { if (child.text) line += child.text; });
-                const textLines = doc.splitTextToSize(line.trim(), pageWrapWidth);
-                checkPageBreak(textLines.length * lineHeight);
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(normalFontSize);
-                doc.setTextColor(80, 80, 80);
-                doc.text(textLines, textMargin, y);
-                y += textLines.length * lineHeight + (lineHeight / 2);
-            } 
-            else if (node.type === 'numbered-list') {
-                let itemCounter = 1;
-                (node.children || []).forEach(listItem => {
-                    let line = '';
-                    (listItem.children || []).forEach(textPart => { line += textPart.text || ''; });
-                    const fullLine = `${itemCounter}. ${line.trim()}`;
-                    const textLines = doc.splitTextToSize(fullLine, pageWrapWidth - 7);
-                    checkPageBreak(textLines.length * lineHeight);
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(normalFontSize);
-                    doc.setTextColor(80, 80, 80);
-                    doc.text(textLines, textMargin + 7, y);
-                    y += textLines.length * lineHeight;
-                    itemCounter++;
-                });
-                y += lineHeight;
-            }
-        });
+    let nodes;
+    try {
+        nodes = JSON.parse(slateJSON);
+    } catch (error) {
+        console.error("Gagal mem-parsing JSON solusi:", error);
         return y;
-    };
+    }
 
-    const handleDownload = () => {
-        const doc = new jsPDF();
-        const styles = getCategoryStyles(result.kategori);
-        
-        const primaryColor = [37, 99, 235]; 
-        const categoryColor = styles.rgb; 
-        
-        const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
-        const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
-        
-        const addHeaderFooter = () => {
-            const pageCount = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(18);
-                doc.setTextColor(50, 50, 50);
-                doc.text("Laporan Hasil Diagnosa SIPIKAT", pageWidth / 2, 20, { align: 'center' });
-                
-                doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-                doc.setLineWidth(0.5);
-                doc.line(15, 25, pageWidth - 15, 25);
+    const normalFontSize = 10;
+    const textMargin = 20;
+    const pageWrapWidth = doc.internal.pageSize.getWidth() - (textMargin * 2);
+    const lineHeight = 5;
 
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(8);
-                doc.setTextColor(150, 150, 150);
-                const footerText = `Halaman ${i} dari ${pageCount}`;
-                doc.text(footerText, pageWidth / 2, pageHeight - 10, { align: 'center' });
-                doc.text(`Dokumen ini dibuat secara otomatis oleh SIPIKAT.`, 15, pageHeight - 10);
+    nodes.forEach(node => {
+        const checkPageBreak = (neededHeight) => {
+            if (y + neededHeight > 265) {
+                doc.addPage();
+                y = 20;
             }
         };
 
-        let y = 35; 
-
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(14);
-        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-        doc.text("1. Informasi Pasien & Hasil Diagnosa", 15, y);
-        y += 8;
-
-        const combinedData = [
-            { title: 'Nama Lengkap', value: result.user.nama },
-            { title: 'Usia', value: `${result.user.usia} tahun` },
-            { title: 'Jenis Kelamin', value: result.user.jenis_kelamin },
-            { title: 'Alamat', value: result.user.alamat },
-            { title: 'Tanggal Diagnosa', value: new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric'}) },
-            { title: 'Tingkat Kecanduan', value: `${parseFloat((result.total_cf * 100).toFixed(2))}%` },
-            { title: 'Hasil Diagnosa', value: result.kategori.toUpperCase() },
-        ];
-
-        autoTable(doc, {
-            startY: y,
-            body: combinedData.map(item => [item.title, ':', item.value]),
-            theme: 'plain',
-            styles: { fontSize: 10, cellPadding: 1.5 },
-            columnStyles: {
-                0: { fontStyle: 'bold', cellWidth: 45 },
-                1: { cellWidth: 5 },
-                2: { cellWidth: 'auto' }
-            },
-            didParseCell: (data) => {
-                if (data.row.raw[0] === 'Hasil Diagnosa') {
-                    const valueCell = data.row.cells[2];
-                    if (valueCell) {
-                        valueCell.styles.textColor = categoryColor;
-                        valueCell.styles.fontStyle = 'bold';
-                        valueCell.styles.fontSize = 12;
-                    }
-                }
-                if (data.row.raw[0] === 'Tingkat Kecanduan') {
-                    const valueCell = data.row.cells[2];
-                    if (valueCell) {
-                        valueCell.styles.fontStyle = 'bold';
-                    }
-                }
-            }
-        });
-        y = doc.lastAutoTable.finalY + 12;
-
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(14);
-        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-        doc.text("2. Gejala yang Dialami", 15, y);
-        y += 8;
-
-        const symptomsData = result.gejala_terpilih.map(g => [g.gejala, `${(g.cf_user * 100).toFixed(0)}%`]);
-        autoTable(doc, {
-            startY: y,
-            head: [['Deskripsi Gejala', 'Tingkat Keyakinan']],
-            body: symptomsData,
-            theme: 'striped',
-            headStyles: { 
-                fillColor: [55, 65, 81],
-                textColor: [255, 255, 255],
-                fontStyle: 'bold'
-            },
-            columnStyles: {
-                0: { cellWidth: 'auto' },
-                1: { cellWidth: 40, halign: 'center' }
-            }
-        });
-        y = doc.lastAutoTable.finalY + 12;
-        
-        if (y > 200) {
-            doc.addPage();
-            y = 40;
+        if (node.type === 'paragraph') {
+            let line = '';
+            (node.children || []).forEach(child => { if (child.text) line += child.text; });
+            const textLines = doc.splitTextToSize(line.trim(), pageWrapWidth);
+            checkPageBreak(textLines.length * lineHeight + 5);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(normalFontSize);
+            doc.setTextColor(40, 40, 40);
+            doc.text(textLines, textMargin, y);
+            y += textLines.length * lineHeight + 3;
+        } 
+        else if (node.type === 'numbered-list') {
+            let itemCounter = 1;
+            (node.children || []).forEach(listItem => {
+                let line = '';
+                (listItem.children || []).forEach(textPart => { line += textPart.text || ''; });
+                const fullLine = `${itemCounter}. ${line.trim()}`;
+                const textLines = doc.splitTextToSize(fullLine, pageWrapWidth - 10);
+                checkPageBreak(textLines.length * lineHeight);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(normalFontSize);
+                doc.setTextColor(40, 40, 40);
+                doc.text(textLines, textMargin + 5, y);
+                y += textLines.length * lineHeight + 2;
+                itemCounter++;
+            });
+            y += 3;
         }
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(14);
-        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-        doc.text("3. Solusi dan Rekomendasi", 15, y);
-        y += 10;
-        
-        y = renderSlateContent(doc, result.solusi, y, () => addHeaderFooter()); 
-        
-        addHeaderFooter();
+    });
+    return y;
+};
 
-        doc.save(`Hasil Diagnosa - ${result.user.nama.replace(/\s/g, '_')}.pdf`);
+const handleDownload = () => {
+    const doc = new jsPDF();
+    
+    const pageHeight = doc.internal.pageSize.height;
+    const pageWidth = doc.internal.pageSize.width;
+    
+    // Header dengan kop surat profesional
+    const addHeader = () => {
+        // Logo placeholder atau inisial
+        doc.setFillColor(30, 58, 138); // Biru profesional gelap
+        doc.rect(20, 15, 3, 20, 'F');
+        
+        // Nama sistem/institusi
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.setTextColor(30, 58, 138);
+        doc.text("SIPIKAT", 26, 22);
+        
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(80, 80, 80);
+        doc.text("Sistem Pakar Identifikasi Kecanduan Gadget", 26, 27);
+        doc.text("Laporan Hasil Pemeriksaan", 26, 32);
+        
+        // Garis pembatas
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.5);
+        doc.line(20, 38, pageWidth - 20, 38);
     };
+    
+    // Footer profesional
+    const addFooter = (pageNum, totalPages) => {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(120, 120, 120);
+        
+        // Nomor halaman
+        doc.text(`Halaman ${pageNum} dari ${totalPages}`, pageWidth - 20, pageHeight - 10, { align: 'right' });
+        
+        // Informasi dokumen
+        doc.text(`Dokumen dibuat: ${new Date().toLocaleDateString('id-ID')}`, 20, pageHeight - 10);
+    };
+
+    addHeader();
+    
+    let y = 50;
+
+    // Section 1: Informasi Pemeriksaan
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(30, 58, 138);
+    doc.text("I. INFORMASI PEMERIKSAAN", 20, y);
+    y += 8;
+
+    // Tabel informasi dasar
+    const infoData = [
+        ['Nomor Pemeriksaan', ':', `DX-${Date.now().toString().slice(-8)}`],
+        ['Tanggal Pemeriksaan', ':', new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric'})],
+        ['Nama Lengkap', ':', result.user.nama],
+        ['Usia', ':', `${result.user.usia} tahun`],
+        ['Jenis Kelamin', ':', result.user.jenis_kelamin],
+        ['Alamat', ':', result.user.alamat],
+    ];
+
+    autoTable(doc, {
+        startY: y,
+        body: infoData,
+        theme: 'plain',
+        styles: { 
+            fontSize: 10,
+            cellPadding: 2,
+            textColor: [40, 40, 40]
+        },
+        columnStyles: {
+            0: { fontStyle: 'bold', cellWidth: 50, textColor: [60, 60, 60] },
+            1: { cellWidth: 5 },
+            2: { cellWidth: 'auto' }
+        }
+    });
+    y = doc.lastAutoTable.finalY + 15;
+
+    // Section 2: Hasil Pemeriksaan
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(30, 58, 138);
+    doc.text("II. HASIL PEMERIKSAAN", 20, y);
+    y += 8;
+
+    // Box hasil dengan styling minimal
+    const resultBox = [
+        ['Tingkat Kecanduan', ':', `${parseFloat((result.total_cf * 100).toFixed(2))}%`],
+        ['Kategori', ':', result.kategori.toUpperCase()],
+    ];
+
+    autoTable(doc, {
+        startY: y,
+        body: resultBox,
+        theme: 'plain',
+        styles: { 
+            fontSize: 10,
+            cellPadding: 2,
+            textColor: [40, 40, 40]
+        },
+        columnStyles: {
+            0: { fontStyle: 'bold', cellWidth: 50, textColor: [60, 60, 60] },
+            1: { cellWidth: 5 },
+            2: { cellWidth: 'auto', fontStyle: 'bold', fontSize: 11 }
+        }
+    });
+    y = doc.lastAutoTable.finalY + 15;
+
+    // Section 3: Gejala Teridentifikasi
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(30, 58, 138);
+    doc.text("III. GEJALA TERIDENTIFIKASI", 20, y);
+    y += 8;
+
+    const symptomsData = result.gejala_terpilih.map((g, idx) => [
+        idx + 1,
+        g.gejala,
+        `${(g.cf_user * 100).toFixed(0)}%`
+    ]);
+
+    autoTable(doc, {
+        startY: y,
+        head: [['No.', 'Deskripsi Gejala', 'Tingkat Keyakinan']],
+        body: symptomsData,
+        theme: 'plain',
+        styles: {
+            fontSize: 9,
+            cellPadding: 3,
+            lineColor: [220, 220, 220],
+            lineWidth: 0.1,
+            textColor: [40, 40, 40]
+        },
+        headStyles: { 
+            fillColor: [248, 250, 252],
+            textColor: [60, 60, 60],
+            fontStyle: 'bold',
+            halign: 'left'
+        },
+        columnStyles: {
+            0: { cellWidth: 15, halign: 'center' },
+            1: { cellWidth: 'auto' },
+            2: { cellWidth: 35, halign: 'center' }
+        },
+        alternateRowStyles: {
+            fillColor: [252, 252, 252]
+        }
+    });
+    y = doc.lastAutoTable.finalY + 15;
+    
+    // Cek apakah perlu halaman baru
+    if (y > 220) {
+        doc.addPage();
+        addHeader();
+        y = 50;
+    }
+
+    // Section 4: Rekomendasi dan Tindak Lanjut
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(30, 58, 138);
+    doc.text("IV. REKOMENDASI DAN TINDAK LANJUT", 20, y);
+    y += 8;
+    
+    y = renderSlateContent(doc, result.solusi, y);
+    
+    // Tambah space sebelum penutup
+    y += 15;
+    
+    // Cek halaman untuk penutup
+    if (y > 240) {
+        doc.addPage();
+        addHeader();
+        y = 50;
+    }
+    
+    // Penutup profesional
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(60, 60, 60);
+    const closingText = [
+        "Demikian hasil pemeriksaan ini dibuat dengan sebenar-benarnya berdasarkan data dan gejala",
+        "yang telah disampaikan. Untuk konsultasi lebih lanjut, disarankan untuk berkonsultasi dengan",
+        "tenaga profesional di bidang kesehatan mental."
+    ];
+    
+    closingText.forEach((line, idx) => {
+        doc.text(line, 20, y + (idx * 5));
+    });
+    
+    y += 25;
+    
+    // Tanda tangan digital placeholder
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(40, 40, 40);
+    doc.text("SIPIKAT - Sistem Pakar", pageWidth - 60, y, { align: 'center' });
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text("(Dokumen elektronik, tidak memerlukan tanda tangan basah)", pageWidth - 60, y + 5, { align: 'center' });
+    
+    // Tambahkan footer ke semua halaman
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        addFooter(i, pageCount);
+    }
+
+    // Simpan dengan nama file yang rapi
+    const fileName = `Laporan_Diagnosa_${result.user.nama.replace(/\s/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
+};
 
     if (loading) {
         return <div className="min-h-screen flex items-center justify-center bg-gray-50 text-lg text-gray-600">Memuat hasil...</div>;
