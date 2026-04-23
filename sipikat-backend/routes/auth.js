@@ -12,6 +12,13 @@ const { loginLimiter, strictLimiter } = require('../middleware/rateLimiter');
 router.post('/admin/login', loginLimiter, authController.adminLogin);
 
 /**
+ * @route   POST /api/auth/refresh
+ * @desc    Refresh access token and rotate refresh token
+ * @access  Private (requires valid refresh token)
+ */
+router.post('/refresh', authenticateRefreshToken, authController.refreshToken);
+
+/**
  * @route   POST /api/auth/admin/refresh
  * @desc    Refresh access token using refresh token
  * @access  Private (requires valid refresh token)

@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 const jwtConfig = require('../config/jwt');
+const { handleRefreshTokenReuse } = require('../utils/tokenService');
 
 const authenticateToken = async (req, res, next) => {
   try {
@@ -100,7 +101,27 @@ const authenticateRefreshToken = async (req, res, next) => {
       });
     }
 
-    // Verify refresh token
+    const [blacklisted] = await pool.execute(
+      'SELECT id FROM token_blacklist WHERE token = ? AND expires_at > NOW() LIMIT 1',
+      [refreshToken]
+    );
+
+    if (blacklisted.length > 0) {
+      const decoded = jwt.decode(refreshToken);
+      if (decoded?.sub) {
+        await handleRefreshTokenReuse({
+          userId: decoded.sub,
+          presentedToken: refreshToken
+        });
+      }
+
+      return res.status(403).json({
+        message: 'Reuse refresh token terdeteksi. Semua sesi telah dicabut, silakan login kembali.',
+        authenticated: false,
+        reuseDetected: true
+      });
+    }
+
     jwt.verify(refreshToken, jwtConfig.refreshToken.secret, async (err, decoded) => {
       if (err) {
         return res.status(403).json({ 
@@ -109,11 +130,17 @@ const authenticateRefreshToken = async (req, res, next) => {
         });
       }
 
-      // Check if refresh token exists in database and not expired
+      if (decoded.type !== 'refresh') {
+        return res.status(403).json({
+          message: 'Tipe token tidak valid.',
+          authenticated: false
+        });
+      }
+
       try {
         const [users] = await pool.execute(
-          'SELECT id, name, email, refresh_token_expires_at FROM tb_user WHERE id = ? AND refresh_token = ? LIMIT 1',
-          [decoded.sub, refreshToken]
+          'SELECT id, name, email, refresh_token, refresh_token_expires_at FROM tb_user WHERE id = ? LIMIT 1',
+          [decoded.sub]
         );
 
         if (users.length === 0) {
@@ -123,8 +150,22 @@ const authenticateRefreshToken = async (req, res, next) => {
           });
         }
 
-        // Check if refresh token is expired in database
-        const expiresAt = new Date(users[0].refresh_token_expires_at);
+        const user = users[0];
+
+        if (!user.refresh_token || user.refresh_token !== refreshToken) {
+          await handleRefreshTokenReuse({
+            userId: decoded.sub,
+            presentedToken: refreshToken
+          });
+
+          return res.status(403).json({
+            message: 'Reuse refresh token terdeteksi. Semua sesi telah dicabut, silakan login kembali.',
+            authenticated: false,
+            reuseDetected: true
+          });
+        }
+
+        const expiresAt = new Date(user.refresh_token_expires_at);
         if (expiresAt < new Date()) {
           return res.status(403).json({
             message: 'Refresh token telah kadaluarsa. Silakan login kembali.',
@@ -133,10 +174,11 @@ const authenticateRefreshToken = async (req, res, next) => {
         }
 
         req.user = {
-          id: users[0].id,
-          name: users[0].name,
-          email: users[0].email
+          id: user.id,
+          name: user.name,
+          email: user.email
         };
+        req.refreshToken = refreshToken;
 
         next();
       } catch (dbError) {

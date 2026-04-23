@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const bcrypt = require('bcryptjs');
+const { getPasswordValidationError } = require('../utils/passwordValidator');
 
 exports.getAllUsers = async (req, res) => {
   try {
@@ -29,6 +30,12 @@ exports.addUser = async (req, res) => {
   if (!name || !email || !password) {
     return res.status(400).json({ message: 'Please enter all fields (name, email, password)' });
   }
+
+  const passwordError = getPasswordValidationError(password);
+  if (passwordError) {
+    return res.status(400).json({ message: passwordError });
+  }
+
   try {
     let [rows] = await pool.execute('SELECT id FROM tb_user WHERE email = ?', [email]);
     if (rows.length > 0) {
@@ -59,6 +66,11 @@ exports.updateUser = async (req, res) => {
 
   try {
     if (password) {
+      const passwordError = getPasswordValidationError(password);
+      if (passwordError) {
+        return res.status(400).json({ message: passwordError });
+      }
+
       const salt = await bcrypt.genSalt(10);
       hashedPassword = await bcrypt.hash(password, salt);
     }

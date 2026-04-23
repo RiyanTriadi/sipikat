@@ -3,6 +3,8 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const path = require('path');
+const { apiLimiter } = require('./middleware/rateLimiter');
+const { startTokenBlacklistCleanup } = require('./services/tokenBlacklistCleanup');
 require('dotenv').config();
 
 const app = express();
@@ -62,6 +64,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // 5. Serve Static Files
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
+// 5.1 General API Rate Limiter
+app.use('/api', apiLimiter);
 
 // 6. Import Routes
 const authRoutes = require('./routes/auth');
@@ -132,9 +137,12 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Allowed Origins: ${allowedOrigins.join(', ')}`);
 });
 
+const blacklistCleanupInterval = startTokenBlacklistCleanup();
+
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM signal received: closing HTTP server');
+  clearInterval(blacklistCleanupInterval);
   server.close(() => {
     console.log('HTTP server closed');
   });

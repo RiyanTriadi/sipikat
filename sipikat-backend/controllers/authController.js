@@ -1,46 +1,14 @@
 const pool = require('../config/db'); 
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const jwtConfig = require('../config/jwt');
+const {
+  generateAccessToken,
+  generateRefreshToken,
+  getRefreshTokenExpiry,
+  addTokenToBlacklist,
+  revokeUserRefreshSession
+} = require('../utils/tokenService');
 require('dotenv').config();
-
-/**
- * Generate Access Token
- */
-const generateAccessToken = (userId) => {
-  return jwt.sign(
-    { 
-      sub: userId,
-      type: 'access',
-      iat: Math.floor(Date.now() / 1000)
-    },
-    jwtConfig.accessToken.secret,
-    { expiresIn: jwtConfig.accessToken.expiresIn }
-  );
-};
-
-/**
- * Generate Refresh Token
- */
-const generateRefreshToken = (userId) => {
-  return jwt.sign(
-    { 
-      sub: userId,
-      type: 'refresh',
-      iat: Math.floor(Date.now() / 1000)
-    },
-    jwtConfig.refreshToken.secret,
-    { expiresIn: jwtConfig.refreshToken.expiresIn }
-  );
-};
-
-/**
- * Calculate refresh token expiry date
- */
-const getRefreshTokenExpiry = () => {
-  const expiryMs = parseInt(process.env.SESSION_COOKIE_MAX_AGE) || 7 * 24 * 60 * 60 * 1000;
-  return new Date(Date.now() + expiryMs);
-};
 
 /**
  * Admin Login
@@ -135,14 +103,29 @@ exports.adminLogin = async (req, res) => {
  */
 exports.refreshToken = async (req, res) => {
   try {
-    // req.user is set by authenticateRefreshToken middleware
     const userId = req.user.id;
+    const currentRefreshToken = req.refreshToken;
 
-    // Generate new access token
     const newAccessToken = generateAccessToken(userId);
+    const newRefreshToken = generateRefreshToken(userId);
+    const newRefreshTokenExpiry = getRefreshTokenExpiry();
 
-    // Set new access token cookie
+    const [result] = await pool.execute(
+      'UPDATE tb_user SET refresh_token = ?, refresh_token_expires_at = ? WHERE id = ? AND refresh_token = ?',
+      [newRefreshToken, newRefreshTokenExpiry, userId, currentRefreshToken]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(403).json({
+        message: 'Refresh token tidak valid. Silakan login kembali.',
+        authenticated: false
+      });
+    }
+
+    await addTokenToBlacklist(currentRefreshToken, userId, 'refresh_rotation');
+
     res.cookie('accessToken', newAccessToken, jwtConfig.accessToken.cookieOptions);
+    res.cookie('refreshToken', newRefreshToken, jwtConfig.refreshToken.cookieOptions);
 
     res.json({ 
       message: 'Token berhasil diperbarui',
@@ -167,31 +150,16 @@ exports.adminLogout = async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
 
   try {
-    // Decode access token to get expiry (without verifying, as it might be expired)
-    let tokenExpiry = new Date();
-    try {
-      const decoded = jwt.decode(accessToken);
-      if (decoded && decoded.exp) {
-        tokenExpiry = new Date(decoded.exp * 1000);
-      }
-    } catch (decodeError) {
-      console.log('Could not decode token for blacklist, using current time');
-    }
-
-    // Add access token to blacklist
     if (accessToken) {
-      await pool.execute(
-        'INSERT INTO token_blacklist (token, expires_at, user_id, reason) VALUES (?, ?, ?, ?)',
-        [accessToken, tokenExpiry, req.user?.id || null, 'logout']
-      );
+      await addTokenToBlacklist(accessToken, req.user?.id || null, 'logout');
     }
 
-    // Remove refresh token from database
+    if (refreshToken) {
+      await addTokenToBlacklist(refreshToken, req.user?.id || null, 'logout');
+    }
+
     if (req.user?.id) {
-      await pool.execute(
-        'UPDATE tb_user SET refresh_token = NULL, refresh_token_expires_at = NULL WHERE id = ?',
-        [req.user.id]
-      );
+      await revokeUserRefreshSession(req.user.id);
     }
 
     // Clear cookies
@@ -237,11 +205,7 @@ exports.revokeAllTokens = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Clear refresh token from database
-    await pool.execute(
-      'UPDATE tb_user SET refresh_token = NULL, refresh_token_expires_at = NULL WHERE id = ?',
-      [userId]
-    );
+    await revokeUserRefreshSession(userId);
 
     // Note: We can't blacklist all access tokens easily without storing them
     // This is acceptable because access tokens are short-lived (15 minutes)
