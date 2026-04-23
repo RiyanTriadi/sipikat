@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Edit, Trash2, AlertCircle, UserPlus, RefreshCw, X } from 'lucide-react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 const Alert = ({ message }) => (
     <div className="bg-red-50 border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center space-x-3 shadow-sm mb-6" role="alert">
@@ -217,7 +217,7 @@ export default function AkunPage() {
         setError('');
 
         try {
-            const res = await fetch(`${API_BASE_URL}/admin/users`, {
+            const res = await fetch(`${API_BASE_URL}/api/admin/users`, {
                 credentials: 'include'
             });
             
@@ -250,8 +250,8 @@ export default function AkunPage() {
         
         const method = editingUser ? 'PUT' : 'POST';
         const url = editingUser
-            ? `${API_BASE_URL}/admin/users/${editingUser.id}`
-            : `${API_BASE_URL}/admin/users`;
+            ? `${API_BASE_URL}/api/admin/users/${editingUser.id}`
+            : `${API_BASE_URL}/api/admin/users`;
 
         try {
             const res = await fetch(url, {
@@ -285,7 +285,7 @@ export default function AkunPage() {
         setError('');
 
         try {
-            const res = await fetch(`${API_BASE_URL}/admin/users/${userToDelete}`, {
+            const res = await fetch(`${API_BASE_URL}/api/admin/users/${userToDelete}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });

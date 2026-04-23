@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Trash2, AlertCircle, RefreshCw, Eye, X } from 'lucide-react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 const Alert = ({ message, type = 'error' }) => {
     const colors = {
@@ -437,7 +437,7 @@ export default function DiagnosaHistoryPage() {
         setError('');
 
         try {
-            const res = await fetch(`${API_BASE_URL}/diagnosa`, {
+            const res = await fetch(`${API_BASE_URL}/api/diagnosa`, {
                 credentials: 'include'
             });
 
@@ -481,7 +481,7 @@ export default function DiagnosaHistoryPage() {
         setError('');
 
         try {
-            const res = await fetch(`${API_BASE_URL}/diagnosa/${diagnosaToDelete}`, {
+            const res = await fetch(`${API_BASE_URL}/api/diagnosa/${diagnosaToDelete}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });

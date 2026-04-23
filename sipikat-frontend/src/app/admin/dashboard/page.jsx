@@ -7,7 +7,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { id } from 'date-fns/locale';
 
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 const Alert = ({ message }) => (
     <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center space-x-3 shadow-sm mb-6" role="alert">
@@ -93,11 +93,11 @@ export default function DashboardPage() {
 
             try {
                 const fetchPromises = [
-                    fetch(`${API_BASE_URL}/gejala`, { credentials: 'include' }),
-                    fetch(`${API_BASE_URL}/artikel`, { credentials: 'include' }),
-                    fetch(`${API_BASE_URL}/diagnosa`, { credentials: 'include' }),
-                    fetch(`${API_BASE_URL}/admin/users`, { credentials: 'include' }),
-                    fetch(`${API_BASE_URL}/aktivitas/terbaru`, { credentials: 'include' }),
+                    fetch(`${API_BASE_URL}/api/gejala`, { credentials: 'include' }),
+                    fetch(`${API_BASE_URL}/api/artikel`, { credentials: 'include' }),
+                    fetch(`${API_BASE_URL}/api/diagnosa`, { credentials: 'include' }),
+                    fetch(`${API_BASE_URL}/api/admin/users`, { credentials: 'include' }),
+                    fetch(`${API_BASE_URL}/api/aktivitas/terbaru`, { credentials: 'include' }),
                 ];
 
                 const responses = await Promise.all(fetchPromises);

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Loader2, Trash2, AlertCircle, RefreshCw, Plus, Edit } from 'lucide-react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 const formatMbValue = (mb) => {
     const value = parseFloat(mb);
@@ -266,7 +266,7 @@ export default function GejalaPage() {
         setError('');
 
         try {
-            const res = await fetch(`${API_BASE_URL}/gejala/admin`, {
+            const res = await fetch(`${API_BASE_URL}/api/gejala/admin`, {
                 credentials: 'include'
             });
 
@@ -311,7 +311,7 @@ export default function GejalaPage() {
         setError('');
         
         const method = editingGejala ? 'PUT' : 'POST';
-        const url = editingGejala ? `${API_BASE_URL}/gejala/${editingGejala.id}` : `${API_BASE_URL}/gejala`;
+        const url = editingGejala ? `${API_BASE_URL}/api/gejala/${editingGejala.id}` : `${API_BASE_URL}/api/gejala`;
 
         try {
             const res = await fetch(url, {
@@ -357,7 +357,7 @@ export default function GejalaPage() {
         setError('');
 
         try {
-            const res = await fetch(`${API_BASE_URL}/gejala/${gejalaToDelete}`, {
+            const res = await fetch(`${API_BASE_URL}/api/gejala/${gejalaToDelete}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });
