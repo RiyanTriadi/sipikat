@@ -6,6 +6,8 @@ import {
     PlusCircle, Edit, Trash2, Loader2, AlertCircle, RefreshCw,
     Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Quote, UploadCloud, X
 } from 'lucide-react';
+import AdminToast from '@/components/admin/AdminToast';
+import useAdminToast from '@/components/admin/useAdminToast';
 import { createEditor, Editor as SlateEditor, Transforms, Text, Element as SlateElement } from 'slate';
 import { Slate, Editable, withReact } from 'slate-react';
 import { withHistory } from 'slate-history';
@@ -254,8 +256,17 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving, isModalLoadi
         e.preventDefault();
         setFormError('');
         const isContentEmpty = konten.length === 1 && konten[0].children.length === 1 && konten[0].children[0].text === '';
-        if (!judul.trim() || isContentEmpty) {
-            setFormError('Judul dan Konten tidak boleh kosong.');
+        const hasImage = Boolean(gambarFile || gambarUrl);
+        if (!judul.trim()) {
+            setFormError('Judul artikel tidak boleh kosong.');
+            return;
+        }
+        if (!hasImage) {
+            setFormError('Gambar sampul wajib diunggah.');
+            return;
+        }
+        if (isContentEmpty) {
+            setFormError('Konten artikel tidak boleh kosong.');
             return;
         }
         onSave({ judul, konten, gambarFile, gambarUrlLama: gambarUrl });
@@ -279,7 +290,7 @@ const ArtikelModal = ({ isOpen, onClose, onSave, artikel, isSaving, isModalLoadi
                             {formError && <Alert message={formError} />}
                             <div>
                                 <label htmlFor="judul" className="block text-gray-700 text-sm font-medium mb-2">Judul Artikel</label>
-                                <input type="text" id="judul" value={judul} onChange={(e) => setJudul(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required />
+                                <input type="text" id="judul" value={judul} onChange={(e) => setJudul(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" />
                             </div>
                             
                             <div>
@@ -421,6 +432,7 @@ export default function ArtikelAdminPage() {
     const [artikelToDeleteId, setArtikelToDeleteId] = useState(null);
     const [isModalLoading, setIsModalLoading] = useState(false);
     const router = useRouter();
+    const { toast, showToast, hideToast } = useAdminToast();
 
     const fetchArticles = useCallback(async () => {
         setLoading(true);
@@ -509,6 +521,10 @@ export default function ArtikelAdminPage() {
                 throw new Error(errorData.message || res.statusText);
             }
             fetchArticles(); 
+            showToast(
+                editingArtikel ? 'Artikel berhasil diperbarui' : 'Artikel berhasil ditambahkan',
+                editingArtikel ? 'Perubahan artikel sudah disimpan.' : 'Artikel baru sudah berhasil dipublikasikan.'
+            );
             closeModal();
         } catch (err) {
             alert(`Gagal menyimpan artikel: ${err.message}`);
@@ -539,6 +555,7 @@ export default function ArtikelAdminPage() {
                 throw new Error(errorData.message || 'Gagal menghapus artikel.');
             }
             setArticles(prevList => prevList.filter(artikel => artikel.id !== artikelToDeleteId));
+            showToast('Artikel berhasil dihapus', 'Artikel sudah dihapus dari daftar publikasi.');
         } catch (err) {
             alert(err.message);
         } finally {
@@ -582,6 +599,7 @@ export default function ArtikelAdminPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans p-4 sm:p-6 lg:p-8">
+            <AdminToast toast={toast} onClose={hideToast} />
             <main className="max-w-7xl mx-auto">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>

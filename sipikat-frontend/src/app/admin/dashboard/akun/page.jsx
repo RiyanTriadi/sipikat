@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Edit, Trash2, AlertCircle, UserPlus, RefreshCw, X } from 'lucide-react';
+import AdminToast from '@/components/admin/AdminToast';
+import useAdminToast from '@/components/admin/useAdminToast';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -63,7 +65,7 @@ const ConfirmationModal = ({ isOpen, onCancel, onConfirm, isDeleting }) => {
     );
 };
 
-const AkunModal = ({ isOpen, onClose, onSave, user, isSaving }) => {
+const AkunModal = ({ isOpen, onClose, onSave, user, isSaving, formError }) => {
     const [formData, setFormData] = useState({ name: '', email: '', password: '' });
 
     useEffect(() => {
@@ -103,17 +105,18 @@ const AkunModal = ({ isOpen, onClose, onSave, user, isSaving }) => {
                 
                 <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
                     <div className="flex-grow p-6 space-y-6 overflow-y-auto">
+                        {formError && <Alert message={formError} />}
                         <div>
                             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Nama</label>
-                            <input id="name" type="text" name="name" value={formData.name} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required />
+                            <input id="name" type="text" name="name" value={formData.name} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" />
                         </div>
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                            <input id="email" type="email" name="email" value={formData.email} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required />
+                            <input id="email" type="email" name="email" value={formData.email} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" />
                         </div>
                         <div>
                             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                            <input id="password" type="password" name="password" value={formData.password} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder={user ? 'Kosongkan jika tidak diubah' : 'Wajib diisi'} required={!user} />
+                            <input id="password" type="password" name="password" value={formData.password} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder={user ? 'Kosongkan jika tidak diubah' : 'Wajib diisi'} />
                             {user && <p className="text-xs text-gray-500 mt-2">Biarkan kosong jika Anda tidak ingin mengubah password.</p>}
                         </div>
                     </div>
@@ -205,12 +208,14 @@ export default function AkunPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [formError, setFormError] = useState('');
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [userToDelete, setUserToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
     const router = useRouter();
+    const { toast, showToast, hideToast } = useAdminToast();
 
     const fetchUsers = useCallback(async () => {
         setLoading(true);
@@ -247,6 +252,7 @@ export default function AkunPage() {
     const handleSave = async (formData) => {
         setIsSaving(true);
         setError('');
+        setFormError('');
         
         const method = editingUser ? 'PUT' : 'POST';
         const url = editingUser
@@ -264,15 +270,18 @@ export default function AkunPage() {
             });
             
             if (!res.ok) {
-                const errData = await res.json();
-                alert(`Gagal menyimpan: ${errData.message || 'Terjadi kesalahan'}`);
+                const errData = await res.json().catch(() => ({ message: 'Terjadi kesalahan saat menyimpan akun.' }));
                 throw new Error(errData.message || 'Gagal menyimpan akun');
             }
             
             await fetchUsers();
+            showToast(
+                editingUser ? 'Akun berhasil diperbarui' : 'Akun berhasil ditambahkan',
+                editingUser ? 'Perubahan data akun admin sudah disimpan.' : 'Akun admin baru sudah berhasil dibuat.'
+            );
             closeModal();
         } catch (err) {
-            console.error(err);
+            setFormError(err.message);
         } finally {
             setIsSaving(false);
         }
@@ -296,6 +305,7 @@ export default function AkunPage() {
             }
             
             setUsers(prevUsers => prevUsers.filter(u => u.id !== userToDelete));
+            showToast('Akun berhasil dihapus', 'Data akun admin sudah dihapus dari sistem.');
         } catch (err) {
             setError(err.message);
         } finally {
@@ -305,8 +315,8 @@ export default function AkunPage() {
         }
     };
     
-    const openModal = (user = null) => { setEditingUser(user); setIsModalOpen(true); setError(''); };
-    const closeModal = () => { setEditingUser(null); setIsModalOpen(false); };
+    const openModal = (user = null) => { setEditingUser(user); setIsModalOpen(true); setError(''); setFormError(''); };
+    const closeModal = () => { setEditingUser(null); setIsModalOpen(false); setFormError(''); };
     const confirmDeleteHandler = (id) => { setUserToDelete(id); setShowConfirmModal(true); };
     const cancelDeleteHandler = () => { setShowConfirmModal(false); setUserToDelete(null); };
 
@@ -314,6 +324,7 @@ export default function AkunPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans p-4 sm:p-6 lg:p-8">
+            <AdminToast toast={toast} onClose={hideToast} />
             <main className="max-w-7xl mx-auto">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
@@ -362,6 +373,7 @@ export default function AkunPage() {
                 onSave={handleSave}
                 user={editingUser}
                 isSaving={isSaving}
+                formError={formError}
             />
 
             <ConfirmationModal

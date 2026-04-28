@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Loader2, Trash2, AlertCircle, RefreshCw, Plus, Edit } from 'lucide-react';
+import AdminToast from '@/components/admin/AdminToast';
+import useAdminToast from '@/components/admin/useAdminToast';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -89,9 +91,9 @@ const GejalaModal = ({ isOpen, onClose, onSave, gejala, isSaving }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        
-        if (!formData.id.trim() || !formData.gejala.trim() || formData.mb === '') {
-            setFormError('Semua field harus diisi.');
+
+        if (!formData.id.trim()) {
+            setFormError('ID gejala wajib diisi.');
             return;
         }
 
@@ -100,7 +102,33 @@ const GejalaModal = ({ isOpen, onClose, onSave, gejala, isSaving }) => {
             return;
         }
 
-        onSave({ ...formData, mb: parseFloat(formData.mb) });
+        if (!formData.gejala.trim()) {
+            setFormError('Teks gejala wajib diisi.');
+            return;
+        }
+
+        if (formData.gejala.trim().length < 5) {
+            setFormError('Teks gejala terlalu singkat. Mohon isi penjelasan gejala dengan lebih spesifik.');
+            return;
+        }
+
+        if (formData.mb === '') {
+            setFormError('Nilai MB wajib diisi.');
+            return;
+        }
+
+        const parsedMb = parseFloat(formData.mb);
+        if (Number.isNaN(parsedMb)) {
+            setFormError('Nilai MB harus berupa angka yang valid.');
+            return;
+        }
+
+        if (parsedMb < 0 || parsedMb > 1) {
+            setFormError('Nilai MB harus berada di antara 0.00 sampai 1.00.');
+            return;
+        }
+
+        onSave({ ...formData, mb: parsedMb });
     };
 
     return (
@@ -113,19 +141,19 @@ const GejalaModal = ({ isOpen, onClose, onSave, gejala, isSaving }) => {
                 <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
                     <div className="flex-grow p-6 space-y-6 overflow-y-auto">
                         {formError && <Alert message={formError} />}
-                        
+
                         <div>
                             <label htmlFor="id" className="block text-sm font-medium text-gray-700 mb-2">
                                 ID Gejala <span className="text-red-500">*</span>
                             </label>
-                            <input 
-                                type="text" 
-                                id="id" 
-                                name="id" 
-                                value={formData.id} 
-                                onChange={handleChange} 
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-shadow placeholder-gray-400 uppercase" 
-                                required 
+                            <input
+                                type="text"
+                                id="id"
+                                name="id"
+                                value={formData.id}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-shadow placeholder-gray-400 uppercase"
+
                                 placeholder="Contoh: G1, G2, G10"
                                 maxLength="10"
                             />
@@ -136,14 +164,14 @@ const GejalaModal = ({ isOpen, onClose, onSave, gejala, isSaving }) => {
                             <label htmlFor="gejala" className="block text-sm font-medium text-gray-700 mb-2">
                                 Teks Gejala <span className="text-red-500">*</span>
                             </label>
-                            <textarea 
-                                id="gejala" 
-                                name="gejala" 
-                                value={formData.gejala} 
-                                onChange={handleChange} 
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-shadow placeholder-gray-400" 
-                                required 
-                                rows="4" 
+                            <textarea
+                                id="gejala"
+                                name="gejala"
+                                value={formData.gejala}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-shadow placeholder-gray-400"
+
+                                rows="4"
                                 placeholder="Contoh: Mengalami demam tinggi lebih dari 3 hari"
                             ></textarea>
                         </div>
@@ -152,34 +180,34 @@ const GejalaModal = ({ isOpen, onClose, onSave, gejala, isSaving }) => {
                             <label htmlFor="mb" className="block text-sm font-medium text-gray-700 mb-2">
                                 Nilai MB (Bobot Pakar) <span className="text-red-500">*</span>
                             </label>
-                            <input 
-                                type="number" 
-                                id="mb" 
-                                name="mb" 
-                                value={formData.mb} 
-                                onChange={handleChange} 
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-shadow" 
-                                required 
-                                step="0.01" 
-                                min="0" 
-                                max="1" 
+                            <input
+                                type="number"
+                                id="mb"
+                                name="mb"
+                                value={formData.mb}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-shadow"
+
+                                step="0.01"
+                                min="0"
+                                max="1"
                             />
                             <p className="text-xs text-gray-500 mt-2">Masukkan nilai antara 0.00 dan 1.00.</p>
                         </div>
                     </div>
 
                     <div className="flex-shrink-0 flex justify-end gap-3 p-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
-                        <button 
-                            type="button" 
-                            onClick={onClose} 
-                            disabled={isSaving} 
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            disabled={isSaving}
                             className="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
                         >
                             Batal
                         </button>
-                        <button 
-                            type="submit" 
-                            disabled={isSaving} 
+                        <button
+                            type="submit"
+                            disabled={isSaving}
                             className="px-5 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center disabled:opacity-50"
                         >
                             {isSaving ? (<><Loader2 className="animate-spin h-5 w-5 mr-2" /> Menyimpan...</>) : 'Simpan Gejala'}
@@ -260,6 +288,7 @@ export default function GejalaPage() {
     const [editingGejala, setEditingGejala] = useState(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [gejalaToDelete, setGejalaToDelete] = useState(null);
+    const { toast, showToast, hideToast } = useAdminToast();
 
     const fetchGejala = useCallback(async () => {
         setLoading(true);
@@ -276,7 +305,7 @@ export default function GejalaPage() {
             if (!res.ok) {
                 throw new Error('Gagal memuat daftar gejala.');
             }
-            
+
             const data = await res.json();
             setGejalaList(data);
 
@@ -309,7 +338,7 @@ export default function GejalaPage() {
     const handleSave = async (formData) => {
         setIsSaving(true);
         setError('');
-        
+
         const method = editingGejala ? 'PUT' : 'POST';
         const url = editingGejala ? `${API_BASE_URL}/api/gejala/${editingGejala.id}` : `${API_BASE_URL}/api/gejala`;
 
@@ -321,18 +350,22 @@ export default function GejalaPage() {
                 body: JSON.stringify(formData)
             });
 
-            if (res.status === 401 || res.status === 403) { 
-                window.location.href = '/admin/login'; 
-                return; 
+            if (res.status === 401 || res.status === 403) {
+                window.location.href = '/admin/login';
+                return;
             }
-            
-            if (!res.ok) { 
-                const errData = await res.json().catch(() => ({})); 
-                throw new Error(errData.message || 'Gagal menyimpan data.'); 
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.message || 'Gagal menyimpan data.');
             }
-            
+
             closeModalHandler();
             await fetchGejala();
+            showToast(
+                editingGejala ? 'Gejala berhasil diperbarui' : 'Gejala berhasil ditambahkan',
+                editingGejala ? 'Perubahan data gejala sudah disimpan.' : 'Data gejala baru sudah masuk ke sistem.'
+            );
         } catch (err) {
             setError(err.message);
         } finally {
@@ -362,17 +395,18 @@ export default function GejalaPage() {
                 credentials: 'include'
             });
 
-            if (res.status === 401 || res.status === 403) { 
-                window.location.href = '/admin/login'; 
-                return; 
+            if (res.status === 401 || res.status === 403) {
+                window.location.href = '/admin/login';
+                return;
             }
-            
-            if (!res.ok) { 
-                const errData = await res.json().catch(() => ({})); 
-                throw new Error(errData.message || 'Gagal menghapus data.'); 
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.message || 'Gagal menghapus data.');
             }
-            
+
             await fetchGejala();
+            showToast('Gejala berhasil dihapus', 'Data gejala sudah dihapus dari sistem.');
         } catch (err) {
             setError(err.message);
         } finally {
@@ -386,6 +420,7 @@ export default function GejalaPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans p-4 sm:p-6 lg:p-8">
+            <AdminToast toast={toast} onClose={hideToast} />
             <main className="max-w-7xl mx-auto">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
@@ -407,28 +442,28 @@ export default function GejalaPage() {
                     {loading ? (
                         <Spinner text="Memuat data gejala..." />
                     ) : (
-                        <GejalaTable 
-                            data={gejalaList} 
-                            onEdit={openModalHandler} 
-                            onConfirmDelete={confirmDeleteHandler} 
-                            isActionDisabled={isActionDisabled} 
+                        <GejalaTable
+                            data={gejalaList}
+                            onEdit={openModalHandler}
+                            onConfirmDelete={confirmDeleteHandler}
+                            isActionDisabled={isActionDisabled}
                         />
                     )}
                 </div>
             </main>
 
-            <GejalaModal 
-                isOpen={isModalOpen} 
-                onClose={closeModalHandler} 
-                onSave={handleSave} 
-                gejala={editingGejala} 
-                isSaving={isSaving} 
+            <GejalaModal
+                isOpen={isModalOpen}
+                onClose={closeModalHandler}
+                onSave={handleSave}
+                gejala={editingGejala}
+                isSaving={isSaving}
             />
-            <ConfirmationModal 
-                isOpen={showConfirmModal} 
-                onCancel={cancelDeleteHandler} 
-                onConfirm={handleDelete} 
-                isDeleting={isDeleting} 
+            <ConfirmationModal
+                isOpen={showConfirmModal}
+                onCancel={cancelDeleteHandler}
+                onConfirm={handleDelete}
+                isDeleting={isDeleting}
             />
         </div>
     );

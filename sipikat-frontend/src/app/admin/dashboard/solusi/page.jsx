@@ -6,6 +6,8 @@ import {
     Edit, Trash2, Loader2, AlertCircle, RefreshCw,
     Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Quote, X,
 } from 'lucide-react';
+import AdminToast from '@/components/admin/AdminToast';
+import useAdminToast from '@/components/admin/useAdminToast';
 import { createEditor, Editor as SlateEditor, Transforms, Text, Element as SlateElement } from 'slate';
 import { Slate, Editable, withReact } from 'slate-react';
 import { withHistory } from 'slate-history';
@@ -310,7 +312,7 @@ const SolusiModal = ({ isOpen, onClose, onSave, solusi, isSaving }) => {
                         {formError && <Alert message={formError} />}
                         <div>
                             <label htmlFor="kategori" className="block text-gray-700 text-sm font-medium mb-2">Kategori Solusi</label>
-                            <input type="text" id="kategori" value={kategori} onChange={(e) => setKategori(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required />
+                            <input type="text" id="kategori" value={kategori} onChange={(e) => setKategori(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" disabled/>
                         </div>
 
                         <div>
@@ -379,7 +381,6 @@ const SolusiTable = ({ data, onEdit, onDelete, isDeleting }) => {
                         <p className="text-xs text-gray-500 mb-3">Diperbarui: {formatDate(solusi.updated_at)}</p>
                         <div className="flex space-x-4 mt-auto">
                             <button onClick={() => onEdit(solusi)} className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1" disabled={isDeleting}><Edit size={14} /> Edit</button>
-                            <button onClick={() => onDelete(solusi.id)} className="text-red-600 hover:text-red-800 font-medium text-sm flex items-center gap-1" disabled={isDeleting}><Trash2 size={14} /> Hapus</button>
                         </div>
                     </div>
                 ))}
@@ -406,7 +407,6 @@ const SolusiTable = ({ data, onEdit, onDelete, isDeleting }) => {
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium align-top pt-6">
                                     <div className="flex items-center justify-center space-x-4">
                                         <button onClick={() => onEdit(solusi)} className="text-blue-600 hover:text-blue-800 flex items-center gap-1.5" disabled={isDeleting}><Edit size={16} /> Edit</button>
-                                        <button onClick={() => onDelete(solusi.id)} className="text-red-600 hover:text-red-800 flex items-center gap-1.5" disabled={isDeleting}><Trash2 size={16} /> Hapus</button>
                                     </div>
                                 </td>
                             </tr>
@@ -429,6 +429,7 @@ export default function SolusiAdminPage() {
     const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
     const [solusiToDeleteId, setSolusiToDeleteId] = useState(null);
     const router = useRouter();
+    const { toast, showToast, hideToast } = useAdminToast();
 
     const fetchSolusi = useCallback(async () => {
         setLoading(true);
@@ -492,6 +493,10 @@ export default function SolusiAdminPage() {
                 throw new Error(errorData.message || res.statusText);
             }
             await fetchSolusi();
+            showToast(
+                editingSolusi ? 'Solusi berhasil diperbarui' : 'Solusi berhasil ditambahkan',
+                editingSolusi ? 'Perubahan solusi sudah disimpan.' : 'Solusi baru sudah berhasil ditambahkan.'
+            );
             closeModal();
         } catch (err) {
             alert(`Gagal menyimpan solusi: ${err.message}`);
@@ -521,6 +526,7 @@ export default function SolusiAdminPage() {
                 throw new Error('Gagal menghapus solusi.');
             }
             setSolusiList(prevList => prevList.filter(solusi => solusi.id !== solusiToDeleteId));
+            showToast('Solusi berhasil dihapus', 'Data solusi sudah dihapus dari sistem.');
         } catch (err) {
             setError(err.message);
         } finally {
@@ -534,6 +540,7 @@ export default function SolusiAdminPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans p-4 sm:p-6 lg:p-8">
+            <AdminToast toast={toast} onClose={hideToast} />
             <main className="max-w-7xl mx-auto">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
