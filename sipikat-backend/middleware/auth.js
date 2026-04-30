@@ -5,7 +5,7 @@ const { handleRefreshTokenReuse } = require('../utils/tokenService');
 
 const authenticateToken = async (req, res, next) => {
   try {
-    // Extract access token from cookie
+
     const accessToken = req.cookies.accessToken;
 
     if (!accessToken) {
@@ -15,7 +15,6 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
-    // Check if token is blacklisted
     const [blacklisted] = await pool.execute(
       'SELECT id FROM token_blacklist WHERE token = ? AND expires_at > NOW() LIMIT 1',
       [accessToken]
@@ -31,7 +30,6 @@ const authenticateToken = async (req, res, next) => {
     // Verify JWT token
     jwt.verify(accessToken, jwtConfig.accessToken.secret, async (err, decoded) => {
       if (err) {
-        // Check if error is due to expiration
         if (err.name === 'TokenExpiredError') {
           return res.status(401).json({ 
             message: 'Token telah kadaluarsa. Silakan refresh token.',
@@ -39,35 +37,27 @@ const authenticateToken = async (req, res, next) => {
             expired: true
           });
         }
-
-        // Other JWT errors 
         return res.status(403).json({ 
           message: 'Token tidak valid.',
           authenticated: false 
         });
       }
-
-      // Verify user still exists in database
       try {
         const [users] = await pool.execute(
           'SELECT id, name, email FROM tb_user WHERE id = ? LIMIT 1',
           [decoded.sub]
         );
-
         if (users.length === 0) {
           return res.status(403).json({
             message: 'User tidak ditemukan.',
             authenticated: false
           });
         }
-
-        // Attach user info to request object
         req.user = {
           id: users[0].id,
           name: users[0].name,
           email: users[0].email
         };
-
         next();
       } catch (dbError) {
         console.error('Database error in auth middleware:', dbError);
@@ -152,7 +142,7 @@ const authenticateRefreshToken = async (req, res, next) => {
 
         const user = users[0];
 
-        if (!user.refresh_token || user.refresh_token !== refreshToken) {
+        if (user.refresh_token !== refreshToken) {
           await handleRefreshTokenReuse({
             userId: decoded.sub,
             presentedToken: refreshToken

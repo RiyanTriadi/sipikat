@@ -1,7 +1,6 @@
 const rateLimit = require('express-rate-limit');
 const pool = require('../config/db');
 
-// Login Rate Limiter
 const loginLimiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 5, // Max 5 requests per window
@@ -12,13 +11,11 @@ const loginLimiter = rateLimit({
   standardHeaders: true, 
   legacyHeaders: false, 
   
-  // Custom handler to log failed attempts
   handler: async (req, res) => {
     const email = req.body.email || 'unknown';
     const ipAddress = req.ip || req.connection.remoteAddress;
 
     try {
-      // Log the failed attempt
       await pool.execute(
         'INSERT INTO login_attempts (email, ip_address, success) VALUES (?, ?, ?)',
         [email, ipAddress, false]
@@ -33,10 +30,8 @@ const loginLimiter = rateLimit({
     });
   },
 
-  // Skip successful requests
   skipSuccessfulRequests: true,
   
-  // Use IP + email combination for more accurate limiting
   keyGenerator: (req) => {
     return `${req.ip}-${req.body.email || 'no-email'}`;
   }
