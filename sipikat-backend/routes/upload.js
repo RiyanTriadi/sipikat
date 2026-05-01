@@ -4,6 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { authenticateToken } = require('../middleware/auth');
+const { noStore } = require('../utils/http');
 
 // Setup Folder Tujuan
 const uploadDir = path.join(__dirname, '..', 'public', 'uploads', 'thumbnails');
@@ -43,7 +44,7 @@ const upload = multer({
 });
 
 // Endpoint POST /api/upload/thumbnail
-router.post('/thumbnail', authenticateToken, upload.single('thumbnail'), (req, res) => {
+router.post('/thumbnail', noStore, authenticateToken, upload.single('thumbnail'), (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: 'Tidak ada file yang diunggah.' });
@@ -62,8 +63,16 @@ router.post('/thumbnail', authenticateToken, upload.single('thumbnail'), (req, r
     }
 }, (error, req, res, next) => {
     // Error handling khusus Multer
+    if (error instanceof multer.MulterError) {
+        if (error.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ message: 'Ukuran file maksimal 5MB.' });
+        }
+
+        return res.status(400).json({ message: 'Upload file tidak valid.' });
+    }
+
     if (error) {
-        res.status(400).json({ message: error.message });
+        return res.status(400).json({ message: 'Format file tidak didukung atau file tidak valid.' });
     } else {
         next();
     }

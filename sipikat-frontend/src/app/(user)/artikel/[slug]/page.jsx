@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft } from 'lucide-react';
 import { Text } from 'slate';
+import SanitizedHtml from '@/components/common/SanitizedHtml';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -87,12 +88,22 @@ export const serializeSlateToHtml = (nodes) => {
 };
 
 export const parseAndRenderContent = (contentString) => {
+    const escapeHtml = (str) => {
+        if (typeof str !== 'string') return '';
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    };
+
     try {
         const parsedContent = JSON.parse(contentString);
         return serializeSlateToHtml(parsedContent);
     } catch (e) {
-        console.error("Error parsing content as JSON, rendering as plain HTML:", e);
-        return contentString;
+        console.error("Error parsing content as JSON, rendering as escaped text:", e);
+        return `<p class="my-4">${escapeHtml(contentString || '')}</p>`;
     }
 };
 
@@ -159,9 +170,10 @@ export default async function ArtikelDetailPage({ params }) {
                         />
                     )}
 
-                    <div
+                    <SanitizedHtml
+                        as="div"
                         className="prose lg:prose-lg max-w-none text-gray-800 leading-relaxed"
-                        dangerouslySetInnerHTML={{ __html: renderedContent }}
+                        html={renderedContent}
                     />
                     
                     <div className="mt-8 pt-8 border-t border-gray-200">

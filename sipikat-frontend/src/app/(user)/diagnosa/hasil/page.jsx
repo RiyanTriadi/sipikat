@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, User, List, Lightbulb, RefreshCw, Download, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { parseAndRenderContent } from '@/app/(user)/artikel/[slug]/page';
+import SanitizedHtml from '@/components/common/SanitizedHtml';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -374,7 +375,11 @@ const handleDownload = () => {
                         </div>
                         <h2 className="text-2xl font-bold text-gray-800">Langkah Selanjutnya & Rekomendasi</h2>
                     </div>
-                    <div className="mt-6 prose prose-lg max-w-none text-gray-700" dangerouslySetInnerHTML={{ __html: parseAndRenderContent(result.solusi) }} />
+                    <SanitizedHtml
+                        as="div"
+                        className="mt-6 prose prose-lg max-w-none text-gray-700"
+                        html={parseAndRenderContent(result.solusi)}
+                    />
                 </section>
 
                 <section className="bg-white rounded-2xl shadow-md border border-gray-200">

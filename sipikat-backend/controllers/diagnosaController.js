@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const calculateCF = require('../utils/cfCalculator');
+const { sendErrorResponse, applyNoStore } = require('../utils/http');
 
 exports.diagnoseUser = async (req, res) => {
     const {
@@ -78,6 +79,7 @@ exports.diagnoseUser = async (req, res) => {
         );
 
         const diagnosaId = result.insertId;
+        applyNoStore(res);
 
         res.status(201).json({
             message: 'Diagnosa berhasil disimpan',
@@ -96,10 +98,7 @@ exports.diagnoseUser = async (req, res) => {
         });
     } catch (err) {
         console.error('Error in diagnoseUser:', err.message);
-        res.status(500).json({
-            message: 'Server Error',
-            error: err.message
-        });
+        sendErrorResponse(res, err, { publicMessage: 'Server Error' });
     }
 };
 
@@ -116,9 +115,7 @@ exports.getAllDiagnosa = async (req, res) => {
         res.json(parsedRows);
     } catch (err) {
         console.error('Error in getAllDiagnosa:', err.message);
-        res.status(500).json({
-            message: 'Server Error'
-        });
+        sendErrorResponse(res, err, { publicMessage: 'Server Error' });
     }
 };
 
@@ -140,9 +137,7 @@ exports.getDiagnosaById = async (req, res) => {
         res.json(diagnosa);
     } catch (err) {
         console.error('Error in getDiagnosaById:', err.message);
-        res.status(500).json({
-            message: 'Server Error'
-        });
+        sendErrorResponse(res, err, { publicMessage: 'Server Error' });
     }
 };
 
@@ -171,9 +166,7 @@ exports.updateDiagnosa = async (req, res) => {
         });
     } catch (err) {
         console.error('Error in updateDiagnosa:', err.message);
-        res.status(500).json({
-            message: 'Server Error'
-        });
+        sendErrorResponse(res, err, { publicMessage: 'Server Error' });
     }
 };
 
@@ -190,8 +183,6 @@ exports.deleteDiagnosa = async (req, res) => {
         });
     } catch (err) {
         console.error('Error in deleteDiagnosa:', err.message);
-        res.status(500).json({
-            message: 'Server Error'
-        });
+        sendErrorResponse(res, err, { publicMessage: 'Server Error' });
     }
 };

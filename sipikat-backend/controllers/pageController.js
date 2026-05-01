@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { sendErrorResponse } = require('../utils/http');
 
 exports.getPageBySlug = async (req, res) => {
     try {
@@ -12,6 +13,6 @@ exports.getPageBySlug = async (req, res) => {
         res.json(rows[0]);
     } catch (err) {
         console.error("Error in getPageBySlug:", err.message);
-        res.status(500).send('Server Error');
+        sendErrorResponse(res, err, { publicMessage: 'Server Error' });
     }
 };

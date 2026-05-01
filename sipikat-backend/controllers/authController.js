@@ -8,6 +8,7 @@ const {
   addTokenToBlacklist,
   revokeUserRefreshSession
 } = require('../utils/tokenService');
+const { sendErrorResponse, applyNoStore } = require('../utils/http');
 require('dotenv').config();
 
 /**
@@ -16,7 +17,6 @@ require('dotenv').config();
 exports.adminLogin = async (req, res) => {
   const { email, password } = req.body;
   const ipAddress = req.ip || req.connection.remoteAddress;
-
   try {
     // Validate input
     if (!email || !password) {
@@ -24,21 +24,18 @@ exports.adminLogin = async (req, res) => {
         message: 'Email dan password harus diisi.' 
       });
     }
-
     // Find user by email
     const [rows] = await pool.execute(
       'SELECT * FROM tb_user WHERE email = ? LIMIT 1', 
       [email]
     );
     const user = rows[0];
-
     if (!user) {
       // Log failed attempt
       await pool.execute(
         'INSERT INTO login_attempts (email, ip_address, success) VALUES (?, ?, ?)',
         [email, ipAddress, false]
       );
-      
       return res.status(400).json({ 
         message: 'Email atau password salah.' 
       });
@@ -46,42 +43,35 @@ exports.adminLogin = async (req, res) => {
 
     // Verify password
     const isMatch = await bcrypt.compare(password, user.password);
-
     if (!isMatch) {
       // Log failed attempt
       await pool.execute(
         'INSERT INTO login_attempts (email, ip_address, success) VALUES (?, ?, ?)',
         [email, ipAddress, false]
       );
-      
       return res.status(400).json({ 
         message: 'Email atau password salah.' 
       });
     }
-
     // Generate tokens
     const accessToken = generateAccessToken(user.id);
     const refreshToken = generateRefreshToken(user.id);
     const refreshTokenExpiry = getRefreshTokenExpiry();
-
     // Store refresh token in database
     await pool.execute(
       'UPDATE tb_user SET refresh_token = ?, refresh_token_expires_at = ?, last_login = NOW() WHERE id = ?',
       [refreshToken, refreshTokenExpiry, user.id]
     );
-
     // Log successful attempt
     await pool.execute(
       'INSERT INTO login_attempts (email, ip_address, success) VALUES (?, ?, ?)',
       [email, ipAddress, true]
     );
-
     // Set access token cookie
     res.cookie('accessToken', accessToken, jwtConfig.accessToken.cookieOptions);
-
     // Set refresh token cookie
     res.cookie('refreshToken', refreshToken, jwtConfig.refreshToken.cookieOptions);
-
+    applyNoStore(res);
     // Return success response (without tokens in body)
     res.json({ 
       message: 'Login berhasil',
@@ -94,7 +84,7 @@ exports.adminLogin = async (req, res) => {
 
   } catch (err) {
     console.error('Login error:', err.message);
-    res.status(500).json({ message: 'Terjadi kesalahan server.' }); 
+    sendErrorResponse(res, err);
   }
 };
 
@@ -126,6 +116,7 @@ exports.refreshToken = async (req, res) => {
 
     res.cookie('accessToken', newAccessToken, jwtConfig.accessToken.cookieOptions);
     res.cookie('refreshToken', newRefreshToken, jwtConfig.refreshToken.cookieOptions);
+    applyNoStore(res);
 
     res.json({ 
       message: 'Token berhasil diperbarui',
@@ -138,7 +129,7 @@ exports.refreshToken = async (req, res) => {
 
   } catch (err) {
     console.error('Refresh token error:', err.message);
-    res.status(500).json({ message: 'Terjadi kesalahan server.' });
+    sendErrorResponse(res, err);
   }
 };
 
@@ -165,6 +156,7 @@ exports.adminLogout = async (req, res) => {
     // Clear cookies
     res.clearCookie('accessToken', jwtConfig.accessToken.cookieOptions);
     res.clearCookie('refreshToken', jwtConfig.refreshToken.cookieOptions);
+    applyNoStore(res);
 
     res.json({ message: 'Logout berhasil' });
   } catch (err) {
@@ -174,7 +166,7 @@ exports.adminLogout = async (req, res) => {
     res.clearCookie('accessToken', jwtConfig.accessToken.cookieOptions);
     res.clearCookie('refreshToken', jwtConfig.refreshToken.cookieOptions);
     
-    res.status(500).json({ message: 'Terjadi kesalahan saat logout.' });
+    sendErrorResponse(res, err, { publicMessage: 'Terjadi kesalahan saat logout.' });
   }
 };
 
@@ -190,9 +182,8 @@ exports.checkAuth = async (req, res) => {
     });
   } catch (err) {
     console.error('Check auth error:', err.message);
-    res.status(500).json({ 
-      message: 'Terjadi kesalahan server.',
-      authenticated: false 
+    sendErrorResponse(res, err, {
+      extra: { authenticated: false }
     });
   }
 };
@@ -216,6 +207,6 @@ exports.revokeAllTokens = async (req, res) => {
 
   } catch (err) {
     console.error('Revoke tokens error:', err.message);
-    res.status(500).json({ message: 'Terjadi kesalahan server.' });
+    sendErrorResponse(res, err);
   }
 };

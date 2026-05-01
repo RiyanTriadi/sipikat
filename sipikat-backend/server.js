@@ -4,10 +4,14 @@ const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const path = require('path');
 const { apiLimiter } = require('./middleware/rateLimiter');
+const { setSecurityHeaders } = require('./middleware/securityHeaders');
 const { startTokenBlacklistCleanup } = require('./services/tokenBlacklistCleanup');
+const { sendErrorResponse } = require('./utils/http');
 require('dotenv').config();
 
 const app = express();
+
+app.disable('x-powered-by');
 
 // 1. Trust Proxy
 app.set('trust proxy', 1);
@@ -17,9 +21,14 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
+      baseUri: ["'self'"],
+      frameAncestors: ["'none'"],
+      formAction: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:", "http:"], 
+      imgSrc: ["'self'", "data:", "https:", "http:"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
     },
   },
   hsts: {
@@ -32,6 +41,7 @@ app.use(helmet({
   xssFilter: true,
   crossOriginResourcePolicy: { policy: "cross-origin" }, 
 }));
+app.use(setSecurityHeaders);
 
 // 3. CORS Configuration
 const allowedOrigins = [
@@ -86,13 +96,15 @@ app.get('/', (req, res) => {
     message: 'SIPIKAT API Server',
     version: '1.0.0',
     status: 'running',
-    environment: process.env.NODE_ENV,
-    endpoints: [
-      '/health',
-      '/api/auth',
-      '/api/gejala',
-      '/api/diagnosa'
-    ]
+    ...(process.env.NODE_ENV !== 'production' && {
+      environment: process.env.NODE_ENV,
+      endpoints: [
+        '/health',
+        '/api/auth',
+        '/api/gejala',
+        '/api/diagnosa'
+      ]
+    })
   });
 });
 
@@ -124,9 +136,9 @@ app.use((req, res) => {
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error('ERROR LOG:', err);
-  res.status(err.status || 500).json({
-    message: err.message || 'Terjadi kesalahan server',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  sendErrorResponse(res, err, {
+    status: err.status || 500,
+    publicMessage: 'Terjadi kesalahan server.'
   });
 });
 

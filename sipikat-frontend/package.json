@@ -17,6 +17,7 @@
     "cookie-parser": "^1.4.7",
     "critters": "^0.0.23",
     "date-fns": "^4.1.0",
+    "dompurify": "^3.3.3",
     "file-saver": "^2.0.5",
     "framer-motion": "^12.23.3",
     "html2canvas": "^1.4.1",

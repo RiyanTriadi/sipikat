@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Trash2, AlertCircle, RefreshCw, Eye, X } from 'lucide-react';
+import SanitizedHtml from '@/components/common/SanitizedHtml';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -271,9 +272,10 @@ const DetailModal = ({ isOpen, onClose, diagnosa }) => {
                     <div>
                         <h3 className="text-lg font-bold text-gray-800 mb-4">Rekomendasi & Solusi</h3>
                         <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
-                            <div 
+                            <SanitizedHtml
+                                as="div"
                                 className="prose prose-sm max-w-none text-gray-700"
-                                dangerouslySetInnerHTML={{ __html: parseSlateContent(diagnosa.solusi) }}
+                                html={parseSlateContent(diagnosa.solusi)}
                             />
                         </div>
                     </div>

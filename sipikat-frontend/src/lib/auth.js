@@ -1,4 +1,5 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const DEFAULT_AUTH_ERROR = 'Permintaan autentikasi gagal. Silakan coba lagi.';
 
 /**
  * Check if user is authenticated by calling backend
@@ -41,7 +42,7 @@ export const refreshAccessToken = async () => {
         return { success: true, user: data.user };
     } catch (error) {
         console.error('Token refresh failed:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: DEFAULT_AUTH_ERROR };
     }
 };
 
@@ -62,7 +63,7 @@ export const logout = async () => {
         return { success: true };
     } catch (error) {
         console.error('Logout failed:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: DEFAULT_AUTH_ERROR };
     }
 };
 
@@ -138,6 +139,6 @@ export const revokeAllTokens = async () => {
         return { success: true };
     } catch (error) {
         console.error('Revoke tokens failed:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: DEFAULT_AUTH_ERROR };
     }
 };
