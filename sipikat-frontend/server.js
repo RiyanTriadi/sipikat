@@ -7,9 +7,22 @@ const hostname = 'localhost'
 const port = process.env.PORT || 3000
 const app = next({ dev, hostname, port })
 const handle = app.getRequestHandler()
+const apiOrigin = process.env.NEXT_PUBLIC_API_URL || 'https://api.edu-sipikat.com'
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  `connect-src 'self' ${apiOrigin} https://api.edu-sipikat.com`,
+  "img-src 'self' data: https: http:",
+  "object-src 'none'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "upgrade-insecure-requests",
+].join('; ')
 
 const securityHeaders = {
-  'Content-Security-Policy': "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data: https: http:; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; upgrade-insecure-requests",
+  'Content-Security-Policy': contentSecurityPolicy,
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
