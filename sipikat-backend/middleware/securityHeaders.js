@@ -1,12 +1,14 @@
 const CONTENT_SECURITY_POLICY = [
-  "default-src 'self'",
-  "base-uri 'self'",
+  "default-src 'none'",
+  "base-uri 'none'",
   "frame-ancestors 'none'",
-  "form-action 'self'",
-  "img-src 'self' data: https: http:",
+  "form-action 'none'",
+  "connect-src 'self'",
+  "img-src 'self' data: blob: https://api.edu-sipikat.com",
+  "manifest-src 'self'",
   "object-src 'none'",
-  "script-src 'self'",
-  "style-src 'self' 'unsafe-inline'",
+  "script-src 'none'",
+  "style-src 'none'",
   "upgrade-insecure-requests",
 ].join('; ');
 

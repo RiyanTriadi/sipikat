@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, User, List, Lightbulb, RefreshCw, Download, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { parseAndRenderContent } from '@/app/(user)/artikel/[slug]/page';
+import { parseAndRenderContent } from '@/lib/articleContent';
 import SanitizedHtml from '@/components/common/SanitizedHtml';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';

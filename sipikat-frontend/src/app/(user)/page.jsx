@@ -65,7 +65,7 @@ export default async function HomePage() {
       <section className="relative w-full h-[60vh] min-h-[400px] flex items-center justify-center text-white overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full">
           <Image
-            src="https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?q=80&w=1932&auto=format&fit=crop"
+            src="/hero-bg.webp"
             alt="Hero background"
             fill
             priority

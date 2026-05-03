@@ -18,19 +18,7 @@ app.set('trust proxy', 1);
 
 // 2. Security Headers Middleware 
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      baseUri: ["'self'"],
-      frameAncestors: ["'none'"],
-      formAction: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:", "http:"],
-      objectSrc: ["'none'"],
-      upgradeInsecureRequests: [],
-    },
-  },
+  contentSecurityPolicy: false,
   hsts: {
     maxAge: 31536000, 
     includeSubDomains: true,

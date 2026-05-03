@@ -1,20 +1,7 @@
-const apiOrigin = process.env.NEXT_PUBLIC_API_URL || 'https://api.edu-sipikat.com';
-const contentSecurityPolicy = [
-    "default-src 'self'",
-    "base-uri 'self'",
-    "frame-ancestors 'none'",
-    "form-action 'self'",
-    `connect-src 'self' ${apiOrigin} https://api.edu-sipikat.com`,
-    "img-src 'self' data: https: http:",
-    "object-src 'none'",
-    "script-src 'self' 'unsafe-inline'",
-    "style-src 'self' 'unsafe-inline'",
-    "upgrade-insecure-requests",
-].join('; ');
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     poweredByHeader: false,
+    skipTrailingSlashRedirect: true,
     images: {
         remotePatterns: [
             {
@@ -59,49 +46,6 @@ const nextConfig = {
         removeConsole: process.env.NODE_ENV === 'production' ? {
             exclude: ['error', 'warn'],
         } : false,
-    },
-    async headers() {
-        return [
-            {
-                source: '/:path*',
-                headers: [
-                    {
-                        key: 'Content-Security-Policy',
-                        value: contentSecurityPolicy,
-                    },
-                    {
-                        key: 'Referrer-Policy',
-                        value: 'strict-origin-when-cross-origin',
-                    },
-                    {
-                        key: 'X-Content-Type-Options',
-                        value: 'nosniff',
-                    },
-                    {
-                        key: 'X-Frame-Options',
-                        value: 'DENY',
-                    },
-                ],
-            },
-            {
-                source: '/admin/:path*',
-                headers: [
-                    {
-                        key: 'Cache-Control',
-                        value: 'no-store, no-cache, must-revalidate, private',
-                    },
-                ],
-            },
-            {
-                source: '/diagnosa/hasil',
-                headers: [
-                    {
-                        key: 'Cache-Control',
-                        value: 'no-store, no-cache, must-revalidate, private',
-                    },
-                ],
-            },
-        ];
     },
 };
 
